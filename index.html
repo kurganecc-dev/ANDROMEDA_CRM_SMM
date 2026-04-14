@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANDROMEDA | CRM SMM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; font-size: 13px; scroll-behavior: smooth; }
+        .status-idea { border-left: 5px solid #9ca3af; }
+        .status-work { border-left: 5px solid #3b82f6; }
+        .status-ready { border-left: 5px solid #10b981; }
+        .status-published { border-left: 6px solid #6366f1; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); background-color: #e2e8f0; gap: 1px; border: 1px solid #e2e8f0; }
+        .calendar-day { min-height: 110px; background-color: white; padding: 4px; overflow-y: auto; }
+        .calendar-item { font-size: 8px; margin-bottom: 2px; padding: 2px 4px; border-radius: 4px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; display: block; }
+        .multi-select-box { max-height: 130px; overflow-y: auto; border: 1px solid #e2e8f0; padding: 8px; border-radius: 12px; background: #f8fafc; }
+        .tab-active { background: #1e293b !important; color: white !important; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        #loginOverlay { background: radial-gradient(circle at center, #1e293b 0%, #000 100%); z-index: 9999; position: fixed; inset: 0; }
+        .admin-only { display: none; }
+        #chatMessages::-webkit-scrollbar { width: 3px; }
+        #chatMessages::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .social-icon { width: 18px; height: 18px; display: inline-block; vertical-align: middle; transition: transform 0.2s; }
+        .social-icon:hover { transform: scale(1.2); }
+    </style>
+</head>
+<body class="bg-[#f1f5f9] min-h-screen text-slate-900">
+
+    <!-- LOGIN -->
+    <div id="loginOverlay" class="flex items-center justify-center p-4 text-center">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-10 shadow-2xl border">
+            <h1 class="text-3xl font-black uppercase tracking-tighter mb-1 text-slate-900">ANDROMEDA</h1>
+            <p class="text-blue-600 font-bold uppercase text-[9px] mb-10 italic tracking-[0.3em]">CRM SMM SYSTEM</p>
+            <div class="space-y-4">
+                <select id="loginUser" class="w-full border-2 p-3.5 rounded-2xl font-bold outline-none text-xs bg-slate-50 text-center appearance-none cursor-pointer">
+                    <option value="Андрей Чебыкин">Андрей Чебыкин</option>
+                    <option value="Павел Храмцов">Павел Храмцов</option>
+                    <option value="Дмитрий Хандюков">Дмитрий Хандюков</option>
+                    <option value="Любовь Карелина">Любовь Карелина</option>
+                    <option value="Ксения Потапенкова">Ксения Потапенкова</option>
+                    <option value="Яна Толкаченко">Яна Толкаченко</option>
+                    <option value="Арина Краснова">Арина Краснова</option>
+                    <option value="Евгения Щитова">Евгения Щитова</option>
+                    <option value="Анастасия Ершова">Анастасия Ершова</option>
+                    <option value="admin">Администратор</option>
+                </select>
+                <input type="password" id="loginPass" placeholder="Пароль" class="w-full border-2 p-3.5 rounded-2xl font-bold text-center outline-none">
+                <button onclick="handleLogin()" id="loginBtn" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl uppercase tracking-widest text-xs hover:bg-black transition-all">Войти</button>
+                <p id="loginError" class="text-rose-500 text-[10px] font-black uppercase hidden mt-4 italic">Ошибка доступа</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP CONTENT -->
+    <div id="appContent" class="hidden opacity-0 transition-opacity duration-500">
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-50 px-6 py-3 shadow-sm">
+            <div class="max-w-[1800px] mx-auto flex justify-between items-center">
+                <div class="flex items-center gap-10">
+                    <div class="flex flex-col">
+                        <h1 class="text-xl font-black text-slate-900 leading-none">ANDROMEDA</h1>
+                        <span class="text-[9px] font-black text-blue-600 uppercase italic">CRM SMM Professional</span>
+                    </div>
+                    <div class="flex bg-slate-100 p-1 rounded-xl font-black text-[9px] gap-1">
+                        <button onclick="switchView('list')" id="btnViewList" class="px-5 py-2 rounded-lg transition uppercase tab-active">Список</button>
+                        <button onclick="switchView('calendar')" id="btnViewCalendar" class="px-5 py-2 rounded-lg transition uppercase text-slate-400">Календарь</button>
+                        <button onclick="switchView('stats')" id="btnViewStats" class="px-5 py-2 rounded-lg transition uppercase text-slate-400">Статистика</button>
+                        <button onclick="switchView('accounts')" id="btnViewAccounts" class="px-5 py-2 rounded-lg transition uppercase text-slate-400">Аккаунты</button>
+                    </div>
+                </div>
+                <div class="flex gap-4 items-center">
+                    <button onclick="openTrash()" class="relative border p-2 rounded-xl bg-slate-50 shadow-sm">🗑️ <span id="trashBadge" class="absolute -top-1 -right-1 bg-slate-900 text-white text-[7px] font-bold w-4 h-4 rounded-full flex items-center justify-center">0</span></button>
+                    <div id="currentUserDisplay" class="text-[10px] font-black uppercase text-slate-900 px-4 py-2 border-l border-slate-100"></div>
+                    <button onclick="logout()" class="text-rose-500 font-bold text-[9px] uppercase hover:underline">Выход</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-[1800px] mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- ASIDE: CREATE -->
+            <aside class="lg:col-span-3 space-y-6">
+                <div class="bg-white p-6 rounded-[2rem] shadow-xl border border-slate-100 sticky top-24">
+                    <form id="ideaForm" class="space-y-4">
+                        <h3 class="text-[9px] font-black text-slate-300 uppercase tracking-widest text-center">Новая задача</h3>
+                        <input type="text" id="title" placeholder="Тема поста" required class="w-full border-2 p-3 rounded-xl text-xs font-bold bg-slate-50 outline-none focus:border-blue-500 transition-all">
+                        <div class="grid grid-cols-2 gap-2">
+                            <select id="work_type" class="w-full border-2 p-3 rounded-xl text-[10px] font-bold bg-white outline-none cursor-pointer">
+                                <option value="Пост">ПОСТ</option>
+                                <option value="Картинка">КАРТИНКА</option>
+                                <option value="Короткое видео">КОРОТКОЕ ВИДЕО</option>
+                                <option value="Длинное видео">ДЛИННОЕ ВИДЕО</option>
+                            </select>
+                            <select id="tag" class="w-full border-2 p-3 rounded-xl text-[10px] font-bold bg-white outline-none text-blue-600 cursor-pointer">
+                                <option value="ФРК">ФРК</option><option value="УТП">УТП</option><option value="прочее">ПРОЧЕЕ</option>
+                            </select>
+                        </div>
+                        <textarea id="description" placeholder="Описание / ТЗ" class="w-full border-2 p-3 rounded-xl text-xs font-medium bg-slate-50 h-20 outline-none focus:border-blue-500 transition-all"></textarea>
+                        
+                        <div>
+                            <label class="text-[8px] font-black text-slate-400 uppercase mb-2 block flex justify-between">Площадки <label class="cursor-pointer text-blue-500 hover:underline"><input type="checkbox" onchange="toggleAllChannels(this, 'chan')"> ВСЕ</label></label>
+                            <div id="channelList" class="multi-select-box text-[9px] space-y-1"></div>
+                        </div>
+
+                        <div>
+                            <label class="text-[8px] font-black text-purple-500 uppercase mb-2 block tracking-widest">Исполнители</label>
+                            <div id="executorList" class="multi-select-box text-[9px] space-y-1"></div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 text-[9px] font-black uppercase text-slate-400">
+                            <div>🚀 СТАРТ: <input type="date" id="start_date_val" class="w-full border rounded-lg p-2 mt-1 text-slate-900 outline-none"></div>
+                            <div>🏁 СРОК: <input type="date" id="date_val" class="w-full border rounded-lg p-2 mt-1 text-slate-900 outline-none"></div>
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase text-[9px] shadow-lg hover:bg-blue-700 transition-all">Запланировать</button>
+                    </form>
+                </div>
+            </aside>
+
+            <!-- MIDDLE: VIEWS -->
+            <div class="lg:col-span-6 space-y-6">
+                <div id="listControls" class="flex flex-col md:flex-row gap-4">
+                    <input type="text" id="taskSearch" oninput="renderCards()" placeholder="🔍 Поиск по названию..." class="flex-1 p-4 rounded-2xl border-none shadow-sm outline-none font-bold text-xs bg-white">
+                    <select id="tagFilter" onchange="renderCards()" class="p-4 rounded-2xl border-none shadow-sm outline-none font-black text-[10px] uppercase bg-white cursor-pointer">
+                        <option value="ALL">Все теги</option><option value="ФРК">ФРК</option><option value="УТП">УТП</option><option value="прочее">Прочее</option>
+                    </select>
+                </div>
+
+                <div id="view-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+                
+                <div id="view-calendar" class="hidden space-y-4">
+                    <div id="calendarTabs" class="flex flex-wrap gap-2 pb-2 overflow-x-auto text-[8px] font-black"></div>
+                    <div class="bg-white rounded-[2rem] shadow-xl border p-6 text-center">
+                        <div class="flex justify-between items-center mb-4">
+                            <button onclick="changeMonth(-1)" class="p-2 border rounded-xl hover:bg-slate-50">←</button>
+                            <h2 id="calendarMonthLabel" class="font-black uppercase text-xs text-slate-800"></h2>
+                            <button onclick="changeMonth(1)" class="p-2 border rounded-xl hover:bg-slate-50">→</button>
+                        </div>
+                        <div class="grid grid-cols-7 mb-2 text-[8px] font-black text-slate-400 uppercase text-center">
+                            <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div class="text-rose-400">Сб</div><div class="text-rose-400">Вс</div>
+                        </div>
+                        <div id="calendarGrid" class="calendar-grid"></div>
+                    </div>
+                </div>
+
+                <div id="view-stats" class="hidden space-y-6">
+                    <div id="adminPanel" class="admin-only bg-slate-900 text-white p-6 rounded-[2.5rem] shadow-2xl space-y-4">
+                        <p class="text-blue-400 font-black text-[10px] uppercase tracking-widest">Конфигурация API (Общая)</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label class="text-[8px] block mb-1 opacity-50 uppercase">YouTube API Key:</label><input type="password" id="ytApiKey" class="w-full bg-slate-800 rounded-xl p-3 text-xs text-white outline-none border-none"></div>
+                            <div><label class="text-[8px] block mb-1 opacity-50 uppercase">Apify Token:</label><input type="password" id="apifyToken" class="w-full bg-slate-800 rounded-xl p-3 text-xs text-white outline-none border-none"></div>
+                        </div>
+                        <button onclick="saveAdminSettings()" class="bg-blue-600 w-full py-3 rounded-xl font-black text-[9px] uppercase hover:bg-blue-700 transition-all">Сохранить ключи</button>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-3xl border flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm">
+                        <div class="flex items-center gap-2">
+                            <button onclick="changeStatsMonth(-1)" class="p-2 border rounded-xl hover:bg-slate-50">←</button>
+                            <h2 id="statsMonthLabel" class="font-black uppercase text-xs w-32 text-center text-slate-800"></h2>
+                            <button onclick="changeStatsMonth(1)" class="p-2 border rounded-xl hover:bg-slate-50">→</button>
+                        </div>
+                        <select id="statsPlatformFilter" onchange="renderStats()" class="border-2 p-2 rounded-xl text-xs font-bold w-40 outline-none cursor-pointer">
+                            <option value="ALL">ВСЕ ПЛОЩАДКИ</option>
+                            <option value="YouTube">YouTube</option><option value="TikTok">TikTok</option>
+                            <option value="Instagram">Instagram</option><option value="VK">VK</option><option value="Telegram">Telegram (Все)</option>
+                        </select>
+                        <div class="flex gap-2">
+                             <button onclick="updateAllMonthStats()" id="btnUpdateAll" class="bg-emerald-500 text-white px-4 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg">Обновить</button>
+                             <button onclick="exportStatsToCSV()" class="bg-slate-900 text-white px-4 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg">CSV</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div class="bg-white p-6 rounded-3xl border shadow-sm"><p class="text-[9px] font-black text-slate-400 uppercase mb-1">Постов опубликовано</p><h2 id="stat-total" class="text-3xl font-[900] text-slate-800">0</h2></div>
+                        <div class="bg-white p-6 rounded-3xl border text-emerald-600 shadow-sm"><p class="text-[9px] font-black text-slate-400 uppercase mb-1">Суммарный охват</p><h2 id="stat-views" class="text-3xl font-[900]">0</h2></div>
+                    </div>
+                    <div id="statsTableContainer" class="bg-white rounded-3xl border overflow-x-auto shadow-sm"></div>
+                </div>
+
+                <div id="view-accounts" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+            </div>
+
+            <!-- RIGHT: CHAT & TASKS -->
+            <aside class="lg:col-span-3 space-y-6">
+                <div class="bg-slate-900 p-6 rounded-[2.5rem] shadow-2xl text-white min-h-[250px]">
+                    <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-6 border-b border-slate-800 pb-4">Задачи в работе</h3>
+                    <div id="personalTasksList" class="space-y-4 max-h-[300px] overflow-y-auto pr-1"></div>
+                </div>
+                <div class="bg-slate-900 p-6 rounded-[2.5rem] shadow-2xl text-white flex flex-col h-[450px]">
+                    <h3 class="text-[10px] font-black uppercase tracking-widest text-blue-500 mb-4 border-b border-slate-800 pb-4">Командный чат</h3>
+                    <div id="chatMessages" class="flex-1 overflow-y-auto space-y-4 pr-2 mb-4 text-xs"></div>
+                    <div class="flex gap-2 bg-slate-800 p-2 rounded-2xl">
+                        <input id="chatInput" type="text" class="flex-1 bg-transparent border-none text-xs p-1 outline-none text-white" placeholder="Сообщение...">
+                        <button onclick="sendChatMessage()" class="text-blue-500 hover:text-white transition-all text-lg px-2">➤</button>
+                    </div>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <!-- MODAL EDIT -->
+    <div id="editModal" class="hidden fixed inset-0 bg-slate-900/40 items-center justify-center p-4 backdrop-blur-sm z-[100]">
+        <div class="bg-white w-full max-w-5xl rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b flex justify-between items-center text-slate-800">
+                <h2 class="font-black uppercase">Правка задачи</h2>
+                <button onclick="closeModal()" class="text-slate-300 hover:text-rose-500 text-4xl">&times;</button>
+            </div>
+            <form id="editForm" class="p-8 space-y-6 overflow-y-auto">
+                <input type="hidden" id="edit_id">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-[10px] font-black uppercase">
+                    <div class="space-y-4">
+                        <label>ТЕМА: <input type="text" id="edit_title" required class="w-full border p-2.5 rounded-xl bg-slate-50 mt-1 font-black outline-none text-slate-800"></label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label>ТИП: <select id="edit_work_type" class="w-full border p-2.5 rounded-xl mt-1 outline-none font-black text-slate-800">
+                                <option value="Пост">ПОСТ</option>
+                                <option value="Картинка">КАРТИНКА</option>
+                                <option value="Короткое видео">КОРОТКОЕ ВИДЕО</option>
+                                <option value="Длинное видео">ДЛИННОЕ ВИДЕО</option>
+                            </select></label>
+                            <label>ТЕГ: <select id="edit_tag" class="w-full border p-2.5 rounded-xl mt-1 outline-none font-black text-blue-600"><option value="ФРК">ФРК</option><option value="УТП">УТП</option><option value="прочее">ПРОЧЕЕ</option></select></label>
+                        </div>
+                        <label>СТАТУС: <select id="edit_status" class="w-full border p-2.5 rounded-xl mt-1 text-blue-700 font-bold outline-none"></select></label>
+                        <label>ОПИСАНИЕ: <textarea id="edit_description" class="w-full border p-3 rounded-xl mt-1 h-32 normal-case font-medium outline-none text-slate-700"></textarea></label>
+                    </div>
+                    <div class="space-y-4 text-slate-500">
+                        <label>ПЛОЩАДКИ:</label>
+                        <div id="editChannelList" class="multi-select-box"></div>
+                        <div class="grid grid-cols-2 gap-2 mt-4">
+                            <label>🚀 СТАРТ: <input type="date" id="edit_start_date" class="w-full border p-2 mt-1 outline-none font-black text-slate-800"></label>
+                            <label>🏁 СРОК: <input type="date" id="edit_date" class="w-full border p-2 mt-1 outline-none font-black text-slate-800"></label>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <label>ИСПОЛНИТЕЛИ:</label>
+                        <div id="editExecList" class="multi-select-box"></div>
+                        <div class="p-5 bg-emerald-50 rounded-[2rem] border border-emerald-100">
+                            <label class="text-emerald-700 block mb-4 italic uppercase">Ссылки на результаты:</label>
+                            <div id="multiLinkContainer" class="space-y-3"></div>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase text-xs shadow-xl hover:bg-black transition-all">Сохранить</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- TRASH -->
+    <div id="trashModal" class="hidden fixed inset-0 bg-slate-900/60 z-[200] items-center justify-center p-4">
+        <div class="bg-white w-full max-w-2xl rounded-[2.5rem] p-8 shadow-2xl max-h-[80vh] flex flex-col">
+             <h2 class="font-black uppercase text-lg mb-6 flex justify-between text-slate-800">Корзина <button onclick="closeTrash()" class="text-slate-300 hover:text-rose-500 transition-all">&times;</button></h2>
+             <div id="trashList" class="space-y-3 overflow-y-auto pr-2 text-slate-800"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- SUPABASE CONFIG ---
+        const SUPABASE_URL = "https://snfdwowgattembkueops.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_thlOsL_shAho6ohPV-KVDg_k-GEm5jW";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const TEAM = [{ name: "Андрей Чебыкин", color: "#2563eb" }, { name: "Павел Храмцов", color: "#16a34a" }, { name: "Дмитрий Хандюков", color: "#4f46e5" }, { name: "Олеся Подъелец", color: "#e11d48" }, { name: "Татьяна Петрова", color: "#d97706" }, { name: "Яна Толкаченко", color: "#9333ea" }, { name: "Ксения Потапенкова", color: "#db2777" }, { name: "Олег Сытов", color: "#0891b2" }, { name: "Любовь Карелина", color: "#ea580c" }, { name: "Арина Краснова", color: "#0d9488" }, { name: "Евгения Щитова", color: "#10b981" }, { name: "Анастасия Ершова", color: "#6366f1" }];
+        const CHANNELS = ["YouTube", "TikTok", "Instagram", "VK", "Этажи SMM", "NewsRoom", "Echat", "Max", "ОК"];
+        const TG_LIST = ["Этажи SMM", "NewsRoom", "Echat", "Max"];
+        
+        const WORK_ACCOUNTS = [
+            { name: "Вконтакте", platform: "VK", url: "https://vk.com/etagi.realty", handle: "@etagi.realty" },
+            { name: "NewsRoom", platform: "Telegram", url: "https://t.me/nedvij_etagi", handle: "@nedvij_etagi" },
+            { name: "Этажи SMM", platform: "Telegram", url: "https://t.me/+ZVAp3anMnm9lNmQy", handle: "Private Access" },
+            { name: "Одноклассники", platform: "ОК", url: "https://ok.ru/etagi.realty", handle: "etagi.realty" },
+            { name: "YouTube", platform: "YouTube", url: "https://www.youtube.com/@etagi.realty", handle: "@etagi.realty" },
+            { name: "Instagram", platform: "Instagram", url: "https://www.instagram.com/etagi_com", handle: "@etagi_com" }
+        ];
+
+        let contentData = [], trashData = [], currentView = 'list', viewDate = new Date(), statsDate = new Date(), calendarChannel = 'ALL';
+
+        function getSocialIcon(platform) {
+            const icons = {
+                'YouTube': '<svg class="social-icon" viewBox="0 0 24 24" fill="#FF0000"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>',
+                'Instagram': '<svg class="social-icon" viewBox="0 0 24 24" fill="#E4405F"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>',
+                'TikTok': '<svg class="social-icon" viewBox="0 0 24 24" fill="#000000"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-1.22-.32-2.57-.16-3.6.54-.99.7-1.57 1.86-1.61 3.07-.04 1.42.58 2.9 1.69 3.79.98.76 2.24 1.05 3.47.82 1.34-.23 2.51-1.2 3.1-2.42.27-.57.36-1.2.36-1.83.02-5.8 0-11.59 0-17.39z"/></svg>',
+                'VK': '<svg class="social-icon" viewBox="0 0 24 24" fill="#0077FF"><path d="M23.45 5.948c.166-.546 0-.948-.795-.948h-2.625c-.668 0-.976.347-1.143.73 0 0-1.335 3.196-3.226 5.27-.612.612-.89.805-1.224.805-.167 0-.41-.193-.41-.741V5.948c0-.668-.193-.948-.751-.948H9.155c-.417 0-.668.31-.668.604 0 .633.946.78 1.043 2.56v3.877c0 .85-.154 1.005-.488 1.005-.89 0-3.056-3.21-4.34-6.885-.251-.719-.501-1.01-1.171-1.01H.906c-.75 0-.9.347-.9.73 0 .687.89 4.12 4.144 8.676 2.17 3.111 5.225 4.797 8.006 4.797 1.669 0 1.875-.375 1.875-1.02v-2.352c0-.75.158-.9.689-.9.389 0 1.057.193 2.615 1.691 1.78 1.78 2.073 2.58 3.075 2.58h2.625c.75 0 1.126-.375.91-1.117-.238-.741-1.096-1.815-2.231-3.085-.612-.724-1.53-1.503-1.81-1.892-.389-.472-.278-.667 0-1.112 0 0 3.141-4.42 3.475-5.948z"/></svg>',
+                'Telegram': '<svg class="social-icon" viewBox="0 0 24 24" fill="#229ED9"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18.717-.962 4.084-1.362 5.462-.168.583-.446.778-.654.797-.453.041-.797-.3-.1.238-.696-.462-1.104-.755-1.885-1.267-.9-.592-.317-.918.197-1.45.134-.139 2.474-2.27 2.52-2.463.005-.024.01-.114-.043-.16-.053-.047-.131-.031-.188-.018-.08.018-1.363.864-3.843 2.534-.364.25-.693.374-.987.368-.324-.007-.946-.184-1.409-.334-.568-.184-1.018-.281-1.002-.593.008-.163.233-.33.673-.501 2.73-1.188 4.545-1.972 5.446-2.352 2.596-1.093 3.136-1.282 3.487-1.288.077-.001.25.019.362.11s.145.228.156.33c.012.11.02.261.01.42z"/></svg>',
+                'ОК': '<svg class="social-icon" viewBox="0 0 24 24" fill="#EE8208"><path d="M12 11.234a4.195 4.195 0 1 0 0-8.39 4.195 4.195 0 0 0 0 8.39zm0-10.334c6.126 0 11.101 4.975 11.101 11.1 0 6.125-4.975 11.1-11.101 11.1-6.125 0-11.1-4.975-11.1-11.1 0-6.125 4.975-11.1 11.1-11.1zM12 13.04c-3.135 0-5.834 1.83-7.11 4.496l-3.32-2.213a11.1 11.1 0 0 1 20.86 0l-3.32 2.213c-1.276-2.665-3.975-4.496-7.11-4.496z"/></svg>'
+            };
+            let norm = platform;
+            if (TG_LIST.includes(platform)) norm = 'Telegram';
+            return icons[norm] || '🔗';
+        }
+
+        // --- AUTH ---
+        async function handleLogin() {
+            const u = document.getElementById('loginUser').value, p = document.getElementById('loginPass').value, btn = document.getElementById('loginBtn');
+            btn.innerText = "...";
+            try {
+                const { data } = await _supabase.from('profiles').select('*').eq('username', u).eq('password', p).single();
+                if (data) {
+                    sessionStorage.setItem('e_active', 'true'); sessionStorage.setItem('e_uid', data.username);
+                    sessionStorage.setItem('e_name', data.display_name); sessionStorage.setItem('e_role', data.role);
+                    checkAuth();
+                } else { alert("Неверный пароль"); }
+            } catch (e) { alert("Ошибка входа"); } finally { btn.innerText = "ВОЙТИ"; }
+        }
+
+        async function checkAuth() {
+            if (sessionStorage.getItem('e_active') === 'true') {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('appContent').classList.remove('hidden');
+                document.getElementById('currentUserDisplay').innerText = `👤 ${sessionStorage.getItem('e_name')}`;
+                if (sessionStorage.getItem('e_role') === 'admin') document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+                initUI(); await loadAllData(); setupChat();
+                setTimeout(() => document.getElementById('appContent').style.opacity = '1', 50);
+            }
+        }
+
+        async function loadAllData() {
+            try {
+                const { data: tasks } = await _supabase.from('tasks').select('*').eq('is_deleted', false);
+                const { data: trash } = await _supabase.from('tasks').select('*').eq('is_deleted', true);
+                const { data: configs } = await _supabase.from('config').select('*');
+                if (tasks) contentData = tasks; if (trash) trashData = trash;
+                if (configs) configs.forEach(c => localStorage.setItem(c.id, c.value));
+                renderAll();
+            } catch (e) { console.error(e); }
+        }
+
+        function initUI() {
+            const fill = (id, name, list) => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = list.map(i => `<label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg cursor-pointer transition"><input type="checkbox" name="${name}" value="${typeof i === 'string' ? i : i.name}" class="rounded text-blue-600 scale-90"> <span class="text-[9px] font-black uppercase text-slate-600">${typeof i === 'string' ? i : i.name}</span></label>`).join('');
+            };
+            fill('channelList', 'chan', CHANNELS); fill('editChannelList', 'edit_chan', CHANNELS);
+            fill('executorList', 'exec', TEAM); fill('editExecList', 'edit_exec', TEAM);
+            document.getElementById('edit_status').innerHTML = Object.entries({idea:"Идея", work:"В работе", ready:"Готово", published:"Опубликовано"}).map(([k,v]) => `<option value="${k}">${v.toUpperCase()}</option>`).join('');
+            renderCalendarTabs();
+            renderAccounts();
+        }
+
+        // --- STATS ENGINE ---
+        function changeStatsMonth(offset) { statsDate.setMonth(statsDate.getMonth() + offset); renderStats(); }
+
+        function renderStats() {
+            const filter = document.getElementById('statsPlatformFilter').value, label = document.getElementById('statsMonthLabel');
+            label.innerText = statsDate.toLocaleString('ru-RU', { month: 'long', year: 'numeric' });
+            let totalV = 0, totalP = 0;
+            const results = contentData.filter(i => {
+                const d = new Date(i.date);
+                const dateMatch = d.getMonth() === statsDate.getMonth() && d.getFullYear() === statsDate.getFullYear();
+                if (!dateMatch) return false;
+                // В статистику попадают только опубликованные
+                if (i.status !== 'published') return false;
+                if (filter === 'ALL') return true;
+                if (filter === 'Telegram') return TG_LIST.some(tg => i.links && i.links[tg]);
+                return i.links && i.links[filter];
+            });
+            let html = `<table class="w-full text-left text-[10px]"><thead class="bg-slate-50 text-[8px] font-black uppercase text-slate-400"><tr><th class="p-4">Дата</th><th class="p-4">Тема</th><th class="p-4">Охват</th><th class="p-4 text-center">Линки</th></tr></thead><tbody>`;
+            results.forEach(i => {
+                let v = 0, linksHtml = '';
+                if (filter === 'ALL') {
+                    v = i.play_count || 0;
+                    linksHtml = Object.entries(i.links || {}).map(([p, url]) => url ? `<a href="${url}" target="_blank" class="mx-1">${getSocialIcon(p)}</a>` : '').join('');
+                } else if (filter === 'Telegram') {
+                    TG_LIST.forEach(tg => { v += (i.play_counts?.[tg] || 0); if(i.links?.[tg]) linksHtml += `<a href="${i.links[tg]}" target="_blank" class="mx-1">${getSocialIcon(tg)}</a>`; });
+                } else {
+                    v = (i.play_counts?.[filter] || 0); if(i.links?.[filter]) linksHtml = `<a href="${i.links[filter]}" target="_blank">${getSocialIcon(filter)}</a>`;
+                }
+                totalV += v; totalP++;
+                html += `<tr class="border-b"><td class="p-4 whitespace-nowrap">${new Date(i.date).toLocaleDateString('ru-RU')}</td><td class="p-4 font-bold uppercase truncate max-w-[200px] text-slate-700">${i.title}</td><td class="p-4 font-black text-emerald-600">${v.toLocaleString()}</td><td class="p-4 text-center">${linksHtml}</td></tr>`;
+            });
+            document.getElementById('stat-total').innerText = totalP; document.getElementById('stat-views').innerText = totalV.toLocaleString();
+            document.getElementById('statsTableContainer').innerHTML = html + `</tbody></table>`;
+        }
+
+        function exportStatsToCSV() {
+            const results = contentData.filter(i => { 
+                const d = new Date(i.date); 
+                return i.status === 'published' && d.getMonth() === statsDate.getMonth() && d.getFullYear() === statsDate.getFullYear(); 
+            });
+            if (results.length === 0) return alert("Нет данных");
+            let csv = "\uFEFFДата;Тема;Тег;Охват;Ответственный;Ссылки\n";
+            results.forEach(i => {
+                const lnks = Object.values(i.links || {}).filter(u => u).join(' | ');
+                csv += `"${new Date(i.date).toLocaleDateString('ru-RU')}";"${i.title}";"${i.tag}";"${i.play_count}";"${i.responsible}";"${lnks}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }), url = URL.createObjectURL(blob), link = document.createElement("a");
+            link.href = url; link.download = `Report_${statsDate.getMonth()+1}_${statsDate.getFullYear()}.csv`; link.click();
+        }
+
+        // --- CRUD & UI CORE ---
+        function renderAll() { 
+            if (currentView === 'list') renderCards(); 
+            if (currentView === 'calendar') renderCalendar(); 
+            if (currentView === 'stats') renderStats(); 
+            document.getElementById('trashBadge').innerText = trashData.length; 
+            renderPersonalTasks(); 
+        }
+
+        function renderCards() {
+            const query = document.getElementById('taskSearch').value.toLowerCase();
+            const tagF = document.getElementById('tagFilter').value;
+            const container = document.getElementById('view-list'); container.innerHTML = '';
+            contentData.filter(i => (i.title.toLowerCase().includes(query)) && (tagF === 'ALL' || i.tag === tagF)).sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(i => {
+                const div = document.createElement('div'), tagColor = i.tag === 'ФРК' ? 'bg-amber-100 text-amber-600' : (i.tag === 'УТП' ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500');
+                div.className = `bg-white p-6 rounded-[2rem] border-2 border-slate-50 status-${i.status} shadow-sm flex flex-col transition-all hover:shadow-md`;
+                div.innerHTML = `<div class="flex justify-between mb-4"><div class="flex flex-wrap gap-1">${i.channels.map(c => `<span class="bg-slate-900 text-white text-[7px] px-2 py-0.5 rounded font-black uppercase">${c}</span>`).join('')}</div><div class="flex gap-2"><button onclick="openEditModal('${i.id}')" class="text-slate-300 hover:text-blue-500 transition-colors">✏️</button><button onclick="moveToTrash('${i.id}')" class="text-slate-300 hover:text-rose-500 transition-colors">✕</button></div></div><div class="flex items-center gap-2 mb-1"><span class="text-[7px] font-black px-2 py-0.5 rounded-full uppercase ${tagColor}">${i.tag || 'прочее'}</span><div class="text-[8px] font-black text-blue-500 uppercase">${i.work_type || 'Пост'}</div></div><h3 class="font-black text-xs uppercase mb-3 leading-tight text-slate-800">${i.title}</h3><div class="text-[8px] font-bold text-slate-400 mt-auto border-t pt-3 flex justify-between items-center"><span>${i.responsible}</span><span class="text-emerald-600 font-black bg-emerald-50 px-2 py-1 rounded">👁️ ${Number(i.play_count || 0).toLocaleString()}</span></div>`;
+                container.appendChild(div);
+            });
+        }
+
+        // --- ACCOUNT RENDER ---
+        function renderAccounts() {
+            const container = document.getElementById('view-accounts');
+            container.innerHTML = WORK_ACCOUNTS.map(acc => `
+                <a href="${acc.url}" target="_blank" class="account-card bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center justify-between hover:shadow-xl transition-all">
+                    <div class="flex items-center gap-5">
+                        <div class="p-4 bg-slate-50 rounded-[1.5rem] scale-125">${getSocialIcon(acc.platform)}</div>
+                        <div>
+                            <h4 class="font-black text-xs uppercase text-slate-800">${acc.name}</h4>
+                            <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">${acc.handle}</p>
+                        </div>
+                    </div>
+                    <div class="text-blue-500 font-black text-[10px] uppercase">Открыть ↗</div>
+                </a>
+            `).join('');
+        }
+
+        // (The rest of JS: Chat, fetchSingleStat, EditModal, MoveToTrash, etc. remains the same for stability)
+        async function setupChat() {
+            const { data } = await _supabase.from('team_chat').select('*').order('created_at', { ascending: true }).limit(50);
+            if (data) renderMessages(data);
+            _supabase.channel('room1').on('postgres_changes', { event: '*', schema: 'public', table: 'team_chat' }, () => refreshChat()).subscribe();
+        }
+        async function refreshChat() {
+            const { data } = await _supabase.from('team_chat').select('*').order('created_at', { ascending: true }).limit(50);
+            if (data) renderMessages(data);
+        }
+        function renderMessages(msgs) {
+            const container = document.getElementById('chatMessages'), myUid = sessionStorage.getItem('e_uid');
+            container.innerHTML = msgs.map(m => {
+                const time = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isMe = m.sender_uid === myUid;
+                return `<div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} group"><div class="flex items-center gap-2 mb-1"><span class="text-[8px] font-black text-slate-500 uppercase">${m.sender_name}</span><span class="text-[7px] text-slate-600 italic">${time}</span></div><div class="relative max-w-[90%] p-3 rounded-2xl text-[11px] ${isMe ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-200'}">${m.message}${isMe ? `<button onclick="deleteMessage(${m.id})" class="absolute -left-6 top-1 text-rose-500 opacity-0 group-hover:opacity-100 transition-all text-[10px]">✕</button>` : ''}</div></div>`;
+            }).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput'), msg = input.value.trim(); if (!msg) return;
+            await _supabase.from('team_chat').insert([{ sender_name: sessionStorage.getItem('e_name'), sender_uid: sessionStorage.getItem('e_uid'), message: msg }]);
+            input.value = '';
+        }
+        async function deleteMessage(id) { if (confirm("Удалить?")) await _supabase.from('team_chat').delete().eq('id', id); }
+
+        function openEditModal(id) {
+            const i = contentData.find(x => String(x.id) === String(id)); if(!i) return;
+            document.getElementById('edit_id').value = i.id; document.getElementById('edit_title').value = i.title;
+            document.getElementById('edit_work_type').value = i.work_type || 'Пост'; document.getElementById('edit_tag').value = i.tag || 'прочее';
+            document.getElementById('edit_description').value = i.description || ''; document.getElementById('edit_status').value = i.status;
+            document.getElementById('edit_start_date').value = i.start_date; document.getElementById('edit_date').value = i.date;
+            document.querySelectorAll('input[name="edit_chan"]').forEach(cb => { cb.checked = i.channels ? i.channels.includes(cb.value) : false; });
+            document.querySelectorAll('input[name="edit_exec"]').forEach(cb => { cb.checked = i.executors ? i.executors.includes(cb.value) : false; });
+            const container = document.getElementById('multiLinkContainer'); container.innerHTML = '';
+            (i.channels || []).forEach(ch => { const val = (i.links && i.links[ch]) ? i.links[ch] : ''; container.innerHTML += `<div><label class="text-[7px] text-slate-400 block font-black mb-1 uppercase flex items-center gap-2">${getSocialIcon(ch)} ${ch}</label><input type="url" data-platform="${ch}" value="${val}" class="multi-link-input w-full border p-2 rounded-xl text-[9px] font-bold outline-none border-emerald-100 text-slate-800"></div>`; });
+            document.getElementById('editModal').style.display = 'flex';
+        }
+        document.getElementById('editForm').onsubmit = async (e) => {
+            e.preventDefault(); const id = document.getElementById('edit_id').value, links = {}; document.querySelectorAll('.multi-link-input').forEach(input => { links[input.dataset.platform] = input.value; });
+            await _supabase.from('tasks').update({ title: document.getElementById('edit_title').value, work_type: document.getElementById('edit_work_type').value, tag: document.getElementById('edit_tag').value, description: document.getElementById('edit_description').value, status: document.getElementById('edit_status').value, start_date: document.getElementById('edit_start_date').value, date: document.getElementById('edit_date').value, channels: Array.from(document.querySelectorAll('input[name="edit_chan"]:checked')).map(cb => cb.value), executors: Array.from(document.querySelectorAll('input[name="edit_exec"]:checked')).map(cb => cb.value), links: links }).eq('id', id);
+            await loadAllData(); closeModal();
+        };
+        document.getElementById('ideaForm').onsubmit = async (e) => {
+            e.preventDefault(); const task = { id: Date.now(), title: document.getElementById('title').value, work_type: document.getElementById('work_type').value, tag: document.getElementById('tag').value, description: document.getElementById('description').value, channels: Array.from(document.querySelectorAll('input[name="chan"]:checked')).map(c => c.value), executors: Array.from(document.querySelectorAll('input[name="exec"]:checked')).map(c => c.value), responsible: sessionStorage.getItem('e_name'), start_date: document.getElementById('start_date_val').value || new Date().toISOString().split('T')[0], date: document.getElementById('date_val').value || new Date().toISOString().split('T')[0], status: 'idea', links: {}, play_counts: {}, play_count: 0, is_deleted: false };
+            await _supabase.from('tasks').insert([task]); await loadAllData(); e.target.reset(); document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
+        };
+        async function fetchSingleStat(url, platform) {
+            if (!url || url.length < 10) return 0;
+            const YT_KEY = localStorage.getItem('yt_key'), AP_TOKEN = localStorage.getItem('apify_token');
+            try {
+                if (TG_LIST.includes(platform) || url.includes('t.me/')) {
+                    let sUrl = url.trim().replace('t.me/', 't.me/s/');
+                    const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(sUrl)}`);
+                    const d = await res.json(), m = d.contents.match(/class="tgme_widget_message_views">([\d.KM]+)</i);
+                    if (m) { let t = m[1].toUpperCase(); return t.includes('K') ? parseFloat(t)*1000 : (t.includes('M') ? parseFloat(t)*1000000 : parseInt(t.replace(/\D/g,'')) || 0); }
+                }
+                if (platform === 'YouTube' && YT_KEY) {
+                    const vidId = (url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/)||[])[2];
+                    if (vidId) { const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${vidId}&key=${YT_KEY}`); const d = await res.json(); return parseInt(d.items?.[0]?.statistics?.viewCount || 0); }
+                }
+                if ((platform === 'TikTok' || platform === 'Instagram' || platform === 'VK') && AP_TOKEN) {
+                    const actor = platform === 'TikTok' ? "GdWCkxBtKWOsKjdch" : (platform === 'Instagram' ? "apify/instagram-post-scraper" : "dtrungtin/vkontakte-scraper");
+                    const input = platform === 'TikTok' ? { postURLs: [url] } : (platform === 'Instagram' ? { directUrls: [url] } : { urls: [url], mode: 'posts' });
+                    const res = await fetch(`https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${AP_TOKEN}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(input)});
+                    const d = await res.json(); if (d[0]) return d[0].playCount || d[0].videoViewCount || d[0].viewsCount || d[0].likesCount || 0;
+                }
+            } catch (e) { return 0; } return 0;
+        }
+        async function updateAllMonthStats() {
+            const btn = document.getElementById('btnUpdateAll'); btn.innerText = "..."; btn.disabled = true;
+            const tasks = contentData.filter(t => t.links && Object.keys(t.links).length > 0 && new Date(t.date).getMonth() === statsDate.getMonth());
+            for (let t of tasks) {
+                let sum = 0; let pCounts = t.play_counts || {};
+                for (let [p, url] of Object.entries(t.links)) { if (url) { const v = await fetchSingleStat(url, p); pCounts[p] = v; sum += v; } }
+                await _supabase.from('tasks').update({ play_counts: pCounts, play_count: sum }).eq('id', t.id);
+            }
+            await loadAllData(); btn.innerText = "Обновить"; btn.disabled = false;
+        }
+
+        // --- UTILS ---
+        function switchView(v) { 
+            currentView = v; ['list', 'calendar', 'stats', 'accounts'].forEach(id => { 
+                const btn = document.getElementById('btnView' + id.charAt(0).toUpperCase() + id.slice(1));
+                const view = document.getElementById('view-' + id);
+                if(view) view.classList.toggle('hidden', id !== v); 
+                if(btn) btn.classList.toggle('tab-active', id === v); 
+            });
+            document.getElementById('listControls').classList.toggle('hidden', v !== 'list'); renderAll(); 
+        }
+        async function moveToTrash(id) { await _supabase.from('tasks').update({ is_deleted: true, deleted_by: sessionStorage.getItem('e_name') }).eq('id', id); await loadAllData(); }
+        async function restoreFromTrash(id) { await _supabase.from('tasks').update({ is_deleted: false, deleted_by: null }).eq('id', id); await loadAllData(); }
+        async function finalDelete(id) { if(confirm("Навсегда?")) { await _supabase.from('tasks').delete().eq('id', id); await loadAllData(); } }
+        async function saveAdminSettings() { const yt = document.getElementById('ytApiKey').value, ap = document.getElementById('apifyToken').value; await _supabase.from('config').upsert({id: 'yt_key', value: yt}); await _supabase.from('config').upsert({id: 'apify_token', value: ap}); alert("Ок!"); await loadAllData(); }
+        function logout() { sessionStorage.clear(); location.reload(); }
+        function closeModal() { document.getElementById('editModal').style.display = 'none'; }
+        function closeTrash() { document.getElementById('trashModal').style.display = 'none'; }
+        function changeMonth(s) { viewDate.setMonth(viewDate.getMonth() + s); renderCalendar(); }
+        function toggleAllChannels(s, n) { document.getElementsByName(n).forEach(cb => cb.checked = s.checked); }
+
+        function openTrash() { 
+            const isAdmin = sessionStorage.getItem('e_role') === 'admin', list = document.getElementById('trashList'); list.innerHTML = trashData.length ? '' : '<p class="text-center py-10 opacity-30">ПУСТО</p>';
+            trashData.forEach((i) => { const div = document.createElement('div'); div.className = "flex justify-between items-center bg-white p-4 rounded-xl border mb-2 shadow-sm"; div.innerHTML = `<div><div class="text-[10px] font-black uppercase mb-1 leading-none text-slate-800">${i.title}</div><div class="text-[7px] text-rose-500 font-bold uppercase mt-1">Удалил: ${i.deleted_by || '???'}</div></div><div class="flex gap-2">${isAdmin ? `<button onclick="restoreFromTrash('${i.id}')" class="bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-[8px] font-black uppercase">RESTORE</button><button onclick="finalDelete('${i.id}')" class="bg-rose-500 text-white px-3 py-1.5 rounded-lg text-[8px] font-black uppercase">DELETE</button>` : ''}</div>`; list.appendChild(div); });
+            document.getElementById('trashModal').style.display = 'flex';
+        }
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
+            const label = document.getElementById('calendarMonthLabel'); label.innerText = new Intl.DateTimeFormat('ru-RU', { month: 'long', year: 'numeric' }).format(viewDate);
+            const y = viewDate.getFullYear(), m = viewDate.getMonth(), shift = (new Date(y, m, 1).getDay() || 7) - 1;
+            for (let i = 0; i < shift; i++) grid.appendChild(Object.assign(document.createElement('div'), {className: 'calendar-day bg-slate-50 opacity-40'}));
+            for (let d = 1; d <= new Date(y, m + 1, 0).getDate(); d++) {
+                const cell = document.createElement('div'); cell.className = 'calendar-day border-r border-b'; cell.innerHTML = `<div class="text-[9px] font-black text-slate-200">${d}</div>`;
+                const dStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                contentData.forEach(i => { if (calendarChannel === 'ALL' || i.channels?.includes(calendarChannel)) { if (i.start_date === dStr) { const item = document.createElement('div'); item.className = `calendar-item border border-dashed opacity-60`; item.innerHTML = `🚀 ${i.title}`; item.onclick = () => openEditModal(i.id); cell.appendChild(item); } if (i.date === dStr) { const item = document.createElement('div'); item.className = `calendar-item status-${i.status}`; item.innerHTML = `🏁 ${i.title}`; item.onclick = () => openEditModal(i.id); cell.appendChild(item); } } });
+                grid.appendChild(cell);
+            }
+        }
+        function renderCalendarTabs() { const container = document.getElementById('calendarTabs'); container.innerHTML = `<button onclick="setCalChannel('ALL')" class="px-3 py-2 border rounded-xl ${calendarChannel==='ALL'?'tab-active':'bg-white text-slate-400'} uppercase">ОБЩИЙ</button>`; CHANNELS.forEach(ch => container.innerHTML += `<button onclick="setCalChannel('${ch}')" class="px-3 py-2 border rounded-xl ${calendarChannel===ch?'tab-active':'bg-white text-slate-400'} uppercase">${ch}</button>`); }
+        function setCalChannel(ch) { calendarChannel = ch; renderCalendarTabs(); renderCalendar(); }
+        function renderPersonalTasks() {
+            const name = sessionStorage.getItem('e_name'), list = document.getElementById('personalTasksList');
+            const mine = contentData.filter(i => (i.executors?.includes(name) || i.responsible === name) && i.status !== 'published');
+            list.innerHTML = mine.length ? '' : '<p class="text-center py-10 opacity-20 font-black uppercase text-[8px]">Задач нет</p>';
+            mine.forEach(i => { const div = document.createElement('div'); div.className = "p-4 rounded-2xl bg-slate-800 hover:bg-slate-700 cursor-pointer transition shadow-lg mb-2"; div.onclick = () => openEditModal(i.id); div.innerHTML = `<div class="text-[7px] text-blue-400 font-black mb-1 uppercase">${i.work_type || 'Пост'}</div><div class="text-[9px] font-black uppercase text-white leading-tight">${i.title}</div>`; list.appendChild(div); });
+        }
+        checkAuth();
+    </script>
+</body>
+</html>
