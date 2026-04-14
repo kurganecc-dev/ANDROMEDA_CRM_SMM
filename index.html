@@ -26,6 +26,7 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .social-icon { width: 18px; height: 18px; display: inline-block; vertical-align: middle; transition: transform 0.2s; }
         .social-icon:hover { transform: scale(1.2); }
+        .account-card:hover { transform: translateY(-3px); transition: all 0.3s; }
     </style>
 </head>
 <body class="bg-[#f1f5f9] min-h-screen text-slate-900">
@@ -62,7 +63,7 @@
                 <div class="flex items-center gap-10">
                     <div class="flex flex-col">
                         <h1 class="text-xl font-black text-slate-900 leading-none">ANDROMEDA</h1>
-                        <span class="text-[9px] font-black text-blue-600 uppercase italic">CRM SMM Professional</span>
+                        <span class="text-[9px] font-black text-blue-600 uppercase italic">CRM SMM Pro</span>
                     </div>
                     <div class="flex bg-slate-100 p-1 rounded-xl font-black text-[9px] gap-1">
                         <button onclick="switchView('list')" id="btnViewList" class="px-5 py-2 rounded-lg transition uppercase tab-active">Список</button>
@@ -74,30 +75,28 @@
                 <div class="flex gap-4 items-center">
                     <button onclick="openTrash()" class="relative border p-2 rounded-xl bg-slate-50 shadow-sm">🗑️ <span id="trashBadge" class="absolute -top-1 -right-1 bg-slate-900 text-white text-[7px] font-bold w-4 h-4 rounded-full flex items-center justify-center">0</span></button>
                     <div id="currentUserDisplay" class="text-[10px] font-black uppercase text-slate-900 px-4 py-2 border-l border-slate-100"></div>
-                    <button onclick="logout()" class="text-rose-500 font-bold text-[9px] uppercase hover:underline">Выход</button>
+                    <button onclick="logout()" class="text-rose-500 font-bold text-[9px] uppercase hover:underline transition">Выход</button>
                 </div>
             </div>
         </header>
 
         <main class="max-w-[1800px] mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <!-- ASIDE: CREATE -->
+            <!-- CREATE TASK -->
             <aside class="lg:col-span-3 space-y-6">
                 <div class="bg-white p-6 rounded-[2rem] shadow-xl border border-slate-100 sticky top-24">
                     <form id="ideaForm" class="space-y-4">
                         <h3 class="text-[9px] font-black text-slate-300 uppercase tracking-widest text-center">Новая задача</h3>
                         <input type="text" id="title" placeholder="Тема поста" required class="w-full border-2 p-3 rounded-xl text-xs font-bold bg-slate-50 outline-none focus:border-blue-500 transition-all">
                         <div class="grid grid-cols-2 gap-2">
-                            <select id="work_type" class="w-full border-2 p-3 rounded-xl text-[10px] font-bold bg-white outline-none cursor-pointer">
-                                <option value="Пост">ПОСТ</option>
-                                <option value="Картинка">КАРТИНКА</option>
-                                <option value="Короткое видео">КОРОТКОЕ ВИДЕО</option>
-                                <option value="Длинное видео">ДЛИННОЕ ВИДЕО</option>
+                            <select id="work_type" class="w-full border-2 p-3 rounded-xl text-[10px] font-bold bg-white outline-none">
+                                <option value="Пост">ПОСТ</option><option value="Картинка">КАРТИНКА</option>
+                                <option value="Короткое видео">КОРОТКОЕ ВИДЕО</option><option value="Длинное видео">ДЛИННОЕ ВИДЕО</option>
                             </select>
-                            <select id="tag" class="w-full border-2 p-3 rounded-xl text-[10px] font-bold bg-white outline-none text-blue-600 cursor-pointer">
+                            <select id="tag" class="w-full border-2 p-3 rounded-xl text-[10px] font-bold bg-white outline-none text-blue-600">
                                 <option value="ФРК">ФРК</option><option value="УТП">УТП</option><option value="прочее">ПРОЧЕЕ</option>
                             </select>
                         </div>
-                        <textarea id="description" placeholder="Описание / ТЗ" class="w-full border-2 p-3 rounded-xl text-xs font-medium bg-slate-50 h-20 outline-none focus:border-blue-500 transition-all"></textarea>
+                        <textarea id="description" placeholder="Описание / ТЗ" class="w-full border-2 p-3 rounded-xl text-xs font-medium bg-slate-50 h-20 outline-none focus:border-blue-500"></textarea>
                         
                         <div>
                             <label class="text-[8px] font-black text-slate-400 uppercase mb-2 block flex justify-between">Площадки <label class="cursor-pointer text-blue-500 hover:underline"><input type="checkbox" onchange="toggleAllChannels(this, 'chan')"> ВСЕ</label></label>
@@ -118,17 +117,15 @@
                 </div>
             </aside>
 
-            <!-- MIDDLE: VIEWS -->
+            <!-- MIDDLE -->
             <div class="lg:col-span-6 space-y-6">
                 <div id="listControls" class="flex flex-col md:flex-row gap-4">
                     <input type="text" id="taskSearch" oninput="renderCards()" placeholder="🔍 Поиск по названию..." class="flex-1 p-4 rounded-2xl border-none shadow-sm outline-none font-bold text-xs bg-white">
-                    <select id="tagFilter" onchange="renderCards()" class="p-4 rounded-2xl border-none shadow-sm outline-none font-black text-[10px] uppercase bg-white cursor-pointer">
+                    <select id="tagFilter" onchange="renderCards()" class="p-4 rounded-2xl border-none shadow-sm outline-none font-black text-[10px] uppercase bg-white">
                         <option value="ALL">Все теги</option><option value="ФРК">ФРК</option><option value="УТП">УТП</option><option value="прочее">Прочее</option>
                     </select>
                 </div>
-
                 <div id="view-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-                
                 <div id="view-calendar" class="hidden space-y-4">
                     <div id="calendarTabs" class="flex flex-wrap gap-2 pb-2 overflow-x-auto text-[8px] font-black"></div>
                     <div class="bg-white rounded-[2rem] shadow-xl border p-6 text-center">
@@ -137,7 +134,7 @@
                             <h2 id="calendarMonthLabel" class="font-black uppercase text-xs text-slate-800"></h2>
                             <button onclick="changeMonth(1)" class="p-2 border rounded-xl hover:bg-slate-50">→</button>
                         </div>
-                        <div class="grid grid-cols-7 mb-2 text-[8px] font-black text-slate-400 uppercase text-center">
+                        <div class="grid grid-cols-7 mb-2 text-[8px] font-black text-slate-400 uppercase">
                             <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div class="text-rose-400">Сб</div><div class="text-rose-400">Вс</div>
                         </div>
                         <div id="calendarGrid" class="calendar-grid"></div>
@@ -146,28 +143,27 @@
 
                 <div id="view-stats" class="hidden space-y-6">
                     <div id="adminPanel" class="admin-only bg-slate-900 text-white p-6 rounded-[2.5rem] shadow-2xl space-y-4">
-                        <p class="text-blue-400 font-black text-[10px] uppercase tracking-widest">Конфигурация API (Общая)</p>
+                        <p class="text-blue-400 font-black text-[10px] uppercase tracking-widest">Админ: API Ключи</p>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div><label class="text-[8px] block mb-1 opacity-50 uppercase">YouTube API Key:</label><input type="password" id="ytApiKey" class="w-full bg-slate-800 rounded-xl p-3 text-xs text-white outline-none border-none"></div>
                             <div><label class="text-[8px] block mb-1 opacity-50 uppercase">Apify Token:</label><input type="password" id="apifyToken" class="w-full bg-slate-800 rounded-xl p-3 text-xs text-white outline-none border-none"></div>
                         </div>
-                        <button onclick="saveAdminSettings()" class="bg-blue-600 w-full py-3 rounded-xl font-black text-[9px] uppercase hover:bg-blue-700 transition-all">Сохранить ключи</button>
+                        <button onclick="saveAdminSettings()" class="bg-blue-600 w-full py-3 rounded-xl font-black text-[9px] uppercase hover:bg-blue-700">Сохранить для всех</button>
                     </div>
-
-                    <div class="bg-white p-6 rounded-3xl border flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm">
+                    <div class="bg-white p-6 rounded-3xl border flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm text-slate-800">
                         <div class="flex items-center gap-2">
                             <button onclick="changeStatsMonth(-1)" class="p-2 border rounded-xl hover:bg-slate-50">←</button>
-                            <h2 id="statsMonthLabel" class="font-black uppercase text-xs w-32 text-center text-slate-800"></h2>
+                            <h2 id="statsMonthLabel" class="font-black uppercase text-xs w-32 text-center"></h2>
                             <button onclick="changeStatsMonth(1)" class="p-2 border rounded-xl hover:bg-slate-50">→</button>
                         </div>
-                        <select id="statsPlatformFilter" onchange="renderStats()" class="border-2 p-2 rounded-xl text-xs font-bold w-40 outline-none cursor-pointer">
+                        <select id="statsPlatformFilter" onchange="renderStats()" class="border-2 p-2 rounded-xl text-xs font-bold w-40 outline-none">
                             <option value="ALL">ВСЕ ПЛОЩАДКИ</option>
                             <option value="YouTube">YouTube</option><option value="TikTok">TikTok</option>
                             <option value="Instagram">Instagram</option><option value="VK">VK</option><option value="Telegram">Telegram (Все)</option>
                         </select>
                         <div class="flex gap-2">
-                             <button onclick="updateAllMonthStats()" id="btnUpdateAll" class="bg-emerald-500 text-white px-4 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg">Обновить</button>
-                             <button onclick="exportStatsToCSV()" class="bg-slate-900 text-white px-4 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg">CSV</button>
+                             <button onclick="updateAllMonthStats()" id="btnUpdateAll" class="bg-emerald-500 text-white px-4 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest">Обновить</button>
+                             <button onclick="exportStatsToCSV()" class="bg-slate-900 text-white px-4 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest">CSV</button>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4 text-center">
@@ -198,7 +194,7 @@
         </main>
     </div>
 
-    <!-- MODAL EDIT -->
+    <!-- EDIT MODAL -->
     <div id="editModal" class="hidden fixed inset-0 bg-slate-900/40 items-center justify-center p-4 backdrop-blur-sm z-[100]">
         <div class="bg-white w-full max-w-5xl rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh]">
             <div class="p-5 border-b flex justify-between items-center text-slate-800">
@@ -208,24 +204,19 @@
             <form id="editForm" class="p-8 space-y-6 overflow-y-auto">
                 <input type="hidden" id="edit_id">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-[10px] font-black uppercase">
-                    <div class="space-y-4">
+                    <div class="space-y-4 text-slate-400">
                         <label>ТЕМА: <input type="text" id="edit_title" required class="w-full border p-2.5 rounded-xl bg-slate-50 mt-1 font-black outline-none text-slate-800"></label>
                         <div class="grid grid-cols-2 gap-2">
-                            <label>ТИП: <select id="edit_work_type" class="w-full border p-2.5 rounded-xl mt-1 outline-none font-black text-slate-800">
-                                <option value="Пост">ПОСТ</option>
-                                <option value="Картинка">КАРТИНКА</option>
-                                <option value="Короткое видео">КОРОТКОЕ ВИДЕО</option>
-                                <option value="Длинное видео">ДЛИННОЕ ВИДЕО</option>
-                            </select></label>
+                            <label>ТИП: <select id="edit_work_type" class="w-full border p-2.5 rounded-xl mt-1 outline-none font-black text-slate-800"><option value="Пост">ПОСТ</option><option value="Картинка">КАРТИНКА</option><option value="Короткое видео">КОРОТКОЕ ВИДЕО</option><option value="Длинное видео">ДЛИННОЕ ВИДЕО</option></select></label>
                             <label>ТЕГ: <select id="edit_tag" class="w-full border p-2.5 rounded-xl mt-1 outline-none font-black text-blue-600"><option value="ФРК">ФРК</option><option value="УТП">УТП</option><option value="прочее">ПРОЧЕЕ</option></select></label>
                         </div>
                         <label>СТАТУС: <select id="edit_status" class="w-full border p-2.5 rounded-xl mt-1 text-blue-700 font-bold outline-none"></select></label>
                         <label>ОПИСАНИЕ: <textarea id="edit_description" class="w-full border p-3 rounded-xl mt-1 h-32 normal-case font-medium outline-none text-slate-700"></textarea></label>
                     </div>
-                    <div class="space-y-4 text-slate-500">
+                    <div class="space-y-4">
                         <label>ПЛОЩАДКИ:</label>
                         <div id="editChannelList" class="multi-select-box"></div>
-                        <div class="grid grid-cols-2 gap-2 mt-4">
+                        <div class="grid grid-cols-2 gap-2 mt-4 text-slate-400">
                             <label>🚀 СТАРТ: <input type="date" id="edit_start_date" class="w-full border p-2 mt-1 outline-none font-black text-slate-800"></label>
                             <label>🏁 СРОК: <input type="date" id="edit_date" class="w-full border p-2 mt-1 outline-none font-black text-slate-800"></label>
                         </div>
@@ -234,7 +225,7 @@
                         <label>ИСПОЛНИТЕЛИ:</label>
                         <div id="editExecList" class="multi-select-box"></div>
                         <div class="p-5 bg-emerald-50 rounded-[2rem] border border-emerald-100">
-                            <label class="text-emerald-700 block mb-4 italic uppercase">Ссылки на результаты:</label>
+                            <label class="text-emerald-700 block mb-4 italic uppercase">Ссылки:</label>
                             <div id="multiLinkContainer" class="space-y-3"></div>
                         </div>
                     </div>
@@ -244,16 +235,15 @@
         </div>
     </div>
 
-    <!-- TRASH -->
+    <!-- TRASH MODAL -->
     <div id="trashModal" class="hidden fixed inset-0 bg-slate-900/60 z-[200] items-center justify-center p-4">
-        <div class="bg-white w-full max-w-2xl rounded-[2.5rem] p-8 shadow-2xl max-h-[80vh] flex flex-col">
-             <h2 class="font-black uppercase text-lg mb-6 flex justify-between text-slate-800">Корзина <button onclick="closeTrash()" class="text-slate-300 hover:text-rose-500 transition-all">&times;</button></h2>
+        <div class="bg-white w-full max-w-2xl rounded-[2.5rem] p-8 shadow-2xl max-h-[80vh] flex flex-col text-slate-800">
+             <h2 class="font-black uppercase text-lg mb-6 flex justify-between">Корзина <button onclick="closeTrash()" class="text-slate-300 hover:text-rose-500">&times;</button></h2>
              <div id="trashList" class="space-y-3 overflow-y-auto pr-2 text-slate-800"></div>
         </div>
     </div>
 
     <script>
-        // --- SUPABASE CONFIG ---
         const SUPABASE_URL = "https://snfdwowgattembkueops.supabase.co";
         const SUPABASE_KEY = "sb_publishable_thlOsL_shAho6ohPV-KVDg_k-GEm5jW";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -261,11 +251,10 @@
         const TEAM = [{ name: "Андрей Чебыкин", color: "#2563eb" }, { name: "Павел Храмцов", color: "#16a34a" }, { name: "Дмитрий Хандюков", color: "#4f46e5" }, { name: "Олеся Подъелец", color: "#e11d48" }, { name: "Татьяна Петрова", color: "#d97706" }, { name: "Яна Толкаченко", color: "#9333ea" }, { name: "Ксения Потапенкова", color: "#db2777" }, { name: "Олег Сытов", color: "#0891b2" }, { name: "Любовь Карелина", color: "#ea580c" }, { name: "Арина Краснова", color: "#0d9488" }, { name: "Евгения Щитова", color: "#10b981" }, { name: "Анастасия Ершова", color: "#6366f1" }];
         const CHANNELS = ["YouTube", "TikTok", "Instagram", "VK", "Этажи SMM", "NewsRoom", "Echat", "Max", "ОК"];
         const TG_LIST = ["Этажи SMM", "NewsRoom", "Echat", "Max"];
-        
         const WORK_ACCOUNTS = [
             { name: "Вконтакте", platform: "VK", url: "https://vk.com/etagi.realty", handle: "@etagi.realty" },
             { name: "NewsRoom", platform: "Telegram", url: "https://t.me/nedvij_etagi", handle: "@nedvij_etagi" },
-            { name: "Этажи SMM", platform: "Telegram", url: "https://t.me/+ZVAp3anMnm9lNmQy", handle: "Private Access" },
+            { name: "Этажи SMM", platform: "Telegram", url: "https://t.me/+ZVAp3anMnm9lNmQy", handle: "Channel Access" },
             { name: "Одноклассники", platform: "ОК", url: "https://ok.ru/etagi.realty", handle: "etagi.realty" },
             { name: "YouTube", platform: "YouTube", url: "https://www.youtube.com/@etagi.realty", handle: "@etagi.realty" },
             { name: "Instagram", platform: "Instagram", url: "https://www.instagram.com/etagi_com", handle: "@etagi_com" }
@@ -282,9 +271,7 @@
                 'Telegram': '<svg class="social-icon" viewBox="0 0 24 24" fill="#229ED9"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18.717-.962 4.084-1.362 5.462-.168.583-.446.778-.654.797-.453.041-.797-.3-.1.238-.696-.462-1.104-.755-1.885-1.267-.9-.592-.317-.918.197-1.45.134-.139 2.474-2.27 2.52-2.463.005-.024.01-.114-.043-.16-.053-.047-.131-.031-.188-.018-.08.018-1.363.864-3.843 2.534-.364.25-.693.374-.987.368-.324-.007-.946-.184-1.409-.334-.568-.184-1.018-.281-1.002-.593.008-.163.233-.33.673-.501 2.73-1.188 4.545-1.972 5.446-2.352 2.596-1.093 3.136-1.282 3.487-1.288.077-.001.25.019.362.11s.145.228.156.33c.012.11.02.261.01.42z"/></svg>',
                 'ОК': '<svg class="social-icon" viewBox="0 0 24 24" fill="#EE8208"><path d="M12 11.234a4.195 4.195 0 1 0 0-8.39 4.195 4.195 0 0 0 0 8.39zm0-10.334c6.126 0 11.101 4.975 11.101 11.1 0 6.125-4.975 11.1-11.101 11.1-6.125 0-11.1-4.975-11.1-11.1 0-6.125 4.975-11.1 11.1-11.1zM12 13.04c-3.135 0-5.834 1.83-7.11 4.496l-3.32-2.213a11.1 11.1 0 0 1 20.86 0l-3.32 2.213c-1.276-2.665-3.975-4.496-7.11-4.496z"/></svg>'
             };
-            let norm = platform;
-            if (TG_LIST.includes(platform)) norm = 'Telegram';
-            return icons[norm] || '🔗';
+            let norm = platform; if (TG_LIST.includes(platform)) norm = 'Telegram'; return icons[norm] || '🔗';
         }
 
         // --- AUTH ---
@@ -335,7 +322,24 @@
             renderAccounts();
         }
 
-        // --- STATS ENGINE ---
+        // --- ACCOUNTS ---
+        function renderAccounts() {
+            const container = document.getElementById('view-accounts');
+            container.innerHTML = WORK_ACCOUNTS.map(acc => `
+                <a href="${acc.url}" target="_blank" class="account-card bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center justify-between hover:shadow-xl transition-all">
+                    <div class="flex items-center gap-5">
+                        <div class="p-4 bg-slate-50 rounded-[1.5rem] scale-125">${getSocialIcon(acc.platform)}</div>
+                        <div>
+                            <h4 class="font-black text-xs uppercase text-slate-800">${acc.name}</h4>
+                            <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">${acc.handle}</p>
+                        </div>
+                    </div>
+                    <div class="text-blue-500 font-black text-[10px] uppercase">Открыть ↗</div>
+                </a>
+            `).join('');
+        }
+
+        // --- STATS & MONTH CONTROL ---
         function changeStatsMonth(offset) { statsDate.setMonth(statsDate.getMonth() + offset); renderStats(); }
 
         function renderStats() {
@@ -346,7 +350,6 @@
                 const d = new Date(i.date);
                 const dateMatch = d.getMonth() === statsDate.getMonth() && d.getFullYear() === statsDate.getFullYear();
                 if (!dateMatch) return false;
-                // В статистику попадают только опубликованные
                 if (i.status !== 'published') return false;
                 if (filter === 'ALL') return true;
                 if (filter === 'Telegram') return TG_LIST.some(tg => i.links && i.links[tg]);
@@ -371,10 +374,7 @@
         }
 
         function exportStatsToCSV() {
-            const results = contentData.filter(i => { 
-                const d = new Date(i.date); 
-                return i.status === 'published' && d.getMonth() === statsDate.getMonth() && d.getFullYear() === statsDate.getFullYear(); 
-            });
+            const results = contentData.filter(i => { const d = new Date(i.date); return i.status === 'published' && d.getMonth() === statsDate.getMonth() && d.getFullYear() === statsDate.getFullYear(); });
             if (results.length === 0) return alert("Нет данных");
             let csv = "\uFEFFДата;Тема;Тег;Охват;Ответственный;Ссылки\n";
             results.forEach(i => {
@@ -382,48 +382,10 @@
                 csv += `"${new Date(i.date).toLocaleDateString('ru-RU')}";"${i.title}";"${i.tag}";"${i.play_count}";"${i.responsible}";"${lnks}"\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }), url = URL.createObjectURL(blob), link = document.createElement("a");
-            link.href = url; link.download = `Report_${statsDate.getMonth()+1}_${statsDate.getFullYear()}.csv`; link.click();
+            link.href = url; link.download = `Report_${statsDate.getMonth()+1}.csv`; link.click();
         }
 
-        // --- CRUD & UI CORE ---
-        function renderAll() { 
-            if (currentView === 'list') renderCards(); 
-            if (currentView === 'calendar') renderCalendar(); 
-            if (currentView === 'stats') renderStats(); 
-            document.getElementById('trashBadge').innerText = trashData.length; 
-            renderPersonalTasks(); 
-        }
-
-        function renderCards() {
-            const query = document.getElementById('taskSearch').value.toLowerCase();
-            const tagF = document.getElementById('tagFilter').value;
-            const container = document.getElementById('view-list'); container.innerHTML = '';
-            contentData.filter(i => (i.title.toLowerCase().includes(query)) && (tagF === 'ALL' || i.tag === tagF)).sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(i => {
-                const div = document.createElement('div'), tagColor = i.tag === 'ФРК' ? 'bg-amber-100 text-amber-600' : (i.tag === 'УТП' ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500');
-                div.className = `bg-white p-6 rounded-[2rem] border-2 border-slate-50 status-${i.status} shadow-sm flex flex-col transition-all hover:shadow-md`;
-                div.innerHTML = `<div class="flex justify-between mb-4"><div class="flex flex-wrap gap-1">${i.channels.map(c => `<span class="bg-slate-900 text-white text-[7px] px-2 py-0.5 rounded font-black uppercase">${c}</span>`).join('')}</div><div class="flex gap-2"><button onclick="openEditModal('${i.id}')" class="text-slate-300 hover:text-blue-500 transition-colors">✏️</button><button onclick="moveToTrash('${i.id}')" class="text-slate-300 hover:text-rose-500 transition-colors">✕</button></div></div><div class="flex items-center gap-2 mb-1"><span class="text-[7px] font-black px-2 py-0.5 rounded-full uppercase ${tagColor}">${i.tag || 'прочее'}</span><div class="text-[8px] font-black text-blue-500 uppercase">${i.work_type || 'Пост'}</div></div><h3 class="font-black text-xs uppercase mb-3 leading-tight text-slate-800">${i.title}</h3><div class="text-[8px] font-bold text-slate-400 mt-auto border-t pt-3 flex justify-between items-center"><span>${i.responsible}</span><span class="text-emerald-600 font-black bg-emerald-50 px-2 py-1 rounded">👁️ ${Number(i.play_count || 0).toLocaleString()}</span></div>`;
-                container.appendChild(div);
-            });
-        }
-
-        // --- ACCOUNT RENDER ---
-        function renderAccounts() {
-            const container = document.getElementById('view-accounts');
-            container.innerHTML = WORK_ACCOUNTS.map(acc => `
-                <a href="${acc.url}" target="_blank" class="account-card bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center justify-between hover:shadow-xl transition-all">
-                    <div class="flex items-center gap-5">
-                        <div class="p-4 bg-slate-50 rounded-[1.5rem] scale-125">${getSocialIcon(acc.platform)}</div>
-                        <div>
-                            <h4 class="font-black text-xs uppercase text-slate-800">${acc.name}</h4>
-                            <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">${acc.handle}</p>
-                        </div>
-                    </div>
-                    <div class="text-blue-500 font-black text-[10px] uppercase">Открыть ↗</div>
-                </a>
-            `).join('');
-        }
-
-        // (The rest of JS: Chat, fetchSingleStat, EditModal, MoveToTrash, etc. remains the same for stability)
+        // --- CHAT ---
         async function setupChat() {
             const { data } = await _supabase.from('team_chat').select('*').order('created_at', { ascending: true }).limit(50);
             if (data) renderMessages(data);
@@ -448,6 +410,25 @@
         }
         async function deleteMessage(id) { if (confirm("Удалить?")) await _supabase.from('team_chat').delete().eq('id', id); }
 
+        // --- CRUD & UI ---
+        function renderAll() { 
+            if (currentView === 'list') renderCards(); 
+            if (currentView === 'calendar') renderCalendar(); 
+            if (currentView === 'stats') renderStats(); 
+            document.getElementById('trashBadge').innerText = trashData.length; 
+            renderPersonalTasks(); 
+        }
+        function renderCards() {
+            const query = document.getElementById('taskSearch').value.toLowerCase();
+            const tagF = document.getElementById('tagFilter').value;
+            const container = document.getElementById('view-list'); container.innerHTML = '';
+            contentData.filter(i => (i.title.toLowerCase().includes(query)) && (tagF === 'ALL' || i.tag === tagF)).sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(i => {
+                const div = document.createElement('div'), tagColor = i.tag === 'ФРК' ? 'bg-amber-100 text-amber-600' : (i.tag === 'УТП' ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500');
+                div.className = `bg-white p-6 rounded-[2rem] border-2 border-slate-50 status-${i.status} shadow-sm flex flex-col transition-all hover:shadow-md`;
+                div.innerHTML = `<div class="flex justify-between mb-4"><div class="flex flex-wrap gap-1">${i.channels.map(c => `<span class="bg-slate-900 text-white text-[7px] px-2 py-0.5 rounded font-black uppercase">${c}</span>`).join('')}</div><div class="flex gap-2"><button onclick="openEditModal('${i.id}')" class="text-slate-300 hover:text-blue-500 transition-colors">✏️</button><button onclick="moveToTrash('${i.id}')" class="text-slate-300 hover:text-rose-500 transition-colors">✕</button></div></div><div class="flex items-center gap-2 mb-1"><span class="text-[7px] font-black px-2 py-0.5 rounded-full uppercase ${tagColor}">${i.tag || 'прочее'}</span><div class="text-[8px] font-black text-blue-500 uppercase">${i.work_type || 'Пост'}</div></div><h3 class="font-black text-xs uppercase mb-3 leading-tight text-slate-800">${i.title}</h3><div class="text-[8px] font-bold text-slate-400 mt-auto border-t pt-3 flex justify-between items-center"><span>${i.responsible}</span><span class="text-emerald-600 font-black bg-emerald-50 px-2 py-1 rounded">👁️ ${Number(i.play_count || 0).toLocaleString()}</span></div>`;
+                container.appendChild(div);
+            });
+        }
         function openEditModal(id) {
             const i = contentData.find(x => String(x.id) === String(id)); if(!i) return;
             document.getElementById('edit_id').value = i.id; document.getElementById('edit_title').value = i.title;
