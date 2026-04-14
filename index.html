@@ -36,7 +36,7 @@
             <h1 class="text-3xl font-black uppercase tracking-tighter mb-1 text-slate-900">ANDROMEDA</h1>
             <p class="text-blue-600 font-bold uppercase text-[9px] mb-10 italic tracking-[0.3em]">CRM SMM SYSTEM</p>
             <div class="space-y-4">
-                <select id="loginUser" class="w-full border-2 p-3.5 rounded-2xl font-bold outline-none text-xs bg-slate-50 text-center appearance-none cursor-pointer text-slate-800">
+                <select id="loginUser" class="w-full border-2 p-3.5 rounded-2xl font-bold outline-none text-xs bg-slate-50 text-center appearance-none cursor-pointer">
                     <option value="Андрей Чебыкин">Андрей Чебыкин</option>
                     <option value="Павел Храмцов">Павел Храмцов</option>
                     <option value="Дмитрий Хандюков">Дмитрий Хандюков</option>
@@ -48,8 +48,8 @@
                     <option value="Анастасия Ершова">Анастасия Ершова</option>
                     <option value="admin">Администратор</option>
                 </select>
-                <input type="password" id="loginPass" placeholder="Пароль" class="w-full border-2 p-3.5 rounded-2xl font-bold text-center outline-none">
-                <button onclick="handleLogin()" id="loginBtn" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl uppercase tracking-widest text-xs hover:bg-black transition-all active:scale-95">Войти</button>
+                <input type="password" id="loginPass" placeholder="Пароль" class="w-full border-2 p-3.5 rounded-2xl font-bold text-center outline-none focus:border-blue-500">
+                <button onclick="handleLogin()" id="loginBtn" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl uppercase tracking-widest text-xs hover:bg-black transition-all">Войти</button>
                 <p id="loginError" class="text-rose-500 text-[10px] font-black uppercase hidden mt-4 italic">Ошибка доступа</p>
             </div>
         </div>
@@ -74,7 +74,7 @@
                 <div class="flex gap-4 items-center">
                     <button onclick="openTrash()" class="relative border p-2 rounded-xl bg-slate-50 shadow-sm">🗑️ <span id="trashBadge" class="absolute -top-1 -right-1 bg-slate-900 text-white text-[7px] font-bold w-4 h-4 rounded-full flex items-center justify-center">0</span></button>
                     <div id="currentUserDisplay" class="text-[10px] font-black uppercase text-slate-900 px-4 py-2 border-l border-slate-100"></div>
-                    <button onclick="logout()" class="text-rose-500 font-bold text-[9px] uppercase hover:underline transition">Выход</button>
+                    <button onclick="logout()" class="text-rose-500 font-bold text-[9px] uppercase hover:underline">Выход</button>
                 </div>
             </div>
         </header>
@@ -95,7 +95,7 @@
                                 <option value="ФРК">ФРК</option><option value="УТП">УТП</option><option value="прочее">ПРОЧЕЕ</option>
                             </select>
                         </div>
-                        <textarea id="description" placeholder="Описание / ТЗ" class="w-full border-2 p-3 rounded-xl text-xs font-medium bg-slate-50 h-20 outline-none focus:border-blue-500 transition-all"></textarea>
+                        <textarea id="description" placeholder="ТЗ / Описание задачи" class="w-full border-2 p-3 rounded-xl text-xs font-medium bg-slate-50 h-20 outline-none focus:border-blue-500 transition-all"></textarea>
                         
                         <div>
                             <label class="text-[8px] font-black text-slate-400 uppercase mb-2 block flex justify-between text-slate-500">Площадки <label class="cursor-pointer text-blue-500 hover:underline"><input type="checkbox" onchange="toggleAllChannels(this, 'chan')"> ВСЕ</label></label>
@@ -117,7 +117,7 @@
             </aside>
 
             <!-- MIDDLE: VIEWS -->
-            <div class="lg:col-span-6 space-y-6">
+            <div class="lg:col-span-6 space-y-6 text-slate-800">
                 <div id="listControls" class="flex flex-col md:flex-row gap-4">
                     <input type="text" id="taskSearch" oninput="renderCards()" placeholder="🔍 Поиск по названию..." class="flex-1 p-4 rounded-2xl border-none shadow-sm outline-none font-bold text-xs bg-white">
                     <select id="tagFilter" onchange="renderCards()" class="p-4 rounded-2xl border-none shadow-sm outline-none font-black text-[10px] uppercase bg-white cursor-pointer">
@@ -130,7 +130,7 @@
                 <div id="view-calendar" class="hidden space-y-4">
                     <div id="calendarTabs" class="flex flex-wrap gap-2 pb-2 overflow-x-auto text-[8px] font-black"></div>
                     <div class="bg-white rounded-[2rem] shadow-xl border p-6 text-center">
-                        <div class="flex justify-between items-center mb-4 text-slate-800">
+                        <div class="flex justify-between items-center mb-4">
                             <button onclick="changeMonth(-1)" class="p-2 border rounded-xl hover:bg-slate-50">←</button>
                             <h2 id="calendarMonthLabel" class="font-black uppercase text-xs"></h2>
                             <button onclick="changeMonth(1)" class="p-2 border rounded-xl hover:bg-slate-50">→</button>
@@ -142,12 +142,12 @@
                     </div>
                 </div>
 
-                <div id="view-stats" class="hidden space-y-6 text-slate-800 font-bold">
+                <div id="view-stats" class="hidden space-y-6">
                     <div id="adminPanel" class="admin-only bg-slate-900 text-white p-6 rounded-[2.5rem] shadow-2xl space-y-4">
-                        <p class="text-blue-400 font-black text-[10px] uppercase tracking-widest">Админ: Ключи API</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-300">
-                            <div><label class="text-[8px] block mb-1 uppercase">YouTube Key:</label><input type="password" id="ytApiKey" class="w-full bg-slate-800 rounded-xl p-3 text-xs outline-none border-none text-white"></div>
-                            <div><label class="text-[8px] block mb-1 uppercase">Apify Token:</label><input type="password" id="apifyToken" class="w-full bg-slate-800 rounded-xl p-3 text-xs outline-none border-none text-white"></div>
+                        <p class="text-blue-400 font-black text-[10px] uppercase tracking-widest text-center">Конфигурация API (Общая)</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label class="text-[8px] block mb-1 opacity-50 uppercase">YouTube API Key:</label><input type="password" id="ytApiKey" class="w-full bg-slate-800 rounded-xl p-3 text-xs text-white outline-none border-none"></div>
+                            <div><label class="text-[8px] block mb-1 opacity-50 uppercase">Apify Token:</label><input type="password" id="apifyToken" class="w-full bg-slate-800 rounded-xl p-3 text-xs text-white outline-none border-none"></div>
                         </div>
                         <button onclick="saveAdminSettings()" class="bg-blue-600 w-full py-3 rounded-xl font-black text-[9px] uppercase hover:bg-blue-700 transition-all">Сохранить для всех</button>
                     </div>
@@ -155,7 +155,7 @@
                     <div class="bg-white p-6 rounded-3xl border flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm">
                         <div class="flex items-center gap-2">
                             <button onclick="changeStatsMonth(-1)" class="p-2 border rounded-xl hover:bg-slate-50">←</button>
-                            <h2 id="statsMonthLabel" class="font-black uppercase text-xs w-32 text-center"></h2>
+                            <h2 id="statsMonthLabel" class="font-black uppercase text-xs w-32 text-center text-slate-800"></h2>
                             <button onclick="changeStatsMonth(1)" class="p-2 border rounded-xl hover:bg-slate-50">→</button>
                         </div>
                         <select id="statsPlatformFilter" onchange="renderStats()" class="border-2 p-2 rounded-xl text-xs font-bold w-40 outline-none cursor-pointer">
@@ -164,13 +164,13 @@
                             <option value="Instagram">Instagram</option><option value="VK">VK</option><option value="Telegram">Telegram (Все)</option>
                         </select>
                         <div class="flex gap-2">
-                             <button onclick="updateAllMonthStats()" id="btnUpdateAll" class="bg-emerald-500 text-white px-4 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg">Обновить</button>
-                             <button onclick="exportStatsToCSV()" class="bg-slate-900 text-white px-4 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg">CSV</button>
+                             <button onclick="updateAllMonthStats()" id="btnUpdateAll" class="bg-emerald-500 text-white px-4 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg hover:bg-emerald-600 transition-all">Обновить</button>
+                             <button onclick="exportStatsToCSV()" class="bg-slate-900 text-white px-4 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg hover:bg-black transition-all">CSV</button>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4 text-center">
-                        <div class="bg-white p-6 rounded-3xl border shadow-sm"><p class="text-[9px] font-black text-slate-400 uppercase mb-1 text-center">Опубликовано</p><h2 id="stat-total" class="text-3xl font-[900]">0</h2></div>
-                        <div class="bg-white p-6 rounded-3xl border text-emerald-600 shadow-sm"><p class="text-[9px] font-black text-slate-400 uppercase mb-1 text-center">Общий охват</p><h2 id="stat-views" class="text-3xl font-[900]">0</h2></div>
+                        <div class="bg-white p-6 rounded-3xl border shadow-sm"><p class="text-[9px] font-black text-slate-400 uppercase mb-1">Опубликовано</p><h2 id="stat-total" class="text-3xl font-[900] text-slate-800">0</h2></div>
+                        <div class="bg-white p-6 rounded-3xl border text-emerald-600 shadow-sm"><p class="text-[9px] font-black text-slate-400 uppercase mb-1 text-emerald-600">Суммарный охват</p><h2 id="stat-views" class="text-3xl font-[900]">0</h2></div>
                     </div>
                     <div id="statsTableContainer" class="bg-white rounded-3xl border overflow-x-auto shadow-sm"></div>
                 </div>
@@ -178,13 +178,13 @@
                 <div id="view-accounts" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6"></div>
             </div>
 
-            <!-- RIGHT: TRACKER & CHAT -->
-            <aside class="lg:col-span-3 space-y-6">
-                <div class="bg-slate-900 p-6 rounded-[2.5rem] shadow-2xl text-white min-h-[250px]">
+            <!-- RIGHT: CHAT & TASKS -->
+            <aside class="lg:col-span-3 space-y-6 text-slate-200">
+                <div class="bg-slate-900 p-6 rounded-[2.5rem] shadow-2xl min-h-[250px]">
                     <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-6 border-b border-slate-800 pb-4">Задачи в работе</h3>
                     <div id="personalTasksList" class="space-y-4 max-h-[300px] overflow-y-auto pr-1"></div>
                 </div>
-                <div class="bg-slate-900 p-6 rounded-[2.5rem] shadow-2xl text-white flex flex-col h-[450px]">
+                <div class="bg-slate-900 p-6 rounded-[2.5rem] shadow-2xl flex flex-col h-[450px]">
                     <h3 class="text-[10px] font-black uppercase tracking-widest text-blue-500 mb-4 border-b border-slate-800 pb-4">Командный чат</h3>
                     <div id="chatMessages" class="flex-1 overflow-y-auto space-y-4 pr-2 mb-4 text-xs"></div>
                     <div class="flex gap-2 bg-slate-800 p-2 rounded-2xl">
@@ -199,8 +199,8 @@
     <!-- MODAL EDIT -->
     <div id="editModal" class="hidden fixed inset-0 bg-slate-900/40 items-center justify-center p-4 backdrop-blur-sm z-[100]">
         <div class="bg-white w-full max-w-5xl rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh]">
-            <div class="p-5 border-b flex justify-between items-center text-slate-800 font-black uppercase">
-                <h2 class="font-black">Правка задачи</h2>
+            <div class="p-5 border-b flex justify-between items-center text-slate-800">
+                <h2 class="font-black uppercase">Правка задачи</h2>
                 <button onclick="closeModal()" class="text-slate-300 hover:text-rose-500 text-4xl">&times;</button>
             </div>
             <form id="editForm" class="p-8 space-y-6 overflow-y-auto">
@@ -218,7 +218,7 @@
                     <div class="space-y-4 text-slate-400">
                         <label>ПЛОЩАДКИ:</label>
                         <div id="editChannelList" class="multi-select-box"></div>
-                        <div class="grid grid-cols-2 gap-2 mt-4">
+                        <div class="grid grid-cols-2 gap-2 mt-4 text-slate-400">
                             <label>🚀 СТАРТ: <input type="date" id="edit_start_date" class="w-full border p-2 mt-1 outline-none font-black text-slate-800"></label>
                             <label>🏁 СРОК: <input type="date" id="edit_date" class="w-full border p-2 mt-1 outline-none font-black text-slate-800"></label>
                         </div>
@@ -228,7 +228,7 @@
                         <div id="editExecList" class="multi-select-box"></div>
                         <div class="p-5 bg-emerald-50 rounded-[2rem] border border-emerald-100">
                             <label class="text-emerald-700 block mb-4 italic uppercase">Ссылки на результаты:</label>
-                            <div id="multiLinkContainer" class="space-y-3"></div>
+                            <div id="multiLinkContainer" class="space-y-3 text-slate-400"></div>
                         </div>
                     </div>
                 </div>
@@ -237,11 +237,11 @@
         </div>
     </div>
 
-    <!-- TRASH MODAL -->
+    <!-- TRASH -->
     <div id="trashModal" class="hidden fixed inset-0 bg-slate-900/60 z-[200] items-center justify-center p-4">
         <div class="bg-white w-full max-w-2xl rounded-[2.5rem] p-8 shadow-2xl max-h-[80vh] flex flex-col text-slate-800">
              <h2 class="font-black uppercase text-lg mb-6 flex justify-between">Корзина <button onclick="closeTrash()" class="text-slate-300 hover:text-rose-500 transition-all">&times;</button></h2>
-             <div id="trashList" class="space-y-3 overflow-y-auto pr-2"></div>
+             <div id="trashList" class="space-y-3 overflow-y-auto pr-2 text-slate-800"></div>
         </div>
     </div>
 
@@ -257,7 +257,7 @@
         const WORK_ACCOUNTS = [
             { name: "Вконтакте", platform: "VK", url: "https://vk.com/etagi.realty", handle: "@etagi.realty" },
             { name: "NewsRoom", platform: "Telegram", url: "https://t.me/nedvij_etagi", handle: "@nedvij_etagi" },
-            { name: "Этажи SMM", platform: "Telegram", url: "https://t.me/+ZVAp3anMnm9lNmQy", handle: "Private Access" },
+            { name: "Этажи SMM", platform: "Telegram", url: "https://t.me/+ZVAp3anMnm9lNmQy", handle: "Channel Access" },
             { name: "Одноклассники", platform: "ОК", url: "https://ok.ru/etagi.realty", handle: "etagi.realty" },
             { name: "YouTube", platform: "YouTube", url: "https://www.youtube.com/@etagi.realty", handle: "@etagi.realty" },
             { name: "Instagram", platform: "Instagram", url: "https://www.instagram.com/etagi_com", handle: "@etagi_com" }
@@ -325,38 +325,72 @@
             renderAccounts();
         }
 
-        // --- ACCOUNTS ---
-        function renderAccounts() {
-            const container = document.getElementById('view-accounts');
-            container.innerHTML = WORK_ACCOUNTS.map(acc => `
-                <a href="${acc.url}" target="_blank" class="account-card bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center justify-between hover:shadow-xl transition-all">
-                    <div class="flex items-center gap-5">
-                        <div class="p-4 bg-slate-50 rounded-[1.5rem] scale-125">${getSocialIcon(acc.platform)}</div>
-                        <div>
-                            <h4 class="font-black text-xs uppercase text-slate-800">${acc.name}</h4>
-                            <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">${acc.handle}</p>
-                        </div>
-                    </div>
-                    <div class="text-blue-500 font-black text-[10px] uppercase">Открыть ↗</div>
-                </a>
-            `).join('');
+        // --- STATS ENGINE ---
+        function cleanUrl(url) { try { let u = new URL(url.trim()); return u.origin + u.pathname; } catch(e) { return url.trim(); } }
+
+        async function fetchSingleStat(url, platform) {
+            if (!url || url.length < 5) return 0;
+            const cleaned = cleanUrl(url);
+            const YT_KEY = localStorage.getItem('yt_key'), AP_TOKEN = localStorage.getItem('apify_token');
+
+            try {
+                // VK Logic
+                if (platform === 'VK' && AP_TOKEN) {
+                    const actor = "apify/vkontakte-scraper";
+                    const input = { startUrls: [{ url: cleaned }], maxItems: 1 };
+                    const res = await fetch(`https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${AP_TOKEN}`, {
+                        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(input)});
+                    const d = await res.json();
+                    console.log("VK Debug:", d[0]);
+                    if (d[0]) return d[0].viewsCount || d[0].views?.count || d[0].stats?.views || d[0].likesCount || 0;
+                }
+                // TG
+                if (TG_LIST.includes(platform) || cleaned.includes('t.me/')) {
+                    let sUrl = cleaned.replace('t.me/', 't.me/s/');
+                    const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(sUrl)}`);
+                    const d = await res.json(), m = d.contents.match(/class="tgme_widget_message_views">([\d.KM]+)</i);
+                    if (m) { let t = m[1].toUpperCase(); return t.includes('K') ? parseFloat(t)*1000 : (t.includes('M') ? parseFloat(t)*1000000 : parseInt(t.replace(/\D/g,'')) || 0); }
+                }
+                // YT
+                if (platform === 'YouTube' && YT_KEY) {
+                    const vidId = (cleaned.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/)||[])[2];
+                    if (vidId) { const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${vidId}&key=${YT_KEY}`); const d = await res.json(); return parseInt(d.items?.[0]?.statistics?.viewCount || 0); }
+                }
+                // IG/TT
+                if ((platform === 'TikTok' || platform === 'Instagram') && AP_TOKEN) {
+                    const actor = platform === 'TikTok' ? "GdWCkxBtKWOsKjdch" : "apify/instagram-post-scraper";
+                    const input = platform === 'TikTok' ? { postURLs: [cleaned] } : { directUrls: [cleaned], resultsLimit: 1 };
+                    const res = await fetch(`https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${AP_TOKEN}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(input)});
+                    const d = await res.json();
+                    console.log(`${platform} Debug:`, d[0]);
+                    if (d[0]) {
+                         if (platform === 'TikTok') return d[0].playCount || 0;
+                         return d[0].videoViewCount || d[0].videoPlayCount || d[0].displayResources?.[0]?.config_width || d[0].likesCount || 0;
+                    }
+                }
+            } catch (e) { console.error("Fetch failed for " + platform, e); return 0; }
+            return 0;
         }
 
-        // --- STATS & CSV ---
-        function changeStatsMonth(offset) { statsDate.setMonth(statsDate.getMonth() + offset); renderStats(); }
+        async function updateAllMonthStats() {
+            const btn = document.getElementById('btnUpdateAll'); btn.innerText = "..."; btn.disabled = true;
+            const tasks = contentData.filter(t => t.links && Object.keys(t.links).length > 0 && new Date(t.date).getMonth() === statsDate.getMonth());
+            for (let t of tasks) {
+                let sum = 0; let pCounts = t.play_counts || {};
+                for (let [p, url] of Object.entries(t.links)) { if (url) { const v = await fetchSingleStat(url, p); pCounts[p] = v; sum += v; } }
+                await _supabase.from('tasks').update({ play_counts: pCounts, play_count: sum }).eq('id', t.id);
+            }
+            await loadAllData(); btn.innerText = "Обновить"; btn.disabled = false;
+        }
 
+        // --- RENDERING ---
         function renderStats() {
             const filter = document.getElementById('statsPlatformFilter').value, label = document.getElementById('statsMonthLabel');
             label.innerText = statsDate.toLocaleString('ru-RU', { month: 'long', year: 'numeric' });
             let totalV = 0, totalP = 0;
             const results = contentData.filter(i => {
                 const d = new Date(i.date);
-                const dateMatch = d.getMonth() === statsDate.getMonth() && d.getFullYear() === statsDate.getFullYear();
-                if (!dateMatch) return false;
-                if (i.status !== 'published') return false;
-                if (filter === 'ALL') return true;
-                if (filter === 'Telegram') return TG_LIST.some(tg => i.links && i.links[tg]);
-                return i.links && i.links[filter];
+                return d.getMonth() === statsDate.getMonth() && d.getFullYear() === statsDate.getFullYear() && i.status === 'published' && (filter === 'ALL' || (i.links && i.links[filter]) || (filter === 'Telegram' && TG_LIST.some(tg => i.links && i.links[tg])));
             });
             let html = `<table class="w-full text-left text-[10px] text-slate-800 font-black uppercase"><thead class="bg-slate-50 text-[8px] font-black uppercase text-slate-400"><tr><th class="p-4">Дата</th><th class="p-4">Тема</th><th class="p-4">Охват</th><th class="p-4 text-center">Линки</th></tr></thead><tbody>`;
             results.forEach(i => {
@@ -376,62 +410,36 @@
             document.getElementById('statsTableContainer').innerHTML = html + `</tbody></table>`;
         }
 
-        function exportStatsToCSV() {
-            const results = contentData.filter(i => { const d = new Date(i.date); return i.status === 'published' && d.getMonth() === statsDate.getMonth() && d.getFullYear() === statsDate.getFullYear(); });
-            if (results.length === 0) return alert("Нет данных");
-            let csv = "\uFEFFДата;Тема;Тег;Тип;Охват;Ответственный;Ссылки\n";
-            results.forEach(i => {
-                const lnks = Object.values(i.links || {}).filter(u => u).join(' | ');
-                csv += `"${new Date(i.date).toLocaleDateString('ru-RU')}";"${i.title}";"${i.tag}";"${i.work_type}";"${i.play_count}";"${i.responsible}";"${lnks}"\n`;
+        function renderCards() {
+            const query = document.getElementById('taskSearch').value.toLowerCase();
+            const tagF = document.getElementById('tagFilter').value;
+            const container = document.getElementById('view-list'); container.innerHTML = '';
+            contentData.filter(i => (i.title.toLowerCase().includes(query)) && (tagF === 'ALL' || i.tag === tagF)).sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(i => {
+                const div = document.createElement('div'), tagColor = i.tag === 'ФРК' ? 'bg-amber-100 text-amber-600' : (i.tag === 'УТП' ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500');
+                div.className = `bg-white p-6 rounded-[2rem] border-2 border-slate-50 status-${i.status} shadow-sm flex flex-col transition-all hover:shadow-md`;
+                div.innerHTML = `<div class="flex justify-between mb-4"><div class="flex flex-wrap gap-1">${i.channels.map(c => `<span class="bg-slate-900 text-white text-[7px] px-2 py-0.5 rounded font-black uppercase">${c}</span>`).join('')}</div><div class="flex gap-2"><button onclick="openEditModal('${i.id}')" class="text-slate-300 hover:text-blue-500 transition-colors">✏️</button><button onclick="moveToTrash('${i.id}')" class="text-slate-300 hover:text-rose-500 transition-colors">✕</button></div></div><div class="flex items-center gap-2 mb-1"><span class="text-[7px] font-black px-2 py-0.5 rounded-full uppercase ${tagColor}">${i.tag || 'прочее'}</span><div class="text-[8px] font-black text-blue-500 uppercase">${i.work_type || 'Пост'}</div></div><h3 class="font-black text-xs uppercase mb-3 leading-tight text-slate-800">${i.title}</h3><div class="text-[8px] font-bold text-slate-400 mt-auto border-t pt-3 flex justify-between items-center"><span>${i.responsible}</span><span class="text-emerald-600 font-black bg-emerald-50 px-2 py-1 rounded">👁️ ${Number(i.play_count || 0).toLocaleString()}</span></div>`;
+                container.appendChild(div);
             });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }), url = URL.createObjectURL(blob), link = document.createElement("a");
-            link.href = url; link.download = `Report_${statsDate.getMonth()+1}_${statsDate.getFullYear()}.csv`; link.click();
         }
 
-        // --- STATS LOGIC ---
-        async function fetchSingleStat(url, platform) {
-            if (!url || url.length < 10) return 0;
-            const YT_KEY = localStorage.getItem('yt_key'), AP_TOKEN = localStorage.getItem('apify_token');
-            try {
-                if (platform === 'VK' && AP_TOKEN) {
-                    const actor = "apify/vkontakte-scraper";
-                    const input = { startUrls: [{ url: url }], maxItems: 1 };
-                    const res = await fetch(`https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${AP_TOKEN}`, {
-                        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(input)});
-                    const d = await res.json();
-                    if (d[0]) return d[0].viewsCount || d[0].views?.count || d[0].stats?.views || 0;
-                }
-                if (TG_LIST.includes(platform) || url.includes('t.me/')) {
-                    let sUrl = url.trim().replace('t.me/', 't.me/s/');
-                    const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(sUrl)}`);
-                    const d = await res.json(), m = d.contents.match(/class="tgme_widget_message_views">([\d.KM]+)</i);
-                    if (m) { let t = m[1].toUpperCase(); return t.includes('K') ? parseFloat(t)*1000 : (t.includes('M') ? parseFloat(t)*1000000 : parseInt(t.replace(/\D/g,'')) || 0); }
-                }
-                if (platform === 'YouTube' && YT_KEY) {
-                    const vidId = (url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/)||[])[2];
-                    if (vidId) { const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${vidId}&key=${YT_KEY}`); const d = await res.json(); return parseInt(d.items?.[0]?.statistics?.viewCount || 0); }
-                }
-                if ((platform === 'TikTok' || platform === 'Instagram') && AP_TOKEN) {
-                    const actor = platform === 'TikTok' ? "GdWCkxBtKWOsKjdch" : "apify/instagram-post-scraper";
-                    const input = platform === 'TikTok' ? { postURLs: [url] } : { directUrls: [url] };
-                    const res = await fetch(`https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${AP_TOKEN}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(input)});
-                    const d = await res.json(); if (d[0]) return d[0].playCount || d[0].videoViewCount || d[0].videoPlayCount || d[0].likesCount || 0;
-                }
-            } catch (e) { return 0; } return 0;
+        // --- ACCOUNT RENDER ---
+        function renderAccounts() {
+            const container = document.getElementById('view-accounts');
+            container.innerHTML = WORK_ACCOUNTS.map(acc => `
+                <a href="${acc.url}" target="_blank" class="account-card bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center justify-between hover:shadow-xl transition-all">
+                    <div class="flex items-center gap-5">
+                        <div class="p-4 bg-slate-50 rounded-[1.5rem] scale-125">${getSocialIcon(acc.platform)}</div>
+                        <div>
+                            <h4 class="font-black text-xs uppercase text-slate-800">${acc.name}</h4>
+                            <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">${acc.handle}</p>
+                        </div>
+                    </div>
+                    <div class="text-blue-500 font-black text-[10px] uppercase">Открыть ↗</div>
+                </a>
+            `).join('');
         }
 
-        async function updateAllMonthStats() {
-            const btn = document.getElementById('btnUpdateAll'); btn.innerText = "..."; btn.disabled = true;
-            const tasks = contentData.filter(t => t.links && Object.keys(t.links).length > 0 && new Date(t.date).getMonth() === statsDate.getMonth());
-            for (let t of tasks) {
-                let sum = 0; let pCounts = t.play_counts || {};
-                for (let [p, url] of Object.entries(t.links)) { if (url) { const v = await fetchSingleStat(url, p); pCounts[p] = v; sum += v; } }
-                await _supabase.from('tasks').update({ play_counts: pCounts, play_count: sum }).eq('id', t.id);
-            }
-            await loadAllData(); btn.innerText = "Обновить"; btn.disabled = false;
-        }
-
-        // --- CRUD & CHAT ---
+        // --- CHAT LOGIC ---
         async function setupChat() {
             const { data } = await _supabase.from('team_chat').select('*').order('created_at', { ascending: true }).limit(50);
             if (data) renderMessages(data);
@@ -456,24 +464,7 @@
         }
         async function deleteMessage(id) { if (confirm("Удалить?")) await _supabase.from('team_chat').delete().eq('id', id); }
 
-        function renderAll() { 
-            if (currentView === 'list') renderCards(); 
-            if (currentView === 'calendar') renderCalendar(); 
-            if (currentView === 'stats') renderStats(); 
-            document.getElementById('trashBadge').innerText = trashData.length; 
-            renderPersonalTasks(); 
-        }
-        function renderCards() {
-            const query = document.getElementById('taskSearch').value.toLowerCase();
-            const tagF = document.getElementById('tagFilter').value;
-            const container = document.getElementById('view-list'); container.innerHTML = '';
-            contentData.filter(i => (i.title.toLowerCase().includes(query)) && (tagF === 'ALL' || i.tag === tagF)).sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(i => {
-                const div = document.createElement('div'), tagColor = i.tag === 'ФРК' ? 'bg-amber-100 text-amber-600' : (i.tag === 'УТП' ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500');
-                div.className = `bg-white p-6 rounded-[2rem] border-2 border-slate-50 status-${i.status} shadow-sm flex flex-col transition-all hover:shadow-md`;
-                div.innerHTML = `<div class="flex justify-between mb-4"><div class="flex flex-wrap gap-1">${i.channels.map(c => `<span class="bg-slate-900 text-white text-[7px] px-2 py-0.5 rounded font-black uppercase">${c}</span>`).join('')}</div><div class="flex gap-2"><button onclick="openEditModal('${i.id}')" class="text-slate-300 hover:text-blue-500 transition-colors">✏️</button><button onclick="moveToTrash('${i.id}')" class="text-slate-300 hover:text-rose-500 transition-colors">✕</button></div></div><div class="flex items-center gap-2 mb-1"><span class="text-[7px] font-black px-2 py-0.5 rounded-full uppercase ${tagColor}">${i.tag || 'прочее'}</span><div class="text-[8px] font-black text-blue-500 uppercase">${i.work_type || 'Пост'}</div></div><h3 class="font-black text-xs uppercase mb-3 leading-tight text-slate-800">${i.title}</h3><div class="text-[8px] font-bold text-slate-400 mt-auto border-t pt-3 flex justify-between items-center"><span>${i.responsible}</span><span class="text-emerald-600 font-black bg-emerald-50 px-2 py-1 rounded">👁️ ${Number(i.play_count || 0).toLocaleString()}</span></div>`;
-                container.appendChild(div);
-            });
-        }
+        // --- CRUD ACTIONS ---
         function openEditModal(id) {
             const i = contentData.find(x => String(x.id) === String(id)); if(!i) return;
             document.getElementById('edit_id').value = i.id; document.getElementById('edit_title').value = i.title;
@@ -500,13 +491,12 @@
         async function finalDelete(id) { if(confirm("Навсегда?")) { await _supabase.from('tasks').delete().eq('id', id); await loadAllData(); } }
         async function saveAdminSettings() { const yt = document.getElementById('ytApiKey').value, ap = document.getElementById('apifyToken').value; await _supabase.from('config').upsert({id: 'yt_key', value: yt}); await _supabase.from('config').upsert({id: 'apify_token', value: ap}); alert("Ключи сохранены!"); await loadAllData(); }
 
-        // --- UTILS ---
+        // --- UI UTILS ---
         function switchView(v) { 
             currentView = v; ['list', 'calendar', 'stats', 'accounts'].forEach(id => { 
                 const btn = document.getElementById('btnView' + id.charAt(0).toUpperCase() + id.slice(1));
                 const view = document.getElementById('view-' + id);
-                if(view) view.classList.toggle('hidden', id !== v); 
-                if(btn) btn.classList.toggle('tab-active', id === v); 
+                if(view) view.classList.toggle('hidden', id !== v); if(btn) btn.classList.toggle('tab-active', id === v); 
             });
             document.getElementById('listControls').classList.toggle('hidden', v !== 'list'); renderAll(); 
         }
@@ -540,6 +530,14 @@
             const mine = contentData.filter(i => (i.executors?.includes(name) || i.responsible === name) && i.status !== 'published');
             list.innerHTML = mine.length ? '' : '<p class="text-center py-10 opacity-20 font-black uppercase text-[8px]">Задач нет</p>';
             mine.forEach(i => { const div = document.createElement('div'); div.className = "p-4 rounded-2xl bg-slate-800 hover:bg-slate-700 cursor-pointer transition shadow-lg mb-2"; div.onclick = () => openEditModal(i.id); div.innerHTML = `<div class="text-[7px] text-blue-400 font-black mb-1 uppercase">${i.work_type || 'Пост'}</div><div class="text-[9px] font-black uppercase text-white leading-tight">${i.title}</div>`; list.appendChild(div); });
+        }
+        function exportStatsToCSV() {
+            const results = contentData.filter(i => { const d = new Date(i.date); return i.status === 'published' && d.getMonth() === statsDate.getMonth() && d.getFullYear() === statsDate.getFullYear(); });
+            if (results.length === 0) return alert("Нет данных");
+            let csv = "\uFEFFДата;Тема;Тег;Охват;Ответственный\n";
+            results.forEach(i => csv += `"${new Date(i.date).toLocaleDateString('ru-RU')}";"${i.title}";"${i.tag}";"${i.play_count}";"${i.responsible}"\n`);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }), url = URL.createObjectURL(blob), link = document.createElement("a");
+            link.href = url; link.download = `Report_${statsDate.getMonth()+1}.csv`; link.click();
         }
         checkAuth();
     </script>
