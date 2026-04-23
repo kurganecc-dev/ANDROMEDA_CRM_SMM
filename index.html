@@ -221,6 +221,318 @@
     .inline-edit-actions button { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; font-size: 11px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
     .inline-edit-actions .primary { background: var(--text); color: white; border-color: transparent; }
     .inline-edit-actions .secondary { background: var(--surface); color: var(--text); }
+    .chat-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.chat-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.chat-presence {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #93c5fd;
+}
+
+.chat-presence-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 6px rgba(34,197,94,.12);
+}
+
+.chat-feed {
+  min-height: 380px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 6px;
+  scroll-behavior: smooth;
+}
+
+.chat-day-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 2px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.chat-day-divider::before,
+.chat-day-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(148,163,184,.18);
+}
+
+.chat-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+
+.chat-row.me {
+  align-items: flex-end;
+}
+
+.chat-row.other {
+  align-items: flex-start;
+}
+
+.chat-meta {
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.chat-author {
+  color: #cbd5e1;
+}
+
+.chat-time {
+  color: #64748b;
+}
+
+.chat-bubble {
+  position: relative;
+  max-width: 88%;
+  border-radius: 22px;
+  padding: 12px 14px;
+  box-shadow: 0 10px 24px rgba(2,6,23,.14);
+  backdrop-filter: blur(10px);
+}
+
+.chat-bubble.me {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  border-top-right-radius: 8px;
+}
+
+.chat-bubble.other {
+  background: rgba(30,41,59,.88);
+  color: #e2e8f0;
+  border: 1px solid rgba(255,255,255,.06);
+  border-top-left-radius: 8px;
+}
+
+.chat-text {
+  font-size: 13px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.chat-actions {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chat-reaction {
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.06);
+  color: #fff;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.chat-reaction:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,.12);
+}
+
+.chat-reaction.active {
+  border-color: rgba(96,165,250,.8);
+  background: rgba(59,130,246,.22);
+}
+
+.chat-emoji-bar {
+  position: absolute;
+  top: -14px;
+  display: none;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(15,23,42,.94);
+  border: 1px solid rgba(255,255,255,.06);
+  box-shadow: 0 12px 24px rgba(0,0,0,.22);
+}
+
+.chat-row.me .chat-emoji-bar {
+  left: -6px;
+  transform: translateX(-100%);
+}
+
+.chat-row.other .chat-emoji-bar {
+  right: -6px;
+  transform: translateX(100%);
+}
+
+.chat-row:hover .chat-emoji-bar {
+  display: inline-flex;
+}
+
+.chat-emoji-btn {
+  border: 0;
+  background: transparent;
+  color: white;
+  cursor: pointer;
+  border-radius: 999px;
+  width: 28px;
+  height: 28px;
+  transition: .18s ease;
+}
+
+.chat-emoji-btn:hover {
+  background: rgba(255,255,255,.08);
+  transform: scale(1.08);
+}
+
+.chat-delete-btn {
+  position: absolute;
+  top: 10px;
+  opacity: 0;
+  border: 0;
+  background: transparent;
+  color: #fb7185;
+  font-size: 12px;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.chat-row.me:hover .chat-delete-btn {
+  opacity: 1;
+}
+
+.chat-row.me .chat-delete-btn {
+  left: -22px;
+}
+
+.chat-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: 22px;
+  background: rgba(15,23,42,.92);
+  border: 1px solid rgba(255,255,255,.06);
+  padding: 12px;
+}
+
+.chat-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chat-quick-btn {
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.05);
+  color: #cbd5e1;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.chat-quick-btn:hover {
+  background: rgba(59,130,246,.16);
+  color: white;
+  border-color: rgba(59,130,246,.32);
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.chat-input-wrap {
+  flex: 1;
+  border-radius: 18px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.06);
+  padding: 10px 12px;
+}
+
+.chat-input {
+  width: 100%;
+  min-height: 24px;
+  max-height: 120px;
+  resize: none;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: white;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.chat-input::placeholder {
+  color: #64748b;
+}
+
+.chat-send-btn {
+  border: 0;
+  border-radius: 16px;
+  min-width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 0 12px 20px rgba(37,99,235,.26);
+  transition: .18s ease;
+}
+
+.chat-send-btn:hover {
+  transform: translateY(-1px) scale(1.02);
+}
+
+.chat-send-btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.chat-empty {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  border-radius: 20px;
+  border: 1px dashed rgba(255,255,255,.08);
+  background: rgba(255,255,255,.03);
+  text-align: center;
+  padding: 20px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
     .task-card.is-editing { border-color: color-mix(in srgb, var(--primary) 40%, var(--border)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 14%, transparent), var(--shadow); }
     body.theme-dark .bg-white, body.theme-dark .bg-slate-50, body.theme-dark .bg-slate-100 { background-color: var(--surface) !important; }
     body.theme-dark .text-slate-900, body.theme-dark .text-slate-800, body.theme-dark .text-slate-700, body.theme-dark .text-slate-600 { color: var(--text) !important; }
@@ -455,14 +767,36 @@
     <div id="focusSidebar" class="space-y-4"></div>
   </div>
 
-  <div class="sidebar-panel rounded-[2rem] p-6 text-slate-100" style="background: #0f172a; box-shadow: var(--shadow);">
-    <h3 class="mb-4 border-b border-slate-800 pb-4 text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">Командный чат</h3>
-    <div id="chatMessages" class="mb-4 max-h-[520px] space-y-4 overflow-y-auto pr-2"></div>
-    <div class="flex gap-2 rounded-2xl bg-slate-800 p-2">
-      <input id="chatInput" type="text" placeholder="Сообщение..." class="flex-1 bg-transparent px-2 py-1 text-sm text-white outline-none" />
-      <button id="sendChatBtn" class="px-3 text-lg text-blue-400">➤</button>
+<div class="sidebar-panel rounded-[2rem] p-6 text-slate-100" style="background: #0f172a; box-shadow: var(--shadow);">
+  <div class="chat-shell">
+    <div class="chat-toolbar border-b border-slate-800 pb-4">
+      <div>
+        <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">Командный чат</h3>
+        <div class="mt-2 chat-presence">
+          <span class="chat-presence-dot"></span>
+          <span>Команда на связи</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="chatMessages" class="chat-feed"></div>
+
+    <div class="chat-composer">
+      <div class="chat-quick-actions">
+        <button type="button" class="chat-quick-btn" data-quick-message="Взял в работу">Взял в работу</button>
+        <button type="button" class="chat-quick-btn" data-quick-message="Нужен фидбек">Нужен фидбек</button>
+        <button type="button" class="chat-quick-btn" data-quick-message="Готово к проверке">Готово к проверке</button>
+      </div>
+
+      <div class="chat-input-row">
+        <div class="chat-input-wrap">
+          <textarea id="chatInput" class="chat-input" rows="1" placeholder="Напиши сообщение команде..."></textarea>
+        </div>
+        <button id="sendChatBtn" class="chat-send-btn" type="button">➤</button>
+      </div>
     </div>
   </div>
+</div>
 </aside>
     </main>
   </div>
@@ -1448,49 +1782,76 @@ const overdue = date && date < todayStart && task.status !== 'published';
     }
 
     function renderMessages(messages) {
-      const root = $('#chatMessages');
-      const myUid = sessionStorage.getItem('e_uid');
-      const commonEmojis = ['👍', '❤️', '🔥', '✅', '🚀'];
-      root.innerHTML = messages.map(message => {
-        const time = new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const isMe = message.sender_uid === myUid;
-        const reactions = message.reactions || {};
-        const reactionsHtml = Object.entries(reactions).map(([emoji, users]) => {
-          if (!users.length) return '';
-          const active = users.includes(myUid);
-          return `<button class="toggle-reaction rounded-full px-1.5 py-0.5 text-[9px] ${active ? 'border border-blue-400 bg-blue-500/30' : 'bg-slate-700/50'}" data-message-id="${escapeHtml(message.id)}" data-emoji="${escapeHtml(emoji)}">${emoji} <span class="opacity-70">${users.length}</span></button>`;
-        }).join('');
-        const picker = commonEmojis.map(emoji => `<button class="toggle-reaction px-1 text-sm" data-message-id="${escapeHtml(message.id)}" data-emoji="${escapeHtml(emoji)}">${emoji}</button>`).join('');
+  const root = $('#chatMessages');
+  const myUid = sessionStorage.getItem('e_uid');
+  const commonEmojis = ['👍', '❤️', '🔥', '✅', '🚀'];
 
-        return `
-          <div class="group mb-4 flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-            <div class="mb-1 flex items-center gap-2">
-              <span class="text-[8px] font-black uppercase text-slate-500">${escapeHtml(message.sender_name || '')}</span>
-              <span class="text-[8px] italic text-slate-600">${escapeHtml(time)}</span>
-            </div>
-            <div class="relative max-w-[90%] rounded-2xl p-3 text-[12px] ${isMe ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-200'}">
-              <div class="absolute ${isMe ? '-left-24' : '-right-24'} top-0 hidden rounded-full border border-slate-700 bg-slate-800 p-1 group-hover:flex">${picker}</div>
-              <div>${escapeHtml(message.message || '')}</div>
-              <div class="mt-2 flex flex-wrap gap-1">${reactionsHtml}</div>
-              ${isMe ? `<button class="delete-message absolute -left-6 top-1 hidden text-[10px] text-rose-500 group-hover:block" data-message-id="${escapeHtml(message.id)}">✕</button>` : ''}
-            </div>
-          </div>
-        `;
-      }).join('');
-      root.scrollTop = root.scrollHeight;
-    }
+  if (!messages?.length) {
+    root.innerHTML = `
+      <div class="chat-empty">
+        <div>
+          <div class="mb-2 text-lg">💬</div>
+          <div>Чат пуст</div>
+          <div class="mt-2 normal-case font-medium text-slate-500">Начни коротким сообщением для команды</div>
+        </div>
+      </div>
+    `;
+    return;
+  }
 
-    async function refreshChat() {
-      const { data, error } = await db.from('team_chat').select('*').order('created_at', { ascending: true }).limit(50);
-      if (!error && data) renderMessages(data);
-    }
+  let lastDayLabel = '';
 
-    async function setupChat() {
-      await refreshChat();
-      db.channel('room1')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'team_chat' }, refreshChat)
-        .subscribe();
-    }
+  root.innerHTML = messages.map(message => {
+    const dateObj = new Date(message.created_at);
+    const dayLabel = dateObj.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long' });
+    const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const isMe = message.sender_uid === myUid;
+    const reactions = message.reactions || {};
+
+    const divider = dayLabel !== lastDayLabel
+      ? `<div class="chat-day-divider">${escapeHtml(dayLabel)}</div>`
+      : '';
+
+    lastDayLabel = dayLabel;
+
+    const reactionsHtml = Object.entries(reactions).map(([emoji, users]) => {
+      if (!users.length) return '';
+      const active = users.includes(myUid);
+      return `
+        <button class="toggle-reaction chat-reaction ${active ? 'active' : ''}" data-message-id="${escapeHtml(message.id)}" data-emoji="${escapeHtml(emoji)}">
+          ${emoji} <span>${users.length}</span>
+        </button>
+      `;
+    }).join('');
+
+    const picker = commonEmojis.map(emoji => `
+      <button class="toggle-reaction chat-emoji-btn" data-message-id="${escapeHtml(message.id)}" data-emoji="${escapeHtml(emoji)}">${emoji}</button>
+    `).join('');
+
+    return `
+      ${divider}
+      <div class="chat-row ${isMe ? 'me' : 'other'}">
+        <div class="chat-meta">
+          <span class="chat-author">${escapeHtml(message.sender_name || '')}</span>
+          <span class="chat-time">${escapeHtml(time)}</span>
+        </div>
+
+        <div class="chat-bubble ${isMe ? 'me' : 'other'}">
+          <div class="chat-emoji-bar">${picker}</div>
+          <div class="chat-text">${escapeHtml(message.message || '')}</div>
+
+          ${reactionsHtml ? `<div class="chat-actions">${reactionsHtml}</div>` : ''}
+
+          ${isMe ? `
+            <button class="delete-message chat-delete-btn" data-message-id="${escapeHtml(message.id)}" title="Удалить сообщение">✕</button>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  root.scrollTop = root.scrollHeight;
+}
 
     function renderAll() {
       const controls = $('#listControls');
@@ -1890,13 +2251,27 @@ const overdue = date && date < todayStart && task.status !== 'published';
   }
 }
     async function sendChatMessage() {
-      const input = $('#chatInput');
-      const message = input.value.trim();
-      if (!message) return;
-      const { error } = await db.from('team_chat').insert([{ sender_name: state.currentUser, sender_uid: sessionStorage.getItem('e_uid'), message }]);
-      if (error) return notify('Не удалось отправить сообщение', 'error');
-      input.value = '';
-    }
+  const input = $('#chatInput');
+  const sendBtn = $('#sendChatBtn');
+  const message = input.value.trim();
+
+  if (!message) return;
+
+  sendBtn.disabled = true;
+
+  const { error } = await db.from('team_chat').insert([{
+    sender_name: state.currentUser,
+    sender_uid: sessionStorage.getItem('e_uid'),
+    message
+  }]);
+
+  sendBtn.disabled = false;
+
+  if (error) return notify('Не удалось отправить сообщение', 'error');
+
+  input.value = '';
+  input.style.height = '24px';
+}
 
     async function deleteMessage(id) {
       if (!confirm('Удалить сообщение?')) return;
@@ -1966,7 +2341,16 @@ const overdue = date && date < todayStart && task.status !== 'published';
       $('#ideaForm').addEventListener('submit', saveCreateForm);
       $('#editForm').addEventListener('submit', saveEditForm);
       $('#sendChatBtn').addEventListener('click', sendChatMessage);
-      $('#chatInput').addEventListener('keydown', e => { if (e.key === 'Enter') sendChatMessage(); });
+      $('#chatInput').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage();}
+});
+
+$('#chatInput').addEventListener('input', e => { e.target.style.height = '24px'; e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`; });
+$$('[data-quick-message]').forEach(btn => { btn.addEventListener('click', () => { const input = $('#chatInput');
+    input.value = btn.dataset.quickMessage || '';
+    input.focus();
+    input.dispatchEvent(new Event('input'));
+  });
+});
       $('#toggleAllChannels').addEventListener('change', e => $$('input[name="chan"]', $('#createModal')).forEach(cb => cb.checked = e.target.checked));
       $('#title').addEventListener('input', () => setFieldError('title', $('#title').value.trim().length >= 4 ? '' : 'Нужно название хотя бы из 4 символов.'));
       $('#description').addEventListener('input', () => setFieldError('description', $('#description').value.trim().length >= 10 ? '' : 'Добавь короткое ТЗ: хотя бы 10 символов.'));
