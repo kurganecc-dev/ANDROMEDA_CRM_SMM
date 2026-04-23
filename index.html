@@ -2838,8 +2838,10 @@ renderMetaOnly();
       location.reload();
     }
 
-          async function moveToTrash(id) {
+             async function moveToTrash(id) {
       const task = state.tasks.find(item => String(item.id) === String(id));
+      if (!task) return;
+
       const { error } = await TaskService.moveToTrash(id, state.currentUser);
       if (error) return notify('Не удалось переместить в корзину', 'error', 'Ошибка');
 
@@ -2853,9 +2855,54 @@ renderMetaOnly();
         });
       }
 
+      if (state.currentView === 'list') renderCards();
+      if (state.currentView === 'kanban') renderKanban();
+      if (state.currentView === 'calendar') renderCalendar();
+      renderMetaOnly();
+
+      showUndoDeleteToast(task);
+      await logAction('delete', task.title || 'Задача', 'Перенесено в корзину');
+    }
+
             renderKanban();
 renderMetaOnly();
       await logAction('delete', task?.title || 'Задача', 'Перенесено в корзину');
+    }
+
+        function showUndoDeleteToast(task) {
+      const container = $('#toastContainer');
+      if (!container || !task) return;
+
+      const toast = document.createElement('div');
+      toast.className = 'toast toast-warning';
+
+      toast.innerHTML = `
+        <div class="toast-icon">🗑️</div>
+        <div class="toast-body">
+          <strong>Задача удалена</strong>
+          <div class="text-sm font-medium">«${escapeHtml(task.title || 'Без названия')}» перенесена в корзину.</div>
+          <button
+            type="button"
+            class="undo-delete-btn mt-3 rounded-xl px-3 py-2 text-[10px] font-black uppercase text-white"
+            style="background: var(--text);"
+            data-task-id="${escapeHtml(task.id)}"
+          >
+            Отменить
+          </button>
+        </div>
+        <button type="button" class="toast-close" aria-label="Закрыть">×</button>
+      `;
+
+      $('.toast-close', toast)?.addEventListener('click', () => removeToast(toast));
+
+      $('.undo-delete-btn', toast)?.addEventListener('click', async () => {
+        await restoreFromTrash(task.id);
+        removeToast(toast);
+        notify('Удаление отменено', 'success', 'Готово');
+      });
+
+      container.appendChild(toast);
+      setTimeout(() => removeToast(toast), 7000);
     }
 
         async function restoreFromTrash(id) {
