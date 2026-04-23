@@ -1406,6 +1406,151 @@
         `;
       }
     };
+        const ChatService = {
+      async fetchMessages(limit = 50) {
+        return db
+          .from(Services.tables.teamChat)
+          .select('*')
+          .order('created_at', { ascending: true })
+          .limit(limit);
+      },
+
+      async sendMessage(payload) {
+        return db.from(Services.tables.teamChat).insert([payload]);
+      },
+
+      async deleteMessage(messageId) {
+        return db.from(Services.tables.teamChat).delete().eq('id', messageId);
+      },
+
+      async getReactions(messageId) {
+        return db.from(Services.tables.teamChat).select('reactions').eq('id', messageId).single();
+      },
+
+      async updateReactions(messageId, reactions) {
+        return db.from(Services.tables.teamChat).update({ reactions }).eq('id', messageId);
+      },
+
+      subscribe(onChange) {
+        return db
+          .channel('room1')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: Services.tables.teamChat },
+            onChange
+          )
+          .subscribe();
+      }
+    };
+
+    const ChatUI = {
+      commonEmojis: ['👍', '❤️', '🔥', '✅', '🚀'],
+
+      renderEmptyState() {
+        return `
+          <div class="chat-empty">
+            <div>
+              <div class="mb-2 text-lg">💬</div>
+              <div>Чат пуст</div>
+              <div class="mt-2 normal-case font-medium text-slate-500">Начни коротким сообщением для команды</div>
+            </div>
+          </div>
+        `;
+      },
+
+      renderReactionButtons(reactions = {}, myUid = '') {
+        return Object.entries(reactions).map(([emoji, users]) => {
+          if (!Array.isArray(users) || !users.length) return '';
+          const active = users.includes(myUid);
+
+          return `
+            <button class="toggle-reaction chat-reaction ${active ? 'active' : ''}" data-message-id="${escapeHtml(emoji && emoji.length ? '' : '')}${''}" data-emoji="${escapeHtml(emoji)}">
+              ${emoji} <span>${users.length}</span>
+            </button>
+          `;
+        }).join('');
+      },
+
+      renderReactionButtonsSafe(messageId, reactions = {}, myUid = '') {
+        return Object.entries(reactions).map(([emoji, users]) => {
+          if (!Array.isArray(users) || !users.length) return '';
+          const active = users.includes(myUid);
+
+          return `
+            <button class="toggle-reaction chat-reaction ${active ? 'active' : ''}" data-message-id="${escapeHtml(messageId)}" data-emoji="${escapeHtml(emoji)}">
+              ${emoji} <span>${users.length}</span>
+            </button>
+          `;
+        }).join('');
+      },
+
+      renderEmojiPicker(messageId) {
+        return ChatUI.commonEmojis.map(emoji => `
+          <button class="toggle-reaction chat-emoji-btn" data-message-id="${escapeHtml(messageId)}" data-emoji="${escapeHtml(emoji)}">${emoji}</button>
+        `).join('');
+      },
+
+      renderMessage(message, context = {}) {
+        const myUid = context.myUid || '';
+        const dateObj = new Date(message.created_at);
+        const dayLabel = dateObj.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long' });
+        const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const isMe = message.sender_uid === myUid;
+        const reactions = message.reactions || {};
+        const divider = context.showDivider ? `<div class="chat-day-divider">${escapeHtml(dayLabel)}</div>` : '';
+        const reactionsHtml = ChatUI.renderReactionButtonsSafe(message.id, reactions, myUid);
+        const picker = ChatUI.renderEmojiPicker(message.id);
+
+        return `
+          ${divider}
+          <div class="chat-row ${isMe ? 'me' : 'other'}">
+            <div class="chat-meta">
+              <span class="chat-author">${escapeHtml(message.sender_name || '')}</span>
+              <span class="chat-time">${escapeHtml(time)}</span>
+            </div>
+
+            <div class="chat-bubble ${isMe ? 'me' : 'other'}">
+              <div class="chat-emoji-bar">${picker}</div>
+              <div class="chat-text">${escapeHtml(message.message || '')}</div>
+
+              ${reactionsHtml ? `<div class="chat-actions">${reactionsHtml}</div>` : ''}
+
+              ${isMe ? `
+                <button class="delete-message chat-delete-btn" data-message-id="${escapeHtml(message.id)}" title="Удалить сообщение">✕</button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      },
+
+      renderMessages(messages = [], myUid = '') {
+        if (!messages.length) return ChatUI.renderEmptyState();
+
+        let lastDayLabel = '';
+
+        return messages.map(message => {
+          const dateObj = new Date(message.created_at);
+          const dayLabel = dateObj.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long' });
+          const showDivider = dayLabel !== lastDayLabel;
+          lastDayLabel = dayLabel;
+
+          return ChatUI.renderMessage(message, { myUid, showDivider });
+        }).join('');
+      },
+
+      scrollToBottom() {
+        const root = $('#chatMessages');
+        if (!root) return;
+        root.scrollTop = root.scrollHeight;
+      },
+
+      resetComposer() {
+        const input = $('#chatInput');
+        if (!input) return;
+        input.value = '';
+        input.style.height = '24px';
+      }
+    };
     
     function setLoadingTasks(isLoading) {
       state.isLoadingTasks = isLoading;
@@ -2064,23 +2209,14 @@
       }).join('');
     }
 
-    function renderMessages(messages) {
-  const root = $('#chatMessages');
-  const myUid = sessionStorage.getItem('e_uid');
-  const commonEmojis = ['👍', '❤️', '🔥', '✅', '🚀'];
+        function renderMessages(messages) {
+      const root = $('#chatMessages');
+      if (!root) return;
 
-  if (!messages?.length) {
-    root.innerHTML = `
-      <div class="chat-empty">
-        <div>
-          <div class="mb-2 text-lg">💬</div>
-          <div>Чат пуст</div>
-          <div class="mt-2 normal-case font-medium text-slate-500">Начни коротким сообщением для команды</div>
-        </div>
-      </div>
-    `;
-    return;
-  }
+      const myUid = sessionStorage.getItem('e_uid') || '';
+      root.innerHTML = ChatUI.renderMessages(messages || [], myUid);
+      ChatUI.scrollToBottom();
+    }
 
   let lastDayLabel = '';
 
@@ -2135,32 +2271,19 @@
 
   root.scrollTop = root.scrollHeight;
 }
-async function refreshChat() {
-  const { data, error } = await db
-    .from('team_chat')
-    .select('*')
-    .order('created_at', { ascending: true })
-    .limit(50);
+    async function refreshChat() {
+      const { data, error } = await ChatService.fetchMessages(50);
+      if (!error && data) {
+        renderMessages(data);
+      }
+    }
 
-  if (!error && data) {
-    renderMessages(data);
-  }
-}
+    async function setupChat() {
+      await refreshChat();
 
-async function setupChat() {
-  await refreshChat();
-
-  if (state.chatChannel) return;
-
-  state.chatChannel = db
-    .channel('room1')
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'team_chat' },
-      refreshChat
-    )
-    .subscribe();
-}
+      if (state.chatChannel) return;
+      state.chatChannel = ChatService.subscribe(refreshChat);
+    }
     
     function renderAll() {
       const controls = $('#listControls');
@@ -2539,47 +2662,50 @@ async function setupChat() {
     btn.textContent = 'Обновить';
   }
 }
-    async function sendChatMessage() {
-  const input = $('#chatInput');
-  const sendBtn = $('#sendChatBtn');
-  const message = input.value.trim();
+        async function sendChatMessage() {
+      const input = $('#chatInput');
+      const sendBtn = $('#sendChatBtn');
+      const message = input.value.trim();
 
-  if (!message) return;
+      if (!message) return;
 
-  sendBtn.disabled = true;
+      sendBtn.disabled = true;
 
-  const { error } = await db.from('team_chat').insert([{
-    sender_name: state.currentUser,
-    sender_uid: sessionStorage.getItem('e_uid'),
-    message
-  }]);
+      const { error } = await ChatService.sendMessage({
+        sender_name: state.currentUser,
+        sender_uid: sessionStorage.getItem('e_uid'),
+        message
+      });
 
-  sendBtn.disabled = false;
+      sendBtn.disabled = false;
 
-  if (error) return notify('Не удалось отправить сообщение', 'error');
+      if (error) return notify('Не удалось отправить сообщение', 'error', 'Ошибка');
 
-  input.value = '';
-  input.style.height = '24px';
-}
-
-    async function deleteMessage(id) {
-      if (!confirm('Удалить сообщение?')) return;
-      const { error } = await db.from('team_chat').delete().eq('id', id);
-      if (error) notify('Не удалось удалить сообщение', 'error');
+      ChatUI.resetComposer();
     }
 
-    async function toggleReaction(messageId, emoji) {
+       async function deleteMessage(id) {
+      if (!confirm('Удалить сообщение?')) return;
+
+      const { error } = await ChatService.deleteMessage(id);
+      if (error) notify('Не удалось удалить сообщение', 'error', 'Ошибка');
+    }
+
+        async function toggleReaction(messageId, emoji) {
       const myUid = sessionStorage.getItem('e_uid');
-      const { data, error } = await db.from('team_chat').select('reactions').eq('id', messageId).single();
+      const { data, error } = await ChatService.getReactions(messageId);
       if (error || !data) return;
+
       const reactions = data.reactions || {};
       if (!Array.isArray(reactions[emoji])) reactions[emoji] = [];
+
       if (reactions[emoji].includes(myUid)) {
         reactions[emoji] = reactions[emoji].filter(uid => uid !== myUid);
       } else {
         reactions[emoji].push(myUid);
       }
-      await db.from('team_chat').update({ reactions }).eq('id', messageId);
+
+      await ChatService.updateReactions(messageId, reactions);
     }
 
     function toggleLogs(forceOpen = null) {
@@ -2633,13 +2759,19 @@ async function setupChat() {
       $('#chatInput').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage();}
 });
 
-$('#chatInput').addEventListener('input', e => { e.target.style.height = '24px'; e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`; });
-$$('[data-quick-message]').forEach(btn => { btn.addEventListener('click', () => { const input = $('#chatInput');
-    input.value = btn.dataset.quickMessage || '';
-    input.focus();
-    input.dispatchEvent(new Event('input'));
-  });
-});
+      $('#chatInput').addEventListener('input', e => {
+        e.target.style.height = '24px';
+        e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+      });
+
+      $$('[data-quick-message]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const input = $('#chatInput');
+          input.value = btn.dataset.quickMessage || '';
+          input.focus();
+          input.dispatchEvent(new Event('input'));
+        });
+      });
       $('#toggleAllChannels').addEventListener('change', e => $$('input[name="chan"]', $('#createModal')).forEach(cb => cb.checked = e.target.checked));
       $('#title').addEventListener('input', () => setFieldError('title', $('#title').value.trim().length >= 4 ? '' : 'Нужно название хотя бы из 4 символов.'));
       $('#description').addEventListener('input', () => setFieldError('description', $('#description').value.trim().length >= 10 ? '' : 'Добавь короткое ТЗ: хотя бы 10 символов.'));
