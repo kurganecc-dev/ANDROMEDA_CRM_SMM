@@ -72,9 +72,35 @@
     .text-muted { color: var(--muted); }
     .border-soft { border-color: var(--border); }
     .status-idea { border-left: 5px solid #9ca3af; }
-    .status-work { border-left: 5px solid #3b82f6; }
-    .status-ready { border-left: 5px solid #10b981; }
-    .status-published { border-left: 5px solid #6366f1; }
+.status-script { border-left: 5px solid #8b5cf6; }
+.status-production { border-left: 5px solid #3b82f6; }
+.status-editing { border-left: 5px solid #f59e0b; }
+.status-review { border-left: 5px solid #ec4899; }
+.status-scheduled { border-left: 5px solid #14b8a6; }
+.status-published { border-left: 5px solid #6366f1; }
+
+.progress-track {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--primary);
+  transition: width .25s ease;
+}
+
+.stage-hint {
+  margin-top: 10px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--primary);
+}
     .tab-active { background: var(--text) !important; color: white !important; }
 
     .view-animate { animation: slideUpFade .25s ease; }
@@ -638,7 +664,31 @@
       const d = parseLocalDate(dateStr);
       return d ? d.toLocaleDateString('ru-RU') : '—';
     }
+      
+      function getWorkflowOrder() {
+  return ['idea', 'script', 'production', 'editing', 'review', 'scheduled', 'published'];
+}
 
+function getProgress(status) {
+  const order = getWorkflowOrder();
+  const index = order.indexOf(status);
+  if (index === -1) return 0;
+  return ((index + 1) / order.length) * 100;
+}
+
+function getNextStepHint(status) {
+  const hints = {
+    idea: 'Следующий шаг: создать сценарий',
+    script: 'Следующий шаг: передать в продакшн',
+    production: 'Следующий шаг: отправить на монтаж',
+    editing: 'Следующий шаг: отправить на проверку',
+    review: 'Следующий шаг: запланировать публикацию',
+    scheduled: 'Следующий шаг: дождаться публикации',
+    published: 'Следующий шаг: проанализировать результат'
+  };
+  return hints[status] || 'Следующий шаг не определён';
+}
+    
     function isSameMonthYear(date, sample) {
       return date && sample && date.getMonth() === sample.getMonth() && date.getFullYear() === sample.getFullYear();
     }
@@ -842,7 +892,9 @@
       const today = new Date();
       const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
       const active = state.tasks.filter(task => task.status !== 'published').length;
-      const inWork = state.tasks.filter(task => task.status === 'work').length;
+      const inWork = state.tasks.filter(task =>
+  ['script', 'production', 'editing', 'review', 'scheduled'].includes(task.status)
+).length;
       const deadlinesToday = state.tasks.filter(task => task.date === todayStr && task.status !== 'published').length;
       const published = state.tasks.filter(task => task.status === 'published').length;
       if ($('#kpiActive')) $('#kpiActive').textContent = active;
@@ -970,8 +1022,20 @@
               <span class="text-[9px] font-black uppercase" style="color: var(--primary);">${escapeHtml(task.work_type || 'Пост')}</span>
               <span class="rounded-full px-2 py-0.5 text-[8px] font-black uppercase soft-pill">${escapeHtml(STATUS_MAP[task.status] || 'Идея')}</span>
             </div>
-            <h3 class="mb-4 text-[15px] font-black uppercase leading-tight">${title}</h3>
-            <div class="grid grid-cols-2 gap-2 text-[10px] font-bold" style="color: var(--muted);">
+            <h3 class="mb-3 text-[15px] font-black uppercase leading-tight">${title}</h3>
+
+<div class="mb-4">
+  <div class="progress-track">
+    <div class="progress-fill" style="width:${Math.round(getProgress(task.status))}%"></div>
+  </div>
+  <div class="mt-1 flex items-center justify-between text-[10px] font-bold" style="color: var(--muted);">
+    <span>Прогресс: ${Math.round(getProgress(task.status))}%</span>
+    <span>${escapeHtml(STATUS_MAP[task.status] || 'Идея')}</span>
+  </div>
+  <div class="stage-hint">${escapeHtml(getNextStepHint(task.status))}</div>
+</div>
+
+<div class="grid grid-cols-2 gap-2 text-[10px] font-bold" style="color: var(--muted);">
               <div class="rounded-xl px-3 py-2 soft-pill">👤 ${responsible}</div>
               <div class="rounded-xl px-3 py-2 soft-pill">📅 ${escapeHtml(formatShortDate(task.date))}</div>
             </div>
@@ -986,30 +1050,49 @@
     }
 
     function renderKanban() {
-      const tasks = getFilteredTasks();
-      ['idea', 'work', 'ready', 'published'].forEach(status => {
-        const col = document.querySelector(`[data-kanban="${status}"]`);
-        const count = document.getElementById(`count-${status}`);
-        if (!col || !count) return;
-        const filtered = tasks.filter(task => task.status === status);
-        count.textContent = filtered.length;
-        col.innerHTML = filtered.map(task => {
-          const responsible = escapeHtml((task.responsible || 'Не назначен').split(' ')[0]);
-          const date = parseLocalDate(task.date);
-          const overdue = date && date < new Date() && task.status !== 'published';
-          return `
-            <div class="kanban-card mb-3 cursor-grab rounded-2xl border p-4 shadow-sm active:cursor-grabbing" draggable="true" data-task-id="${escapeHtml(task.id)}" style="border-color: var(--border); color: var(--text); background: var(--surface);">
-              <div class="mb-2 flex flex-wrap gap-1">${(task.channels || []).slice(0, 3).map(ch => `<span class="rounded bg-slate-900 px-1.5 py-0.5 text-[8px] font-black uppercase text-white">${escapeHtml(ch)}</span>`).join('')}</div>
-              <h4 class="mb-3 text-[12px] font-black uppercase leading-tight">${escapeHtml(task.title || 'Без названия')}</h4>
-              <div class="flex items-center justify-between border-t pt-2 text-[9px] font-bold" style="border-color: var(--border); color: var(--muted);">
-                <span>👤 ${responsible}</span>
-                <span class="${overdue ? 'text-rose-500 font-black' : ''}">📅 ${date ? date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) : '—'}</span>
-              </div>
+  const tasks = getFilteredTasks();
+  getWorkflowOrder().forEach(status => {
+    const col = document.querySelector(`[data-kanban="${status}"]`);
+    const count = document.getElementById(`count-${status}`);
+    if (!col || !count) return;
+
+    const filtered = tasks.filter(task => task.status === status);
+    count.textContent = filtered.length;
+
+    col.innerHTML = filtered.map(task => {
+      const responsible = escapeHtml((task.responsible || 'Не назначен').split(' ')[0]);
+      const date = parseLocalDate(task.date);
+      const overdue = date && date < new Date() && task.status !== 'published';
+      const progress = Math.round(getProgress(task.status));
+
+      return `
+        <div class="kanban-card status-${escapeHtml(task.status || 'idea')} mb-3 cursor-grab rounded-2xl border p-4 shadow-sm active:cursor-grabbing" draggable="true" data-task-id="${escapeHtml(task.id)}" style="border-color: var(--border); color: var(--text); background: var(--surface);">
+          <div class="mb-2 flex flex-wrap gap-1">
+            ${(task.channels || []).slice(0, 3).map(ch => `<span class="rounded bg-slate-900 px-1.5 py-0.5 text-[8px] font-black uppercase text-white">${escapeHtml(ch)}</span>`).join('')}
+          </div>
+
+          <div class="mb-2 text-[9px] font-black uppercase" style="color: var(--primary);">${escapeHtml(STATUS_MAP[task.status] || 'Идея')}</div>
+
+          <h4 class="mb-3 text-[12px] font-black uppercase leading-tight">${escapeHtml(task.title || 'Без названия')}</h4>
+
+          <div class="mb-3">
+            <div class="progress-track">
+              <div class="progress-fill" style="width:${progress}%"></div>
             </div>
-          `;
-        }).join('');
-      });
-    }
+            <div class="mt-1 text-[9px] font-bold" style="color: var(--muted);">Прогресс: ${progress}%</div>
+          </div>
+
+          <div class="text-[9px] font-black uppercase stage-hint">${escapeHtml(getNextStepHint(task.status))}</div>
+
+          <div class="mt-3 flex items-center justify-between border-t pt-2 text-[9px] font-bold" style="border-color: var(--border); color: var(--muted);">
+            <span>👤 ${responsible}</span>
+            <span class="${overdue ? 'text-rose-500 font-black' : ''}">📅 ${date ? date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) : '—'}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  });
+}
 
     function renderCalendarTabs() {
       const container = $('#calendarTabs');
