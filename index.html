@@ -1612,6 +1612,64 @@
         input.style.height = '24px';
       }
     };
+
+    const ViewController = {
+      applyLayout() {
+        const controls = $('#listControls');
+        const rightSidebar = $('#rightSidebar');
+        const middle = $('#middlePanel');
+        const listLike = state.currentView === 'list' || state.currentView === 'kanban';
+
+        if (controls) controls.classList.toggle('hidden', !listLike);
+        if (rightSidebar) rightSidebar.classList.toggle('hidden', state.currentView === 'kanban');
+
+        if (middle) {
+          middle.classList.toggle('lg:col-span-12', state.currentView === 'kanban');
+          middle.classList.toggle('lg:col-span-9', state.currentView !== 'kanban');
+        }
+
+        VIEWS.forEach(view => {
+          const el = document.getElementById(`view-${view}`);
+          if (!el) return;
+
+          const active = view === state.currentView;
+          el.classList.toggle('hidden', !active);
+          el.classList.toggle('view-animate', active);
+        });
+      },
+
+      renderActiveView() {
+        if (state.currentView === 'list') renderCards();
+        if (state.currentView === 'kanban') renderKanban();
+        if (state.currentView === 'calendar') renderCalendar();
+
+        if (state.currentView === 'analytics') {
+          $('#analytics-table')?.classList.toggle('hidden', state.analyticsSubView !== 'table');
+          $('#analytics-visuals')?.classList.toggle('hidden', state.analyticsSubView !== 'visuals');
+          $('#analyticsTableBtn')?.classList.toggle('tab-active', state.analyticsSubView === 'table');
+          $('#analyticsVisualsBtn')?.classList.toggle('tab-active', state.analyticsSubView === 'visuals');
+          $('#analyticsTableBtn')?.classList.toggle('text-slate-400', state.analyticsSubView !== 'table');
+          $('#analyticsVisualsBtn')?.classList.toggle('text-slate-400', state.analyticsSubView !== 'visuals');
+
+          if (state.analyticsSubView === 'table') {
+            renderStats();
+          } else {
+            renderCharts();
+          }
+        }
+
+        if (state.currentView === 'accounts') renderAccounts();
+      },
+
+      renderMeta() {
+        if ($('#trashBadge')) {
+          $('#trashBadge').textContent = String(state.trash.length);
+        }
+
+        renderSmartSidebar();
+        renderDashboardSummary();
+      }
+    };
     
     function setLoadingTasks(isLoading) {
       state.isLoadingTasks = isLoading;
@@ -2295,44 +2353,17 @@
       state.chatChannel = ChatService.subscribe(refreshChat);
     }
     
-    function renderAll() {
-      const controls = $('#listControls');
-      const rightSidebar = $('#rightSidebar');
-      const middle = $('#middlePanel');
-      const listLike = state.currentView === 'list' || state.currentView === 'kanban';
-      controls.classList.toggle('hidden', !listLike);
-      rightSidebar.classList.toggle('hidden', state.currentView === 'kanban');
-      middle.classList.toggle('lg:col-span-12', state.currentView === 'kanban');
-      middle.classList.toggle('lg:col-span-9', state.currentView !== 'kanban');
-
-      VIEWS.forEach(view => {
-        const el = document.getElementById(`view-${view}`);
-        if (!el) return;
-        const active = view === state.currentView;
-        el.classList.toggle('hidden', !active);
-        el.classList.toggle('view-animate', active);
-      });
-
+        function renderAll() {
       buildMainTabs();
-      if (state.currentView === 'list') renderCards();
-      if (state.currentView === 'kanban') renderKanban();
-      if (state.currentView === 'calendar') renderCalendar();
-      if (state.currentView === 'analytics') {
-        $('#analytics-table').classList.toggle('hidden', state.analyticsSubView !== 'table');
-        $('#analytics-visuals').classList.toggle('hidden', state.analyticsSubView !== 'visuals');
-        $('#analyticsTableBtn').classList.toggle('tab-active', state.analyticsSubView === 'table');
-        $('#analyticsVisualsBtn').classList.toggle('tab-active', state.analyticsSubView === 'visuals');
-        $('#analyticsTableBtn').classList.toggle('text-slate-400', state.analyticsSubView !== 'table');
-        $('#analyticsVisualsBtn').classList.toggle('text-slate-400', state.analyticsSubView !== 'visuals');
-        if (state.analyticsSubView === 'table') renderStats(); else renderCharts();
-      }
-      if (state.currentView === 'accounts') renderAccounts();
-
-      $('#trashBadge').textContent = String(state.trash.length);
-      renderSmartSidebar();
-      renderDashboardSummary();
+      ViewController.applyLayout();
+      ViewController.renderActiveView();
+      ViewController.renderMeta();
     }
 
+    function renderMetaOnly() {
+      ViewController.renderMeta();
+    }
+    
     function applyTheme(theme) {
       document.body.classList.remove('theme-dark', 'theme-pink');
       if (theme === 'dark') document.body.classList.add('theme-dark');
@@ -2440,7 +2471,10 @@
         });
       }
 
-      renderAll();
+            if (state.currentView === 'list') renderCards();
+      if (state.currentView === 'kanban') renderKanban();
+      if (state.currentView === 'calendar') renderCalendar();
+      renderMetaOnly();
       await logAction('delete', task?.title || 'Задача', 'Перенесено в корзину');
     }
 
@@ -2458,7 +2492,10 @@
         });
       }
 
-      renderAll();
+            if (state.currentView === 'list') renderCards();
+      if (state.currentView === 'kanban') renderKanban();
+      if (state.currentView === 'calendar') renderCalendar();
+      renderMetaOnly();
       renderTrash();
     }
 
@@ -2469,7 +2506,7 @@
       if (error) return notify('Не удалось удалить задачу', 'error', 'Ошибка');
 
       TaskState.removeFromTrash(id);
-      renderAll();
+            renderMetaOnly();
       renderTrash();
     }
 
@@ -2936,7 +2973,10 @@
           if (error) return notify('Не удалось изменить статус');
 
           TaskState.patchTask(taskId, { status: newStatus });
-          renderAll();
+                if (state.currentView === 'list') renderCards();
+      if (state.currentView === 'kanban') renderKanban();
+      if (state.currentView === 'calendar') renderCalendar();
+      renderMetaOnly();
           await logAction('status_change', task.title, `Канбан: ${oldStatus} → ${newStatus}`);
         });
       });
