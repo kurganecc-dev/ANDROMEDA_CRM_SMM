@@ -1261,7 +1261,151 @@
         return db.from(Services.tables.tasks).delete().eq('id', id);
       }
     };
-    
+
+        const TaskUI = {
+      getTagClass(tag) {
+        if (tag === 'ФРК') return 'bg-amber-100 text-amber-700';
+        if (tag === 'УТП') return 'bg-indigo-100 text-indigo-700';
+        return 'bg-slate-100 text-slate-600';
+      },
+
+      renderChannels(channels = [], limit = null) {
+        const list = limit ? channels.slice(0, limit) : channels;
+        return list.map(ch => `
+          <span class="rounded bg-slate-900 px-2 py-0.5 text-[8px] font-black uppercase text-white">${escapeHtml(ch)}</span>
+        `).join('');
+      },
+
+      renderInlineEdit(task, draft = {}) {
+        return `
+          <div class="inline-edit-shell">
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div class="md:col-span-2">
+                <label>Название</label>
+                <input type="text" class="inline-edit-input" data-inline-field="title" data-task-id="${escapeHtml(task.id)}" value="${escapeHtml(draft.title || '')}" />
+              </div>
+              <div>
+                <label>Статус</label>
+                <select class="inline-edit-input" data-inline-field="status" data-task-id="${escapeHtml(task.id)}">
+                  ${Object.entries(STATUS_MAP).map(([value, label]) => `
+                    <option value="${escapeHtml(value)}" ${String(draft.status || '') === value ? 'selected' : ''}>${escapeHtml(label)}</option>
+                  `).join('')}
+                </select>
+              </div>
+              <div>
+                <label>Тип</label>
+                <select class="inline-edit-input" data-inline-field="work_type" data-task-id="${escapeHtml(task.id)}">
+                  ${WORK_TYPES.map(value => `
+                    <option value="${escapeHtml(value)}" ${String(draft.work_type || '') === value ? 'selected' : ''}>${escapeHtml(value)}</option>
+                  `).join('')}
+                </select>
+              </div>
+              <div>
+                <label>Дедлайн</label>
+                <input type="date" class="inline-edit-input" data-inline-field="date" data-task-id="${escapeHtml(task.id)}" value="${escapeHtml(draft.date || '')}" />
+              </div>
+              <div>
+                <label>Ответственный</label>
+                <input type="text" class="inline-edit-input" data-inline-field="responsible" data-task-id="${escapeHtml(task.id)}" value="${escapeHtml(draft.responsible || '')}" />
+              </div>
+            </div>
+            <div class="inline-edit-actions">
+              <button type="button" class="primary save-inline-edit" data-task-id="${escapeHtml(task.id)}">Сохранить</button>
+              <button type="button" class="secondary cancel-inline-edit">Отмена</button>
+            </div>
+          </div>
+        `;
+      },
+
+      renderListCard(task, options = {}) {
+        const isEditing = options.isEditing || false;
+        const draft = options.draft || {};
+        const tagClass = TaskUI.getTagClass(task.tag);
+        const channels = TaskUI.renderChannels(task.channels || []);
+        const responsible = escapeHtml(task.responsible || 'Не назначен');
+        const title = escapeHtml(task.title || 'Без названия');
+        const views = Number(task.play_count || 0).toLocaleString('ru-RU');
+        const deadlineMeta = getDeadlineMeta(task.date, task.status);
+        const inlineEditHtml = isEditing ? TaskUI.renderInlineEdit(task, draft) : '';
+
+        return `
+          <article class="task-card ${isEditing ? 'is-editing' : ''} status-${escapeHtml(task.status || 'idea')} app-surface rounded-[2rem] border-2 border-transparent p-6 transition hover:-translate-y-1 hover:border-blue-200" data-task-id="${escapeHtml(task.id)}">
+            <div class="mb-4 flex items-start justify-between gap-3">
+              <div class="flex max-w-[80%] flex-wrap gap-1">${channels}</div>
+              <div class="flex items-center gap-1">
+                <button type="button" class="inline-edit-trigger rounded-full p-2 text-slate-400 hover:bg-blue-50 hover:text-blue-600" data-task-id="${escapeHtml(task.id)}" title="Быстрое редактирование">✎</button>
+                <button type="button" class="trash-task rounded-full p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-500" data-task-id="${escapeHtml(task.id)}" title="В корзину">✕</button>
+              </div>
+            </div>
+
+            <div class="mb-2 flex items-center gap-2">
+              <span class="rounded-full px-2 py-0.5 text-[8px] font-black uppercase ${tagClass}">${escapeHtml(task.tag || 'прочее')}</span>
+              <span class="text-[9px] font-black uppercase" style="color: var(--primary);">${escapeHtml(task.work_type || 'Пост')}</span>
+              <span class="rounded-full px-2 py-0.5 text-[8px] font-black uppercase soft-pill">${escapeHtml(STATUS_MAP[task.status] || 'Идея')}</span>
+            </div>
+
+            <h3 class="mb-3 text-[15px] font-black uppercase leading-tight">${title}</h3>
+
+            <div class="mb-4">
+              <div class="progress-track">
+                <div class="progress-fill" style="width:${Math.round(getProgress(task.status))}%"></div>
+              </div>
+              <div class="mt-1 flex items-center justify-between text-[10px] font-bold" style="color: var(--muted);">
+                <span>Прогресс: ${Math.round(getProgress(task.status))}%</span>
+                <span>${escapeHtml(STATUS_MAP[task.status] || 'Идея')}</span>
+              </div>
+              <div class="stage-hint">${escapeHtml(getNextStepHint(task.status))}</div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-[10px] font-bold" style="color: var(--muted);">
+              <div class="rounded-xl px-3 py-2 soft-pill">👤 ${responsible}</div>
+              <div class="deadline-chip ${deadlineMeta.className}">📅 ${escapeHtml(deadlineMeta.label)}</div>
+            </div>
+
+            <div class="mt-4 flex items-center justify-between border-t pt-4 text-[10px] font-bold" style="border-color: var(--border); color: var(--muted);">
+              <span>Старт: ${escapeHtml(formatShortDate(task.start_date))}</span>
+              <span class="rounded-lg bg-emerald-50 px-2 py-1 font-black text-emerald-600">👁️ ${views}</span>
+            </div>
+
+            ${inlineEditHtml}
+          </article>
+        `;
+      },
+
+      renderKanbanCard(task) {
+        const responsible = escapeHtml((task.responsible || 'Не назначен').split(' ')[0]);
+        const deadlineMeta = getDeadlineMeta(task.date, task.status);
+        const progress = Math.round(getProgress(task.status));
+
+        return `
+          <div class="kanban-card status-${escapeHtml(task.status || 'idea')} mb-3 cursor-grab rounded-2xl border p-4 shadow-sm active:cursor-grabbing" draggable="true" data-task-id="${escapeHtml(task.id)}" style="border-color: var(--border); color: var(--text); background: var(--surface);">
+            <div class="mb-2 flex flex-wrap gap-1">
+              ${TaskUI.renderChannels(task.channels || [], 3)}
+            </div>
+
+            <div class="mb-2 text-[9px] font-black uppercase" style="color: var(--primary);">${escapeHtml(STATUS_MAP[task.status] || 'Идея')}</div>
+
+            <h4 class="mb-3 text-[12px] font-black uppercase leading-tight">${escapeHtml(task.title || 'Без названия')}</h4>
+
+            <div class="mb-3">
+              <div class="progress-track">
+                <div class="progress-fill" style="width:${progress}%"></div>
+              </div>
+              <div class="mt-1 text-[9px] font-bold" style="color: var(--muted);">Прогресс: ${progress}%</div>
+            </div>
+
+            <div class="text-[9px] font-black uppercase stage-hint">${escapeHtml(getNextStepHint(task.status))}</div>
+
+            <div class="mt-3 flex items-center justify-between border-t pt-2 text-[9px] font-bold" style="border-color: var(--border); color: var(--muted);">
+              <span>👤 ${responsible}</span>
+              <span class="deadline-chip ${deadlineMeta.className}" style="padding:6px 8px; font-size:9px;">
+                📅 ${escapeHtml(deadlineMeta.shortLabel)}
+              </span>
+            </div>
+          </div>
+        `;
+      }
+    };
     
     function setLoadingTasks(isLoading) {
       state.isLoadingTasks = isLoading;
@@ -1521,155 +1665,53 @@
       await loadAllData();
     }
 
-    function renderCards() {
+       function renderCards() {
       const container = $('#view-list');
       if (!container) return;
+
       if (state.isLoadingTasks) {
         renderListSkeleton();
         return;
       }
+
       const tasks = getFilteredTasks();
+
       if (!tasks.length) {
-        container.innerHTML = `<div class="empty-state col-span-full rounded-[2rem] p-10 text-center"><div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl" style="background: var(--surface);">📭</div><div class="text-lg font-black">Ничего не найдено</div><p class="mx-auto mt-2 max-w-md text-sm font-medium" style="color: var(--muted);">Попробуй очистить поиск или снять фильтр по тегу. В новой версии пустое состояние тоже подсказывает следующий шаг.</p><button type="button" id="resetFiltersBtn" class="mt-5 rounded-2xl px-5 py-3 text-[11px] font-black uppercase text-white" style="background: var(--text);">Сбросить фильтры</button></div>`;
+        container.innerHTML = `
+          <div class="empty-state col-span-full rounded-[2rem] p-10 text-center">
+            <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl" style="background: var(--surface);">📭</div>
+            <div class="text-lg font-black">Ничего не найдено</div>
+            <p class="mx-auto mt-2 max-w-md text-sm font-medium" style="color: var(--muted);">
+              Попробуй очистить поиск или снять фильтр по тегу. В новой версии пустое состояние тоже подсказывает следующий шаг.
+            </p>
+            <button type="button" id="resetFiltersBtn" class="mt-5 rounded-2xl px-5 py-3 text-[11px] font-black uppercase text-white" style="background: var(--text);">
+              Сбросить фильтры
+            </button>
+          </div>
+        `;
         return;
       }
 
       container.innerHTML = tasks.map(task => {
-        const tagClass = task.tag === 'ФРК'
-          ? 'bg-amber-100 text-amber-700'
-          : task.tag === 'УТП'
-            ? 'bg-indigo-100 text-indigo-700'
-            : 'bg-slate-100 text-slate-600';
-
-        const channels = (task.channels || []).map(ch => `<span class="rounded bg-slate-900 px-2 py-0.5 text-[8px] font-black uppercase text-white">${escapeHtml(ch)}</span>`).join('');
-        const responsible = escapeHtml(task.responsible || 'Не назначен');
-        const title = escapeHtml(task.title || 'Без названия');
-        const views = Number(task.play_count || 0).toLocaleString('ru-RU');
-const deadlineMeta = getDeadlineMeta(task.date, task.status);
-const isEditing = state.inlineEditId === String(task.id);
-const draft = isEditing ? (state.inlineDraft || {}) : null;
-        const inlineEditHtml = isEditing ? `
-          <div class="inline-edit-shell">
-            <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <div class="md:col-span-2">
-                <label>Название</label>
-                <input type="text" class="inline-edit-input" data-inline-field="title" data-task-id="${escapeHtml(task.id)}" value="${escapeHtml(draft.title || '')}" />
-              </div>
-              <div>
-                <label>Статус</label>
-                <select class="inline-edit-input" data-inline-field="status" data-task-id="${escapeHtml(task.id)}">
-                  ${Object.entries(STATUS_MAP).map(([value,label]) => `<option value="${escapeHtml(value)}" ${String(draft.status||'')===value?'selected':''}>${escapeHtml(label)}</option>`).join('')}
-                </select>
-              </div>
-              <div>
-                <label>Тип</label>
-                <select class="inline-edit-input" data-inline-field="work_type" data-task-id="${escapeHtml(task.id)}">
-                  ${WORK_TYPES.map(value => `<option value="${escapeHtml(value)}" ${String(draft.work_type||'')===value?'selected':''}>${escapeHtml(value)}</option>`).join('')}
-                </select>
-              </div>
-              <div>
-                <label>Дедлайн</label>
-                <input type="date" class="inline-edit-input" data-inline-field="date" data-task-id="${escapeHtml(task.id)}" value="${escapeHtml(draft.date || '')}" />
-              </div>
-              <div>
-                <label>Ответственный</label>
-                <input type="text" class="inline-edit-input" data-inline-field="responsible" data-task-id="${escapeHtml(task.id)}" value="${escapeHtml(draft.responsible || '')}" />
-              </div>
-            </div>
-            <div class="inline-edit-actions">
-              <button type="button" class="primary save-inline-edit" data-task-id="${escapeHtml(task.id)}">Сохранить</button>
-              <button type="button" class="secondary cancel-inline-edit">Отмена</button>
-            </div>
-          </div>
-        ` : '';
-
-        return `
-          <article class="task-card ${isEditing ? 'is-editing' : ''} status-${escapeHtml(task.status || 'idea')} app-surface rounded-[2rem] border-2 border-transparent p-6 transition hover:-translate-y-1 hover:border-blue-200" data-task-id="${escapeHtml(task.id)}">
-            <div class="mb-4 flex items-start justify-between gap-3">
-              <div class="flex max-w-[80%] flex-wrap gap-1">${channels}</div>
-              <div class="flex items-center gap-1">
-                <button type="button" class="inline-edit-trigger rounded-full p-2 text-slate-400 hover:bg-blue-50 hover:text-blue-600" data-task-id="${escapeHtml(task.id)}" title="Быстрое редактирование">✎</button>
-                <button type="button" class="trash-task rounded-full p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-500" data-task-id="${escapeHtml(task.id)}" title="В корзину">✕</button>
-              </div>
-            </div>
-            <div class="mb-2 flex items-center gap-2">
-              <span class="rounded-full px-2 py-0.5 text-[8px] font-black uppercase ${tagClass}">${escapeHtml(task.tag || 'прочее')}</span>
-              <span class="text-[9px] font-black uppercase" style="color: var(--primary);">${escapeHtml(task.work_type || 'Пост')}</span>
-              <span class="rounded-full px-2 py-0.5 text-[8px] font-black uppercase soft-pill">${escapeHtml(STATUS_MAP[task.status] || 'Идея')}</span>
-            </div>
-            <h3 class="mb-3 text-[15px] font-black uppercase leading-tight">${title}</h3>
-
-<div class="mb-4">
-  <div class="progress-track">
-    <div class="progress-fill" style="width:${Math.round(getProgress(task.status))}%"></div>
-  </div>
-  <div class="mt-1 flex items-center justify-between text-[10px] font-bold" style="color: var(--muted);">
-    <span>Прогресс: ${Math.round(getProgress(task.status))}%</span>
-    <span>${escapeHtml(STATUS_MAP[task.status] || 'Идея')}</span>
-  </div>
-  <div class="stage-hint">${escapeHtml(getNextStepHint(task.status))}</div>
-</div>
-
-<div class="grid grid-cols-2 gap-2 text-[10px] font-bold" style="color: var(--muted);">
-  <div class="rounded-xl px-3 py-2 soft-pill">👤 ${responsible}</div>
-  <div class="deadline-chip ${deadlineMeta.className}">📅 ${escapeHtml(deadlineMeta.label)}</div>
-</div>
-            <div class="mt-4 flex items-center justify-between border-t pt-4 text-[10px] font-bold" style="border-color: var(--border); color: var(--muted);">
-              <span>Старт: ${escapeHtml(formatShortDate(task.start_date))}</span>
-              <span class="rounded-lg bg-emerald-50 px-2 py-1 font-black text-emerald-600">👁️ ${views}</span>
-            </div>
-            ${inlineEditHtml}
-          </article>
-        `;
+        const isEditing = state.inlineEditId === String(task.id);
+        const draft = isEditing ? (state.inlineDraft || {}) : {};
+        return TaskUI.renderListCard(task, { isEditing, draft });
       }).join('');
     }
 
-    function renderKanban() {
-  const tasks = getFilteredTasks();
-  getWorkflowOrder().forEach(status => {
-    const col = document.querySelector(`[data-kanban="${status}"]`);
-    const count = document.getElementById(`count-${status}`);
-    if (!col || !count) return;
+        function renderKanban() {
+      const tasks = getFilteredTasks();
 
-    const filtered = tasks.filter(task => task.status === status);
-    count.textContent = filtered.length;
+      getWorkflowOrder().forEach(status => {
+        const col = document.querySelector(`[data-kanban="${status}"]`);
+        const count = document.getElementById(`count-${status}`);
+        if (!col || !count) return;
 
-    col.innerHTML = filtered.map(task => {
-      const responsible = escapeHtml((task.responsible || 'Не назначен').split(' ')[0]);
-      const date = parseLocalDate(task.date);
-const deadlineMeta = getDeadlineMeta(task.date, task.status);
-const overdue = deadlineMeta.className === 'deadline-overdue';
-const progress = Math.round(getProgress(task.status));
-      return `
-        <div class="kanban-card status-${escapeHtml(task.status || 'idea')} mb-3 cursor-grab rounded-2xl border p-4 shadow-sm active:cursor-grabbing" draggable="true" data-task-id="${escapeHtml(task.id)}" style="border-color: var(--border); color: var(--text); background: var(--surface);">
-          <div class="mb-2 flex flex-wrap gap-1">
-            ${(task.channels || []).slice(0, 3).map(ch => `<span class="rounded bg-slate-900 px-1.5 py-0.5 text-[8px] font-black uppercase text-white">${escapeHtml(ch)}</span>`).join('')}
-          </div>
-
-          <div class="mb-2 text-[9px] font-black uppercase" style="color: var(--primary);">${escapeHtml(STATUS_MAP[task.status] || 'Идея')}</div>
-
-          <h4 class="mb-3 text-[12px] font-black uppercase leading-tight">${escapeHtml(task.title || 'Без названия')}</h4>
-
-          <div class="mb-3">
-            <div class="progress-track">
-              <div class="progress-fill" style="width:${progress}%"></div>
-            </div>
-            <div class="mt-1 text-[9px] font-bold" style="color: var(--muted);">Прогресс: ${progress}%</div>
-          </div>
-
-          <div class="text-[9px] font-black uppercase stage-hint">${escapeHtml(getNextStepHint(task.status))}</div>
-
-          <div class="mt-3 flex items-center justify-between border-t pt-2 text-[9px] font-bold" style="border-color: var(--border); color: var(--muted);">
-  <span>👤 ${responsible}</span>
-  <span class="deadline-chip ${deadlineMeta.className}" style="padding:6px 8px; font-size:9px;">
-    📅 ${escapeHtml(deadlineMeta.shortLabel)}
-  </span>
-</div>
-        </div>
-      `;
-    }).join('');
-  });
-}
+        const filtered = tasks.filter(task => task.status === status);
+        count.textContent = filtered.length;
+        col.innerHTML = filtered.map(task => TaskUI.renderKanbanCard(task)).join('');
+      });
+    }
 
     function renderCalendarTabs() {
       const container = $('#calendarTabs');
