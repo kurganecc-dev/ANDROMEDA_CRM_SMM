@@ -1983,6 +1983,155 @@
         if (container) container.innerHTML = AnalyticsUI.renderTable(tasks);
       }
     };
+
+    const ChartUI = {
+      platforms: ['YouTube', 'Instagram', 'TikTok', 'VK', 'Telegram'],
+
+      platformColors: {
+        YouTube: '#FF0000',
+        Instagram: '#E4405F',
+        TikTok: '#000000',
+        VK: '#0077FF',
+        Telegram: '#229ED9'
+      },
+
+      getPlatformViews(task, platform) {
+        if (platform === 'Telegram') {
+          return TG_LIST.reduce((sum, tg) => sum + Number(task.play_counts?.[tg] || 0), 0);
+        }
+
+        return Number(task.play_counts?.[platform] || 0);
+      },
+
+      getPublishedTasks() {
+        return state.tasks.filter(task => task.status === 'published');
+      },
+
+      buildMonthlyPeriods() {
+        const now = new Date();
+        const periods = [];
+
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          periods.push({
+            month: d.getMonth(),
+            year: d.getFullYear(),
+            label: d.toLocaleString('ru-RU', { month: 'short' })
+          });
+        }
+
+        return periods;
+      },
+
+      buildMonthlyData(platform, periods) {
+        const published = ChartUI.getPublishedTasks();
+
+        return periods.map(period => {
+          return published
+            .filter(task => {
+              const date = parseLocalDate(task.date);
+              return date && date.getMonth() === period.month && date.getFullYear() === period.year;
+            })
+            .reduce((sum, task) => sum + ChartUI.getPlatformViews(task, platform), 0);
+        });
+      },
+
+      buildDailyLabels() {
+        const now = new Date();
+        const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        return Array.from({ length: days }, (_, index) => String(index + 1));
+      },
+
+      buildDailyData(platform, labels) {
+        const now = new Date();
+        const published = ChartUI.getPublishedTasks();
+
+        return labels.map(label => {
+          const day = Number(label);
+
+          return published
+            .filter(task => {
+              const date = parseLocalDate(task.date);
+              return date &&
+                date.getDate() === day &&
+                date.getMonth() === now.getMonth() &&
+                date.getFullYear() === now.getFullYear();
+            })
+            .reduce((sum, task) => sum + ChartUI.getPlatformViews(task, platform), 0);
+        });
+      },
+
+      buildDataset(platform, data) {
+        const color = ChartUI.platformColors[platform];
+
+        return {
+          label: platform,
+          data,
+          borderColor: color,
+          backgroundColor: `${color}22`,
+          fill: true,
+          tension: 0.3
+        };
+      },
+
+      buildChartData() {
+        if (state.chartMode === 'months') {
+          $('#chartTitle').textContent = 'Аналитика охватов (6 мес)';
+
+          const periods = ChartUI.buildMonthlyPeriods();
+          const labels = periods.map(period => period.label);
+          const datasets = ChartUI.platforms.map(platform =>
+            ChartUI.buildDataset(platform, ChartUI.buildMonthlyData(platform, periods))
+          );
+
+          return { labels, datasets };
+        }
+
+        $('#chartTitle').textContent = `Аналитика по дням (${new Date().toLocaleString('ru-RU', { month: 'long' })})`;
+
+        const labels = ChartUI.buildDailyLabels();
+        const datasets = ChartUI.platforms.map(platform =>
+          ChartUI.buildDataset(platform, ChartUI.buildDailyData(platform, labels))
+        );
+
+        return { labels, datasets };
+      },
+
+      render() {
+        const canvas = $('#reachChart');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        const data = ChartUI.buildChartData();
+
+        if (state.chart) state.chart.destroy();
+
+        state.chart = new Chart(ctx, {
+          type: 'line',
+          data,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  font: { weight: 'bold', size: 10 }
+                }
+              },
+              tooltip: {
+                mode: 'index',
+                intersect: false
+              }
+            },
+            scales: {
+              y: { beginAtZero: true },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+      }
+    };
     
     const ViewController = {
       applyLayout() {
@@ -2354,90 +2503,10 @@ renderMetaOnly();
       });
     }
     
-    function renderCalendarTabs() { CalendarUI.renderTabs();}
-    function renderCalendar() { CalendarUI.render();}
-    function renderStats() { AnalyticsUI.renderStatsTable();}
-
-    function renderCharts() {
-      const canvas = $('#reachChart');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      const platforms = ['YouTube', 'Instagram', 'TikTok', 'VK', 'Telegram'];
-      let labels = [];
-      let datasets = [];
-      const now = new Date();
-
-      if (state.chartMode === 'months') {
-        $('#chartTitle').textContent = 'Аналитика охватов (6 мес)';
-        const periods = [];
-        for (let i = 5; i >= 0; i--) {
-          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          periods.push({
-            month: d.getMonth(),
-            year: d.getFullYear(),
-            label: d.toLocaleString('ru-RU', { month: 'short' })
-          });
-        }
-        labels = periods.map(p => p.label);
-        datasets = platforms.map(platform => {
-          const color = platform === 'YouTube' ? '#FF0000' : platform === 'Instagram' ? '#E4405F' : platform === 'TikTok' ? '#000000' : platform === 'VK' ? '#0077FF' : '#229ED9';
-          const data = periods.map(period => {
-            return state.tasks
-              .filter(task => {
-                const date = parseLocalDate(task.date);
-                return date && task.status === 'published' && date.getMonth() === period.month && date.getFullYear() === period.year;
-              })
-              .reduce((sum, task) => {
-                if (platform === 'Telegram') {
-                  return sum + TG_LIST.reduce((acc, tg) => acc + Number(task.play_counts?.[tg] || 0), 0);
-                }
-                return sum + Number(task.play_counts?.[platform] || 0);
-              }, 0);
-          });
-          return { label: platform, data, borderColor: color, backgroundColor: `${color}22`, fill: true, tension: 0.3 };
-        });
-      } else {
-        $('#chartTitle').textContent = `Аналитика по дням (${now.toLocaleString('ru-RU', { month: 'long' })})`;
-        const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-        labels = Array.from({ length: days }, (_, index) => String(index + 1));
-        datasets = platforms.map(platform => {
-          const color = platform === 'YouTube' ? '#FF0000' : platform === 'Instagram' ? '#E4405F' : platform === 'TikTok' ? '#000000' : platform === 'VK' ? '#0077FF' : '#229ED9';
-          const data = labels.map(label => {
-            const day = Number(label);
-            return state.tasks
-              .filter(task => {
-                const date = parseLocalDate(task.date);
-                return date && task.status === 'published' && date.getDate() === day && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-              })
-              .reduce((sum, task) => {
-                if (platform === 'Telegram') {
-                  return sum + TG_LIST.reduce((acc, tg) => acc + Number(task.play_counts?.[tg] || 0), 0);
-                }
-                return sum + Number(task.play_counts?.[platform] || 0);
-              }, 0);
-          });
-          return { label: platform, data, borderColor: color, backgroundColor: `${color}22`, fill: true, tension: 0.3 };
-        });
-      }
-
-      if (state.chart) state.chart.destroy();
-      state.chart = new Chart(ctx, {
-        type: 'line',
-        data: { labels, datasets },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'bottom', labels: { font: { weight: 'bold', size: 10 } } },
-            tooltip: { mode: 'index', intersect: false }
-          },
-          scales: {
-            y: { beginAtZero: true },
-            x: { grid: { display: false } }
-          }
-        }
-      });
-    }
+    function renderCalendarTabs() {CalendarUI.renderTabs();}
+    function renderCalendar() {CalendarUI.render();}
+    function renderStats() {AnalyticsUI.renderStatsTable();}
+    function renderCharts() {ChartUI.render();}
 
     function renderAccounts() {
       $('#view-accounts').innerHTML = WORK_ACCOUNTS.map(acc => `
