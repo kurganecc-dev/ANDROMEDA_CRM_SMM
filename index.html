@@ -2693,6 +2693,40 @@ renderMetaOnly();
       if (state.chatChannel) return;
       state.chatChannel = ChatService.subscribe(refreshChat);
     }
+
+    function setupTasksRealtime() {
+      if (state.tasksChannel) return;
+
+      state.tasksChannel = db
+        .channel('tasks-realtime')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: Services.tables.tasks },
+          payload => {
+            const { eventType, new: newRow, old: oldRow } = payload;
+
+            if (eventType === 'INSERT') {
+              TaskState.addTask(newRow);
+            }
+
+            if (eventType === 'UPDATE') {
+              TaskState.patchTask(newRow.id, newRow);
+            }
+
+            if (eventType === 'DELETE') {
+              TaskState.removeTask(oldRow.id);
+              TaskState.removeFromTrash(oldRow.id);
+            }
+
+            // мягкий ререндер
+            if (state.currentView === 'list') renderCards();
+            if (state.currentView === 'kanban') renderKanban();
+            if (state.currentView === 'calendar') renderCalendar();
+            renderMetaOnly();
+          }
+        )
+        .subscribe();
+    }
     
         function renderAll() {
       buildMainTabs();
@@ -2794,6 +2828,7 @@ renderMetaOnly();
       applySavedTheme();
       await loadAllData();
       await setupChat();
+      await setupTasksRealtime();
 
       setTimeout(() => $('#appContent').style.opacity = '1', 50);
     }
