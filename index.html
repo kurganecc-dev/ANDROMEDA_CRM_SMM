@@ -2217,60 +2217,7 @@
       root.innerHTML = ChatUI.renderMessages(messages || [], myUid);
       ChatUI.scrollToBottom();
     }
-
-  let lastDayLabel = '';
-
-  root.innerHTML = messages.map(message => {
-    const dateObj = new Date(message.created_at);
-    const dayLabel = dateObj.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long' });
-    const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const isMe = message.sender_uid === myUid;
-    const reactions = message.reactions || {};
-
-    const divider = dayLabel !== lastDayLabel
-      ? `<div class="chat-day-divider">${escapeHtml(dayLabel)}</div>`
-      : '';
-
-    lastDayLabel = dayLabel;
-
-    const reactionsHtml = Object.entries(reactions).map(([emoji, users]) => {
-      if (!users.length) return '';
-      const active = users.includes(myUid);
-      return `
-        <button class="toggle-reaction chat-reaction ${active ? 'active' : ''}" data-message-id="${escapeHtml(message.id)}" data-emoji="${escapeHtml(emoji)}">
-          ${emoji} <span>${users.length}</span>
-        </button>
-      `;
-    }).join('');
-
-    const picker = commonEmojis.map(emoji => `
-      <button class="toggle-reaction chat-emoji-btn" data-message-id="${escapeHtml(message.id)}" data-emoji="${escapeHtml(emoji)}">${emoji}</button>
-    `).join('');
-
-    return `
-      ${divider}
-      <div class="chat-row ${isMe ? 'me' : 'other'}">
-        <div class="chat-meta">
-          <span class="chat-author">${escapeHtml(message.sender_name || '')}</span>
-          <span class="chat-time">${escapeHtml(time)}</span>
-        </div>
-
-        <div class="chat-bubble ${isMe ? 'me' : 'other'}">
-          <div class="chat-emoji-bar">${picker}</div>
-          <div class="chat-text">${escapeHtml(message.message || '')}</div>
-
-          ${reactionsHtml ? `<div class="chat-actions">${reactionsHtml}</div>` : ''}
-
-          ${isMe ? `
-            <button class="delete-message chat-delete-btn" data-message-id="${escapeHtml(message.id)}" title="Удалить сообщение">✕</button>
-          ` : ''}
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  root.scrollTop = root.scrollHeight;
-}
+  
     async function refreshChat() {
       const { data, error } = await ChatService.fetchMessages(50);
       if (!error && data) {
