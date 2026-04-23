@@ -958,22 +958,23 @@
     ];
 
     const state = {
-      tasks: [],
-      trash: [],
-      currentView: 'list',
-      analyticsSubView: 'table',
-      chartMode: 'months',
-      calendarChannel: 'ALL',
-      viewDate: new Date(),
-      statsDate: new Date(),
-      createPrefillDate: '',
-      chart: null,
-      currentUser: null,
-      currentRole: null,
-      isLoadingTasks: false,
-      inlineEditId: null,
-      inlineDraft: null
-    };
+  tasks: [],
+  trash: [],
+  currentView: 'list',
+  analyticsSubView: 'table',
+  chartMode: 'months',
+  calendarChannel: 'ALL',
+  viewDate: new Date(),
+  statsDate: new Date(),
+  createPrefillDate: '',
+  chart: null,
+  currentUser: null,
+  currentRole: null,
+  isLoadingTasks: false,
+  inlineEditId: null,
+  inlineDraft: null,
+  chatChannel: null
+};
 
     const $ = (sel, root = document) => root.querySelector(sel);
     const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -1852,7 +1853,33 @@ const overdue = date && date < todayStart && task.status !== 'published';
 
   root.scrollTop = root.scrollHeight;
 }
+async function refreshChat() {
+  const { data, error } = await db
+    .from('team_chat')
+    .select('*')
+    .order('created_at', { ascending: true })
+    .limit(50);
 
+  if (!error && data) {
+    renderMessages(data);
+  }
+}
+
+async function setupChat() {
+  await refreshChat();
+
+  if (state.chatChannel) return;
+
+  state.chatChannel = db
+    .channel('room1')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'team_chat' },
+      refreshChat
+    )
+    .subscribe();
+}
+    
     function renderAll() {
       const controls = $('#listControls');
       const rightSidebar = $('#rightSidebar');
