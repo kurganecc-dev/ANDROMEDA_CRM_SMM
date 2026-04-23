@@ -2156,8 +2156,8 @@ async function setupChat() {
       $('#date_val').value = date;
       $('#date_val').min = date;
       const formatted = parseLocalDate(date)?.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) || 'без даты';
-      if ($('#createModalTitle')) $('#createModalTitle').textContent = prefillDate ? 'Новая задача на выбранную дату' : 'Новая задача';
-      if ($('#createModalSubtitle')) $('#createModalSubtitle').textContent = prefillDate ? 'Дата уже подставлена из календаря — осталось заполнить только суть задачи.' : 'Короткая форма без лишнего шума — только то, что нужно для старта.';
+      if ($('#createModalTitle')) $('#createModalTitle').textContent = prefillDate ? 'Новая задача' : 'Новая задача';
+      if ($('#createModalSubtitle')) $('#createModalSubtitle').textContent = prefillDate ? 'Заполни все важное .' : 'Короткая форма без лишнего шума — только то, что нужно для старта.';
       if ($('#createPreviewDate')) $('#createPreviewDate').textContent = formatted;
       openModal('createModal');
       renderCalendar();
