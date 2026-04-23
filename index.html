@@ -2083,31 +2083,8 @@ renderMetaOnly();
       });
     }
     
-       function renderCalendarTabs() { CalendarUI.renderTabs();}
-       function renderCalendar() { CalendarUI.render(); }
-    
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-      for (let day = 1; day <= daysInMonth; day++) {
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const items = state.tasks.filter(task => {
-          const channelMatch = state.calendarChannel === 'ALL' || (task.channels || []).includes(state.calendarChannel);
-          return channelMatch && (task.start_date === dateStr || task.date === dateStr);
-        });
-        const itemsHtml = items.map(task => {
-          const isStart = task.start_date === dateStr;
-          const cls = isStart ? 'border border-dashed opacity-70 text-slate-600' : `status-${escapeHtml(task.status || 'idea')}`;
-          return `<button class="calendar-item ${cls} w-full text-left" data-task-id="${escapeHtml(task.id)}">${isStart ? '🚀' : '🏁'} ${escapeHtml(task.title || 'Без названия')}</button>`;
-        }).join('');
-
-        grid.insertAdjacentHTML('beforeend', `
-          <div class="calendar-day cursor-pointer ${dateStr === state.createPrefillDate ? "create-target" : ""}" data-date="${dateStr}">
-            <div class="mb-1 text-[10px] font-black text-slate-400">${day}</div>
-            ${itemsHtml}
-          </div>
-        `);
-      }
-    }
-
+    function renderCalendarTabs() { CalendarUI.renderTabs();}
+    function renderCalendar() { CalendarUI.render(); }
     function renderStats() {
       const label = $('#statsMonthLabel');
       const filter = $('#statsPlatformFilter')?.value || 'ALL';
