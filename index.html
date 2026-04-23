@@ -1165,7 +1165,104 @@
     const getProgress = Utils.getProgress;
     const getNextStepHint = Utils.getNextStepHint;
     const isSameMonthYear = Utils.isSameMonthYear;
+        const TaskHelpers = {
+      normalizeLinks(links = {}) {
+        return Object.fromEntries(
+          Object.entries(links).map(([key, value]) => [key, String(value || '').trim()])
+        );
+      },
 
+      collectCreatePayload() {
+        const startDate = $('#start_date_val').value;
+        const endDate = $('#date_val').value;
+
+        return {
+          id: Date.now(),
+          title: $('#title').value.trim(),
+          work_type: $('#work_type').value,
+          tag: $('#tag').value,
+          description: $('#description').value.trim(),
+          channels: $$('input[name="chan"]:checked').map(cb => cb.value),
+          executors: $$('input[name="exec"]:checked').map(cb => cb.value),
+          responsible: state.currentUser,
+          start_date: startDate || new Date().toISOString().split('T')[0],
+          date: endDate || new Date().toISOString().split('T')[0],
+          status: 'idea',
+          links: {},
+          play_counts: {},
+          play_count: 0,
+          is_deleted: false
+        };
+      },
+
+      collectEditPayload() {
+        const links = {};
+        $$('.multi-link-input').forEach(input => {
+          links[input.dataset.platform] = input.value.trim();
+        });
+
+        return {
+          title: $('#edit_title').value.trim(),
+          work_type: $('#edit_work_type').value,
+          tag: $('#edit_tag').value,
+          description: $('#edit_description').value.trim(),
+          status: $('#edit_status').value,
+          start_date: $('#edit_start_date').value || null,
+          date: $('#edit_date').value || null,
+          channels: $$('input[name="edit_chan"]:checked').map(cb => cb.value),
+          executors: $$('input[name="edit_exec"]:checked').map(cb => cb.value),
+          links: TaskHelpers.normalizeLinks(links)
+        };
+      },
+
+      collectInlinePayload(draft = {}) {
+        return {
+          title: String(draft.title || '').trim(),
+          status: draft.status || 'idea',
+          date: draft.date,
+          responsible: String(draft.responsible || '').trim() || state.currentUser,
+          work_type: draft.work_type || 'Пост'
+        };
+      }
+    };
+
+    const TaskService = {
+      async getAllActive() {
+        return db.from(Services.tables.tasks).select('*').eq('is_deleted', false);
+      },
+
+      async getAllTrash() {
+        return db.from(Services.tables.tasks).select('*').eq('is_deleted', true);
+      },
+
+      async create(task) {
+        return db.from(Services.tables.tasks).insert([task]);
+      },
+
+      async update(id, payload) {
+        return db.from(Services.tables.tasks).update(payload).eq('id', id);
+      },
+
+      async moveToTrash(id, deletedBy) {
+        return db.from(Services.tables.tasks).update({
+          is_deleted: true,
+          deleted_by: deletedBy
+        }).eq('id', id);
+      },
+
+      async restore(id) {
+        return db.from(Services.tables.tasks).update({
+          is_deleted: false,
+          deleted_by: null
+        }).eq('id', id);
+      },
+
+      async removeForever(id) {
+        return db.from(Services.tables.tasks).delete().eq('id', id);
+      }
+    };
+    
+    
     function setLoadingTasks(isLoading) {
       state.isLoadingTasks = isLoading;
       renderAll();
@@ -1397,23 +1494,27 @@
       renderCards();
     }
 
-    async function saveInlineEdit(taskId) {
+        async function saveInlineEdit(taskId) {
       const draft = state.inlineDraft || {};
-      if (!String(draft.title || '').trim()) return notify('Для быстрого сохранения нужно указать название.', 'warning', 'Незаполнено');
-      if (!draft.date) return notify('Укажи дедлайн, чтобы сохранить карточку.', 'warning', 'Незаполнено');
-      const payload = {
-        title: String(draft.title).trim(),
-        status: draft.status || 'idea',
-        date: draft.date,
-        responsible: String(draft.responsible || '').trim() || state.currentUser,
-        work_type: draft.work_type || 'Пост'
-      };
+
+      if (!String(draft.title || '').trim()) {
+        return notify('Для быстрого сохранения нужно указать название.', 'warning', 'Незаполнено');
+      }
+
+      if (!draft.date) {
+        return notify('Укажи дедлайн, чтобы сохранить карточку.', 'warning', 'Незаполнено');
+      }
+
+      const payload = TaskHelpers.collectInlinePayload(draft);
       const loadingToast = notify('Сохраняю быстрые изменения в карточке…', 'loading', 'Подожди', { closable: false });
-      const { error } = await db.from('tasks').update(payload).eq('id', taskId);
+
+      const { error } = await TaskService.update(taskId, payload);
+
       if (error) {
         updateToast(loadingToast, 'Не удалось сохранить быстрые изменения.', 'error', 'Ошибка');
         return;
       }
+
       updateToast(loadingToast, 'Карточка обновлена без открытия модалки.', 'success', 'Сохранено');
       state.inlineEditId = null;
       state.inlineDraft = null;
@@ -2075,13 +2176,13 @@ async function setupChat() {
       await db.from('activity_logs').insert([{ user_name: state.currentUser, action_type: actionType, task_title: taskTitle, details }]);
     }
 
-    async function loadAllData() {
+        async function loadAllData() {
       setLoadingTasks(true);
       try {
         const [tasksRes, trashRes, configRes] = await Promise.all([
-          db.from('tasks').select('*').eq('is_deleted', false),
-          db.from('tasks').select('*').eq('is_deleted', true),
-          db.from('config').select('*')
+          TaskService.getAllActive(),
+          TaskService.getAllTrash(),
+          db.from(Services.tables.config).select('*')
         ]);
 
         if (tasksRes.error || trashRes.error) {
@@ -2149,25 +2250,29 @@ async function setupChat() {
       location.reload();
     }
 
-    async function moveToTrash(id) {
+       async function moveToTrash(id) {
       const task = state.tasks.find(item => String(item.id) === String(id));
-      const { error } = await db.from('tasks').update({ is_deleted: true, deleted_by: state.currentUser }).eq('id', id);
+      const { error } = await TaskService.moveToTrash(id, state.currentUser);
       if (error) return notify('Не удалось переместить в корзину', 'error', 'Ошибка');
+
       await loadAllData();
       await logAction('delete', task?.title || 'Задача', 'Перенесено в корзину');
     }
 
     async function restoreFromTrash(id) {
-      const { error } = await db.from('tasks').update({ is_deleted: false, deleted_by: null }).eq('id', id);
-      if (error) return notify('Не удалось восстановить задачу');
+      const { error } = await TaskService.restore(id);
+      if (error) return notify('Не удалось восстановить задачу', 'error', 'Ошибка');
+
       await loadAllData();
       renderTrash();
     }
 
     async function finalDelete(id) {
       if (!confirm('Навсегда удалить задачу?')) return;
-      const { error } = await db.from('tasks').delete().eq('id', id);
-      if (error) return notify('Не удалось удалить задачу');
+
+      const { error } = await TaskService.removeForever(id);
+      if (error) return notify('Не удалось удалить задачу', 'error', 'Ошибка');
+
       await loadAllData();
       renderTrash();
     }
@@ -2222,69 +2327,45 @@ async function setupChat() {
       renderCalendar();
     }
 
-    async function saveEditForm(event) {
+   async function saveEditForm(event) {
       event.preventDefault();
+
       const startDate = $('#edit_start_date').value;
       const endDate = $('#edit_date').value;
-      if (startDate && endDate && endDate < startDate) return notify('Дедлайн не может быть раньше даты старта');
+
+      if (startDate && endDate && endDate < startDate) {
+        return notify('Дедлайн не может быть раньше даты старта', 'warning', 'Проверь даты');
+      }
 
       const id = $('#edit_id').value;
       const oldTask = state.tasks.find(item => String(item.id) === String(id));
-      const newStatus = $('#edit_status').value;
-      const links = {};
-      $$('.multi-link-input').forEach(input => links[input.dataset.platform] = input.value.trim());
+      const payload = TaskHelpers.collectEditPayload();
 
-      const payload = {
-        title: $('#edit_title').value.trim(),
-        work_type: $('#edit_work_type').value,
-        tag: $('#edit_tag').value,
-        description: $('#edit_description').value.trim(),
-        status: newStatus,
-        start_date: startDate || null,
-        date: endDate || null,
-        channels: $$('input[name="edit_chan"]:checked').map(cb => cb.value),
-        executors: $$('input[name="edit_exec"]:checked').map(cb => cb.value),
-        links
-      };
-
-      const { error } = await db.from('tasks').update(payload).eq('id', id);
+      const { error } = await TaskService.update(id, payload);
       if (error) return notify('Не удалось сохранить изменения', 'error', 'Ошибка');
 
       await loadAllData();
       closeModal('editModal');
-      if (oldTask && oldTask.status !== newStatus) {
-        await logAction('status_change', oldTask.title, `Статус: ${oldTask.status} → ${newStatus}`);
+
+      if (oldTask && oldTask.status !== payload.status) {
+        await logAction('status_change', oldTask.title, `Статус: ${oldTask.status} → ${payload.status}`);
       } else {
         await logAction('update', oldTask?.title || payload.title, 'Данные обновлены');
       }
     }
 
-    async function saveCreateForm(event) {
+        async function saveCreateForm(event) {
       event.preventDefault();
-      if (!validateCreateForm()) return notify('Проверь поля формы: ошибки уже показаны под нужными полями.', 'warning', 'Нужно поправить данные');
-      const startDate = $('#start_date_val').value;
-      const endDate = $('#date_val').value;
 
-      const task = {
-        id: Date.now(),
-        title: $('#title').value.trim(),
-        work_type: $('#work_type').value,
-        tag: $('#tag').value,
-        description: $('#description').value.trim(),
-        channels: $$('input[name="chan"]:checked').map(cb => cb.value),
-        executors: $$('input[name="exec"]:checked').map(cb => cb.value),
-        responsible: state.currentUser,
-        start_date: startDate || new Date().toISOString().split('T')[0],
-        date: endDate || new Date().toISOString().split('T')[0],
-        status: 'idea',
-        links: {},
-        play_counts: {},
-        play_count: 0,
-        is_deleted: false
-      };
+      if (!validateCreateForm()) {
+        return notify('Проверь поля формы: ошибки уже показаны под нужными полями.', 'warning', 'Нужно поправить данные');
+      }
 
-      const { error } = await db.from('tasks').insert([task]);
+      const task = TaskHelpers.collectCreatePayload();
+      const { error } = await TaskService.create(task);
+
       if (error) return notify('Не удалось создать задачу', 'error', 'Ошибка');
+
       await loadAllData();
       $('#ideaForm').reset();
       $$('input[type="checkbox"]', $('#createModal')).forEach(cb => cb.checked = false);
