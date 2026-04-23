@@ -306,51 +306,56 @@
 
         <div id="view-list" class="grid grid-cols-1 gap-6 md:grid-cols-2"></div>
 
-        <div id="view-kanban" class="hidden overflow-x-auto pb-4">
-  <div class="flex min-w-[1400px] gap-4">
-
-    <!-- IDEA -->
-    <div class="kanban-stage" data-stage="idea">
-      <h3>💡 Идеи</h3>
-      <div class="kanban-col" data-kanban="idea"></div>
+       <div id="view-kanban" class="hidden overflow-x-auto pb-4">
+  <div class="flex min-w-[1760px] gap-4">
+    <div class="flex-1">
+      <div class="mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-[10px] font-black uppercase app-surface">
+        💡 Идеи <span id="count-idea">0</span>
+      </div>
+      <div data-kanban="idea" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: var(--border); background: color-mix(in srgb, var(--surface) 70%, transparent);"></div>
     </div>
 
-    <!-- SCRIPT -->
-    <div class="kanban-stage" data-stage="script">
-      <h3>✍️ Сценарий</h3>
-      <div class="kanban-col" data-kanban="script"></div>
+    <div class="flex-1">
+      <div class="mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-[10px] font-black uppercase text-white" style="background:#8b5cf6;">
+        ✍️ Сценарий <span id="count-script">0</span>
+      </div>
+      <div data-kanban="script" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: rgba(139,92,246,.28); background: rgba(139,92,246,.06);"></div>
     </div>
 
-    <!-- PRODUCTION -->
-    <div class="kanban-stage" data-stage="production">
-      <h3>🎬영 Продакшн</h3>
-      <div class="kanban-col" data-kanban="production"></div>
+    <div class="flex-1">
+      <div class="mb-3 flex items-center justify-between rounded-xl bg-blue-600 px-4 py-3 text-[10px] font-black uppercase text-white">
+        🎬 Продакшн <span id="count-production">0</span>
+      </div>
+      <div data-kanban="production" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color:#bfdbfe; background:rgba(59,130,246,.06);"></div>
     </div>
 
-    <!-- EDITING -->
-    <div class="kanban-stage" data-stage="editing">
-      <h3>✂️ Монтаж</h3>
-      <div class="kanban-col" data-kanban="editing"></div>
+    <div class="flex-1">
+      <div class="mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-[10px] font-black uppercase text-white" style="background:#f59e0b;">
+        ✂️ Монтаж <span id="count-editing">0</span>
+      </div>
+      <div data-kanban="editing" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: rgba(245,158,11,.28); background: rgba(245,158,11,.06);"></div>
     </div>
 
-    <!-- REVIEW -->
-    <div class="kanban-stage" data-stage="review">
-      <h3>👀 Проверка</h3>
-      <div class="kanban-col" data-kanban="review"></div>
+    <div class="flex-1">
+      <div class="mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-[10px] font-black uppercase text-white" style="background:#ec4899;">
+        👀 Проверка <span id="count-review">0</span>
+      </div>
+      <div data-kanban="review" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: rgba(236,72,153,.28); background: rgba(236,72,153,.06);"></div>
     </div>
 
-    <!-- SCHEDULED -->
-    <div class="kanban-stage" data-stage="scheduled">
-      <h3>📅 Запланировано</h3>
-      <div class="kanban-col" data-kanban="scheduled"></div>
+    <div class="flex-1">
+      <div class="mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-[10px] font-black uppercase text-white" style="background:#14b8a6;">
+        📅 Запланировано <span id="count-scheduled">0</span>
+      </div>
+      <div data-kanban="scheduled" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: rgba(20,184,166,.28); background: rgba(20,184,166,.06);"></div>
     </div>
 
-    <!-- PUBLISHED -->
-    <div class="kanban-stage" data-stage="published">
-      <h3>🚀 Опубликовано</h3>
-      <div class="kanban-col" data-kanban="published"></div>
+    <div class="flex-1">
+      <div class="mb-3 flex items-center justify-between rounded-xl bg-slate-900 px-4 py-3 text-[10px] font-black uppercase text-white">
+        🚀 Опубликовано <span id="count-published">0</span>
+      </div>
+      <div data-kanban="published" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: var(--border); background: rgba(15,23,42,.06);"></div>
     </div>
-
   </div>
 </div>
 
@@ -1062,7 +1067,9 @@ function getNextStepHint(status) {
     col.innerHTML = filtered.map(task => {
       const responsible = escapeHtml((task.responsible || 'Не назначен').split(' ')[0]);
       const date = parseLocalDate(task.date);
-      const overdue = date && date < new Date() && task.status !== 'published';
+      const today = new Date();
+const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+const overdue = date && date < todayStart && task.status !== 'published';
       const progress = Math.round(getProgress(task.status));
 
       return `
@@ -1832,38 +1839,47 @@ function getNextStepHint(status) {
     }
 
     async function updateAllMonthStats() {
-      const btn = $('#btnUpdateAll');
-      btn.disabled = true;
-      btn.textContent = '...';
-      try {
-        const tasks = state.tasks.filter(task => {
-          const date = parseLocalDate(task.date);
-          return date && isSameMonthYear(date, state.statsDate) && task.links && Object.keys(task.links).length > 0;
-        });
+  const btn = $('#btnUpdateAll');
+  const progressToast = notify('Обновляю статистику по публикациям…', 'loading', 'Подожди', { closable: false });
 
-        for (const task of tasks) {
-          let total = 0;
-          const playCounts = { ...(task.play_counts || {}) };
-          for (const [platform, url] of Object.entries(task.links || {})) {
-            if (!url) continue;
-            const value = await fetchSingleStat(url, platform);
-            playCounts[platform] = value;
-            total += value;
-          }
-          const { error } = await db.from('tasks').update({ play_counts: playCounts, play_count: total }).eq('id', task.id);
-          if (error) console.error(error);
-        }
-        await loadAllData();
-        updateToast(progressToast, 'Статистика обновлена.', 'success', 'Готово');
-      } catch (e) {
-        console.error(e);
-        updateToast(progressToast, 'Не удалось обновить статистику.', 'error', 'Ошибка');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Обновить';
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  try {
+    const tasks = state.tasks.filter(task => {
+      const date = parseLocalDate(task.date);
+      return date && isSameMonthYear(date, state.statsDate) && task.links && Object.keys(task.links).length > 0;
+    });
+
+    for (const task of tasks) {
+      let total = 0;
+      const playCounts = { ...(task.play_counts || {}) };
+
+      for (const [platform, url] of Object.entries(task.links || {})) {
+        if (!url) continue;
+        const value = await fetchSingleStat(url, platform);
+        playCounts[platform] = value;
+        total += value;
       }
+
+      const { error } = await db.from('tasks').update({
+        play_counts: playCounts,
+        play_count: total
+      }).eq('id', task.id);
+
+      if (error) console.error(error);
     }
 
+    await loadAllData();
+    updateToast(progressToast, 'Статистика обновлена.', 'success', 'Готово');
+  } catch (e) {
+    console.error(e);
+    updateToast(progressToast, 'Не удалось обновить статистику.', 'error', 'Ошибка');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Обновить';
+  }
+}
     async function sendChatMessage() {
       const input = $('#chatInput');
       const message = input.value.trim();
