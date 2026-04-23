@@ -1504,6 +1504,49 @@
       }
     };
 
+        const ConfigService = {
+      async getAll() {
+        return db.from(Services.tables.config).select('*');
+      },
+
+      async saveApiKeys(ytKey, apifyToken) {
+        const [ytRes, apifyRes] = await Promise.all([
+          db.from(Services.tables.config).upsert({ id: 'yt_key', value: ytKey }),
+          db.from(Services.tables.config).upsert({ id: 'apify_token', value: apifyToken })
+        ]);
+
+        return {
+          error: ytRes.error || apifyRes.error
+        };
+      },
+
+      applyToLocalStorage(rows = []) {
+        rows.forEach(row => localStorage.setItem(row.id, row.value));
+
+        if ($('#ytApiKey')) $('#ytApiKey').value = localStorage.getItem('yt_key') || '';
+        if ($('#apifyToken')) $('#apifyToken').value = localStorage.getItem('apify_token') || '';
+      }
+    };
+
+    const LogService = {
+      async create(actionType, taskTitle, details = '') {
+        return db.from(Services.tables.activityLogs).insert([{
+          user_name: state.currentUser,
+          action_type: actionType,
+          task_title: taskTitle,
+          details
+        }]);
+      },
+
+      async getLatest(limit = 30) {
+        return db
+          .from(Services.tables.activityLogs)
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(limit);
+      }
+    };
+    
     const ChatUI = {
       commonEmojis: ['👍', '❤️', '🔥', '✅', '🚀'],
 
@@ -2547,19 +2590,33 @@ renderMetaOnly();
       `).join('');
     }
 
-    async function renderLogs() {
-      const { data, error } = await db.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(30);
+        async function renderLogs() {
+      const { data, error } = await LogService.getLatest(30);
+
       if (error) {
         $('#logsContent').innerHTML = '<p class="text-sm text-rose-500">Не удалось загрузить логи</p>';
         return;
       }
+
       if (!data?.length) {
         $('#logsContent').innerHTML = '<p class="py-10 text-center text-[10px] font-bold uppercase text-slate-400">Действий пока нет</p>';
         return;
       }
+
       $('#logsContent').innerHTML = data.map(log => {
-        const time = new Date(log.created_at).toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' });
-        const icon = log.action_type === 'create' ? '➕' : log.action_type === 'delete' ? '🗑️' : log.action_type === 'status_change' ? '🔄' : '📝';
+        const time = new Date(log.created_at).toLocaleString('ru-RU', {
+          hour: '2-digit',
+          minute: '2-digit',
+          day: '2-digit',
+          month: 'short'
+        });
+
+        const icon =
+          log.action_type === 'create' ? '➕' :
+          log.action_type === 'delete' ? '🗑️' :
+          log.action_type === 'status_change' ? '🔄' :
+          '📝';
+
         return `
           <div class="rounded-2xl border p-3" style="background: var(--surface-2); border-color: var(--border);">
             <div class="mb-1 flex items-start justify-between gap-2">
@@ -2621,8 +2678,7 @@ renderMetaOnly();
       applyTheme(theme);
     }
 
-    async function logAction(actionType, taskTitle, details = '') {
-      await db.from('activity_logs').insert([{ user_name: state.currentUser, action_type: actionType, task_title: taskTitle, details }]);
+        async function logAction(actionType, taskTitle, details = '') {await LogService.create(actionType, taskTitle, details);
     }
 
         async function loadAllData() {
@@ -2631,7 +2687,7 @@ renderMetaOnly();
         const [tasksRes, trashRes, configRes] = await Promise.all([
           TaskService.getAllActive(),
           TaskService.getAllTrash(),
-          db.from(Services.tables.config).select('*')
+         ConfigService.getAll()
         ]);
 
         if (tasksRes.error || trashRes.error) {
@@ -2643,10 +2699,8 @@ renderMetaOnly();
                 TaskState.setTasks(tasksRes.data || []);
         TaskState.setTrash(trashRes.data || []);
 
-        if (configRes.data) {
-          configRes.data.forEach(row => localStorage.setItem(row.id, row.value));
-          $('#ytApiKey').value = localStorage.getItem('yt_key') || '';
-          $('#apifyToken').value = localStorage.getItem('apify_token') || '';
+                if (configRes.data) {
+          ConfigService.applyToLocalStorage(configRes.data);
         }
       } finally {
         setLoadingTasks(false);
@@ -2848,14 +2902,17 @@ renderMetaOnly();
       await logAction('create', task.title, 'Создана новая задача');
     }
 
-    async function saveAdminSettings() {
+        async function saveAdminSettings() {
       const yt = $('#ytApiKey').value.trim();
       const apify = $('#apifyToken').value.trim();
-      const first = await db.from('config').upsert({ id: 'yt_key', value: yt });
-      const second = await db.from('config').upsert({ id: 'apify_token', value: apify });
-      if (first.error || second.error) return notify('Не удалось сохранить настройки');
-      await loadAllData();
-      notify('Настройки сохранены');
+
+      const { error } = await ConfigService.saveApiKeys(yt, apify);
+      if (error) return notify('Не удалось сохранить настройки', 'error', 'Ошибка');
+
+      localStorage.setItem('yt_key', yt);
+      localStorage.setItem('apify_token', apify);
+
+      notify('Настройки сохранены', 'success', 'Готово');
     }
 
     function exportStatsToCSV() {
