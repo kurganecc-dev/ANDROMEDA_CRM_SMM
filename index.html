@@ -793,29 +793,24 @@
         </div>
 
         <div id="view-accounts" class="hidden grid grid-cols-1 gap-6 md:grid-cols-2"></div>
-      </section>
-
-     <aside id="rightSidebar" class="space-y-6 lg:col-span-3">
-  <div class="sidebar-panel rounded-[2rem] p-5 text-slate-100 overflow-hidden" style="background: #0f172a; box-shadow: var(--shadow);">
-    <h3 class="mb-4 border-b border-slate-800 pb-4 text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">Фокус и мои задачи</h3>
-    <div id="focusSidebar" class="space-y-4"></div>
-  </div>
-
-<div class="sidebar-panel rounded-[2rem] p-6 text-slate-100" style="background: #0f172a; box-shadow: var(--shadow);">
-  <div class="chat-shell">
-   <div class="chat-toolbar border-b border-slate-800 pb-3">
+        <div id="view-chat" class="hidden">
+  <div class="app-surface rounded-[2rem] p-6">
+    <div class="mb-6 flex items-center justify-between border-b pb-5" style="border-color: var(--border);">
       <div>
-        <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">Командный чат</h3>
-        <div class="mt-2 chat-presence">
-          <span class="chat-presence-dot"></span>
-          <span>Команда на связи</span>
-        </div>
+        <h2 class="text-xl font-black uppercase">Командный чат</h2>
+        <p class="mt-2 text-sm font-medium" style="color: var(--muted);">
+          Общение команды, быстрые статусы и обсуждение рабочих задач.
+        </p>
+      </div>
+      <div class="chat-presence">
+        <span class="chat-presence-dot"></span>
+        <span>Команда на связи</span>
       </div>
     </div>
 
-    <div id="chatMessages" class="chat-feed"></div>
+    <div id="chatMessages" class="chat-feed" style="height: 560px; max-height: 62vh;"></div>
 
-    <div class="chat-composer">
+    <div class="chat-composer mt-5">
       <div class="chat-quick-actions">
         <button type="button" class="chat-quick-btn" data-quick-message="Взял в работу">Взял в работу</button>
         <button type="button" class="chat-quick-btn" data-quick-message="Нужен фидбек">Нужен фидбек</button>
@@ -831,6 +826,13 @@
     </div>
   </div>
 </div>
+      </section>
+
+     <aside id="rightSidebar" class="space-y-6 lg:col-span-3">
+  <div class="sidebar-panel rounded-[2rem] p-5 text-slate-100 overflow-hidden" style="background: #0f172a; box-shadow: var(--shadow);">
+    <h3 class="mb-4 border-b border-slate-800 pb-4 text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">Фокус и мои задачи</h3>
+    <div id="focusSidebar" class="space-y-4"></div>
+  </div>
 </aside>
     </main>
   </div>
@@ -993,7 +995,7 @@
         published: 'Опубликовано'
       },
 
-      views: ['list', 'kanban', 'calendar', 'analytics', 'accounts'],
+      views: ['list', 'kanban', 'calendar', 'analytics', 'accounts', 'chat'],
 
       workAccounts: [
         { name: 'Вконтакте', platform: 'VK', url: 'https://vk.com/etagi.realty', handle: '@etagi.realty' },
@@ -1021,7 +1023,9 @@
       isLoadingTasks: false,
       inlineEditId: null,
       inlineDraft: null,
-      chatChannel: null
+      chatChannel: null,
+      unreadChatCount: 0,
+      lastSeenChatMessageId: null
     };
 
     const DOM = {
@@ -2263,6 +2267,11 @@
         }
 
         if (state.currentView === 'accounts') renderAccounts();
+        if (state.currentView === 'chat') {
+  state.unreadChatCount = 0;
+  buildMainTabs();
+  refreshChat();
+}
       },
 
       renderMeta() {
@@ -2448,9 +2457,18 @@
       const root = $('#mainTabs');
       root.innerHTML = VIEWS.map(view => {
         const label = {
-          list: 'Список', kanban: 'Канбан', calendar: 'Календарь', analytics: 'Аналитика', accounts: 'Аккаунты'
-        }[view];
-        return `<button data-view="${view}" class="view-tab rounded-xl px-4 py-2 ${view === state.currentView ? 'tab-active' : 'text-slate-400'}">${label}</button>`;
+  list: 'Список',
+  kanban: 'Канбан',
+  calendar: 'Календарь',
+  analytics: 'Аналитика',
+  accounts: 'Аккаунты',
+  chat: 'Чат'
+}[view];
+
+const unreadBadge = view === 'chat' && state.unreadChatCount > 0
+  ? `<span class="ml-2 rounded-full bg-rose-500 px-2 py-0.5 text-[9px] font-black text-white">${state.unreadChatCount}</span>`
+  : '';
+       return `<button data-view="${view}" class="view-tab rounded-xl px-4 py-2 ${view === state.currentView ? 'tab-active' : 'text-slate-400'}">${label}${unreadBadge}</button>`;
       }).join('');
     }
 
@@ -2687,13 +2705,25 @@ renderMetaOnly();
       }
     }
 
-    async function setupChat() {
-      await refreshChat();
+  async function setupChat() {
+  await refreshChat();
 
-      if (state.chatChannel) return;
-      state.chatChannel = ChatService.subscribe(refreshChat);
+  if (state.chatChannel) return;
+
+  state.chatChannel = ChatService.subscribe(payload => {
+    if (payload.eventType === 'INSERT') {
+      const message = payload.new;
+      const myUid = sessionStorage.getItem('e_uid');
+
+      if (state.currentView !== 'chat' && message.sender_uid !== myUid) {
+        state.unreadChatCount += 1;
+        buildMainTabs();
+      }
     }
 
+    refreshChat();
+  });
+}
     function setupTasksRealtime() {
       if (state.tasksChannel) return;
 
@@ -3296,12 +3326,17 @@ renderMetaOnly();
       $$('[data-close-modal]').forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.closeModal)));
 
       document.addEventListener('click', async event => {
-        const viewTab = event.target.closest('.view-tab');
-        if (viewTab) {
-          state.currentView = viewTab.dataset.view;
-          renderAll();
-          return;
-        }
+       const viewTab = event.target.closest('.view-tab');
+if (viewTab) {
+  state.currentView = viewTab.dataset.view;
+
+  if (state.currentView === 'chat') {
+    state.unreadChatCount = 0;
+  }
+
+  renderAll();
+  return;
+}
 
         const inlineTrigger = event.target.closest('.inline-edit-trigger');
         if (inlineTrigger) {
