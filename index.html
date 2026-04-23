@@ -1546,6 +1546,47 @@
           .limit(limit);
       }
     };
+
+    const AuthService = {
+      sessionKeys: {
+        active: 'e_active',
+        uid: 'e_uid',
+        name: 'e_name',
+        role: 'e_role'
+      },
+
+      async login(username, password) {
+        return db
+          .from(Services.tables.profiles)
+          .select('*')
+          .eq('username', username)
+          .eq('password', password)
+          .single();
+      },
+
+      saveSession(profile) {
+        sessionStorage.setItem(AuthService.sessionKeys.active, 'true');
+        sessionStorage.setItem(AuthService.sessionKeys.uid, profile.username);
+        sessionStorage.setItem(AuthService.sessionKeys.name, profile.display_name);
+        sessionStorage.setItem(AuthService.sessionKeys.role, profile.role);
+      },
+
+      clearSession() {
+        sessionStorage.clear();
+      },
+
+      isActive() {
+        return sessionStorage.getItem(AuthService.sessionKeys.active) === 'true';
+      },
+
+      getCurrentUser() {
+        return {
+          uid: sessionStorage.getItem(AuthService.sessionKeys.uid),
+          name: sessionStorage.getItem(AuthService.sessionKeys.name),
+          role: sessionStorage.getItem(AuthService.sessionKeys.role)
+        };
+      }
+    };
     
     const ChatUI = {
       commonEmojis: ['👍', '❤️', '🔥', '✅', '🚀'],
@@ -2707,9 +2748,11 @@ renderMetaOnly();
       }
     }
 
-    async function handleLogin() {
+        async function handleLogin() {
       const btn = $('#loginBtn');
-      $('#loginError').classList.add('hidden');
+      const errorBox = $('#loginError');
+
+      errorBox.classList.add('hidden');
       btn.disabled = true;
       btn.textContent = '...';
 
@@ -2717,39 +2760,46 @@ renderMetaOnly();
       const password = $('#loginPass').value;
 
       try {
-        const { data, error } = await db.from('profiles').select('*').eq('username', username).eq('password', password).single();
+        const { data, error } = await AuthService.login(username, password);
         if (error || !data) throw new Error('INVALID');
 
-        sessionStorage.setItem('e_active', 'true');
-        sessionStorage.setItem('e_uid', data.username);
-        sessionStorage.setItem('e_name', data.display_name);
-        sessionStorage.setItem('e_role', data.role);
+        AuthService.saveSession(data);
         await checkAuth();
       } catch (error) {
-        $('#loginError').textContent = 'Ошибка входа';
-        $('#loginError').classList.remove('hidden');
+        errorBox.textContent = 'Ошибка входа';
+        errorBox.classList.remove('hidden');
       } finally {
         btn.disabled = false;
         btn.textContent = 'Войти';
       }
     }
 
-    async function checkAuth() {
-      if (sessionStorage.getItem('e_active') !== 'true') return;
-      state.currentUser = sessionStorage.getItem('e_name');
-      state.currentRole = sessionStorage.getItem('e_role');
+        async function checkAuth() {
+      if (!AuthService.isActive()) return;
+
+      const user = AuthService.getCurrentUser();
+
+      state.currentUser = user.name;
+      state.currentRole = user.role;
+
       $('#currentUserDisplay').textContent = `👤 ${state.currentUser || ''}`;
-      if (state.currentRole === 'admin') $('#adminPanel').classList.remove('hidden');
+
+      if (state.currentRole === 'admin') {
+        $('#adminPanel').classList.remove('hidden');
+      }
+
       $('#loginOverlay').style.display = 'none';
       $('#appContent').classList.remove('hidden');
+
       applySavedTheme();
       await loadAllData();
       await setupChat();
+
       setTimeout(() => $('#appContent').style.opacity = '1', 50);
     }
 
-    function logout() {
-      sessionStorage.clear();
+        function logout() {
+      AuthService.clearSession();
       location.reload();
     }
 
