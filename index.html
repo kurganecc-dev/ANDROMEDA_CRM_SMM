@@ -449,26 +449,21 @@
         <div id="view-accounts" class="hidden grid grid-cols-1 gap-6 md:grid-cols-2"></div>
       </section>
 
-      <aside id="rightSidebar" class="space-y-6 lg:col-span-3">
-        <div class="sidebar-panel rounded-[2rem] p-6 text-slate-100" style="background: #0f172a; box-shadow: var(--shadow);">
-          <h3 class="mb-4 border-b border-slate-800 pb-4 text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">Фокус на сегодня</h3>
-          <div id="smartSidebar" class="space-y-3"></div>
-        </div>
+     <aside id="rightSidebar" class="space-y-6 lg:col-span-3">
+  <div class="sidebar-panel rounded-[2rem] p-6 text-slate-100" style="background: #0f172a; box-shadow: var(--shadow);">
+    <h3 class="mb-4 border-b border-slate-800 pb-4 text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">Фокус и мои задачи</h3>
+    <div id="focusSidebar" class="space-y-4"></div>
+  </div>
 
-        <div class="sidebar-panel rounded-[2rem] p-6 text-slate-100" style="background: #0f172a; box-shadow: var(--shadow);">
-          <h3 class="mb-4 border-b border-slate-800 pb-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Мои задачи в работе</h3>
-          <div id="personalTasksList" class="space-y-3"></div>
-        </div>
-
-        <div class="sidebar-panel rounded-[2rem] p-6 text-slate-100" style="background: #0f172a; box-shadow: var(--shadow);">
-          <h3 class="mb-4 border-b border-slate-800 pb-4 text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">Командный чат</h3>
-          <div id="chatMessages" class="mb-4 max-h-[340px] space-y-4 overflow-y-auto pr-2"></div>
-          <div class="flex gap-2 rounded-2xl bg-slate-800 p-2">
-            <input id="chatInput" type="text" placeholder="Сообщение..." class="flex-1 bg-transparent px-2 py-1 text-sm text-white outline-none" />
-            <button id="sendChatBtn" class="px-3 text-lg text-blue-400">➤</button>
-          </div>
-        </div>
-      </aside>
+  <div class="sidebar-panel rounded-[2rem] p-6 text-slate-100" style="background: #0f172a; box-shadow: var(--shadow);">
+    <h3 class="mb-4 border-b border-slate-800 pb-4 text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">Командный чат</h3>
+    <div id="chatMessages" class="mb-4 max-h-[520px] space-y-4 overflow-y-auto pr-2"></div>
+    <div class="flex gap-2 rounded-2xl bg-slate-800 p-2">
+      <input id="chatInput" type="text" placeholder="Сообщение..." class="flex-1 bg-transparent px-2 py-1 text-sm text-white outline-none" />
+      <button id="sendChatBtn" class="px-3 text-lg text-blue-400">➤</button>
+    </div>
+  </div>
+</aside>
     </main>
   </div>
 
@@ -1307,86 +1302,101 @@ const overdue = date && date < todayStart && task.status !== 'published';
     }
 
     function renderSmartSidebar() {
-      const root = $('#smartSidebar');
-      if (!root) return;
-      const today = new Date();
-      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-      const me = state.currentUser;
-      const active = state.tasks.filter(task => task.status !== 'published');
-      const todayTasks = active.filter(task => task.date === todayStr);
-      const overdue = active.filter(task => {
+  const root = $('#focusSidebar');
+  if (!root) return;
+
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const me = state.currentUser;
+
+  const active = state.tasks.filter(task => task.status !== 'published');
+  const todayTasks = active.filter(task => task.date === todayStr);
+  const overdue = active.filter(task => {
+    const d = parseLocalDate(task.date);
+    return d && d < dayStart && task.status !== 'published';
+  });
+  const mine = active.filter(task => ((task.executors || []).includes(me) || task.responsible === me));
+  const unassigned = active.filter(task => !(task.executors || []).length);
+
+  const topItems = [
+    { label: 'На сегодня', value: todayTasks.length, note: todayTasks.length ? 'есть задачи с дедлайном сегодня' : 'сегодня дедлайнов нет' },
+    { label: 'Просрочено', value: overdue.length, note: overdue.length ? 'нужно срочно разобрать' : 'просрочки нет' },
+    { label: 'На мне', value: mine.length, note: mine.length ? 'задачи в личном фокусе' : 'личных задач нет' }
+  ];
+
+  const priority = [...todayTasks, ...overdue.filter(task => task.date !== todayStr)]
+    .slice(0, 4)
+    .map(task => {
+      const due = formatShortDate(task.date);
+      const overdueTask = (() => {
         const d = parseLocalDate(task.date);
-        return d && d < new Date(today.getFullYear(), today.getMonth(), today.getDate()) && task.status !== 'published';
-      });
-      const mine = active.filter(task => ((task.executors || []).includes(me) || task.responsible === me));
-      const unassigned = active.filter(task => !(task.executors || []).length);
+        return d && d < dayStart;
+      })();
 
-      const topItems = [
-        { label: 'На сегодня', value: todayTasks.length, note: todayTasks.length ? 'есть задачи с дедлайном сегодня' : 'сегодня дедлайнов нет' },
-        { label: 'Просрочено', value: overdue.length, note: overdue.length ? 'нужно срочно разобрать' : 'просрочки нет' },
-        { label: 'На мне', value: mine.length, note: mine.length ? 'задачи в личном фокусе' : 'личных задач нет' }
-      ];
-
-      const priority = [...todayTasks, ...overdue.filter(task => task.date !== todayStr)]
-        .slice(0, 4)
-        .map(task => {
-          const due = formatShortDate(task.date);
-          const overdueTask = (() => {
-            const d = parseLocalDate(task.date);
-            return d && d < new Date(today.getFullYear(), today.getMonth(), today.getDate());
-          })();
-          return `
-            <button class="open-task sidebar-insight ${overdueTask ? 'sidebar-task-overdue' : 'sidebar-task-urgent'} w-full rounded-2xl p-3 text-left" data-task-id="${escapeHtml(task.id)}">
-              <div class="mb-1 flex items-center justify-between gap-2">
-                <span class="text-[9px] font-black uppercase ${overdueTask ? 'text-rose-300' : 'text-amber-300'}">${overdueTask ? 'Просрочено' : 'Сегодня'}</span>
-                <span class="text-[10px] font-bold text-slate-300">${escapeHtml(due)}</span>
-              </div>
-              <div class="text-[11px] font-black uppercase leading-tight text-white">${escapeHtml(task.title || 'Без названия')}</div>
-            </button>
-          `;
-        }).join('');
-
-      root.innerHTML = `
-        <div class="grid grid-cols-3 gap-2">
-          ${topItems.map(item => `
-            <div class="sidebar-insight rounded-2xl p-3">
-              <div class="text-[9px] font-black uppercase text-slate-400">${item.label}</div>
-              <div class="mt-1 text-xl font-black text-white">${item.value}</div>
-              <div class="mt-1 text-[10px] font-medium text-slate-400">${item.note}</div>
-            </div>
-          `).join('')}
-        </div>
-        <div class="sidebar-insight rounded-2xl p-4">
-          <div class="mb-3 flex items-center justify-between gap-2">
-            <div>
-              <div class="text-[10px] font-black uppercase text-amber-300">Приоритетные карточки</div>
-              <div class="mt-1 text-[11px] font-medium text-slate-400">То, что лучше не откладывать.</div>
-            </div>
-            <div class="rounded-full bg-white/10 px-2 py-1 text-[9px] font-black text-white">${todayTasks.length + overdue.length}</div>
+      return `
+        <button class="open-task sidebar-insight ${overdueTask ? 'sidebar-task-overdue' : 'sidebar-task-urgent'} w-full rounded-2xl p-3 text-left" data-task-id="${escapeHtml(task.id)}">
+          <div class="mb-1 flex items-center justify-between gap-2">
+            <span class="text-[9px] font-black uppercase ${overdueTask ? 'text-rose-300' : 'text-amber-300'}">${overdueTask ? 'Просрочено' : 'Сегодня'}</span>
+            <span class="text-[10px] font-bold text-slate-300">${escapeHtml(due)}</span>
           </div>
-          <div class="space-y-2">${priority || '<div class="rounded-2xl bg-white/5 p-3 text-[11px] font-medium text-slate-400">Срочных карточек сейчас нет.</div>'}</div>
-        </div>
-        <div class="sidebar-insight rounded-2xl p-4 text-[11px] font-medium text-slate-300">
-          Без исполнителя: <span class="font-black text-white">${unassigned.length}</span>
-        </div>
+          <div class="text-[11px] font-black uppercase leading-tight text-white">${escapeHtml(task.title || 'Без названия')}</div>
+        </button>
       `;
-    }
+    }).join('');
 
-    function renderPersonalTasks() {
-      const list = $('#personalTasksList');
-      const name = state.currentUser;
-      const mine = state.tasks.filter(task => ((task.executors || []).includes(name) || task.responsible === name) && task.status !== 'published');
-      if (!mine.length) {
-        list.innerHTML = '<p class="py-10 text-center text-[10px] font-black uppercase text-slate-500">Задач нет</p>';
-        return;
-      }
-      list.innerHTML = mine.map(task => `
+  const myTasksHtml = mine.length
+    ? mine.slice(0, 5).map(task => `
         <button class="open-task w-full rounded-2xl bg-slate-800 p-4 text-left transition hover:bg-slate-700" data-task-id="${escapeHtml(task.id)}">
-          <div class="mb-1 text-[8px] font-black uppercase text-blue-400">${escapeHtml(task.work_type || 'Пост')}</div>
+          <div class="mb-1 flex items-center justify-between gap-2">
+            <span class="text-[8px] font-black uppercase text-blue-400">${escapeHtml(task.work_type || 'Пост')}</span>
+            <span class="text-[8px] font-black uppercase text-slate-500">${escapeHtml(STATUS_MAP[task.status] || 'Идея')}</span>
+          </div>
           <div class="text-[10px] font-black uppercase leading-tight text-white">${escapeHtml(task.title || 'Без названия')}</div>
         </button>
-      `).join('');
-    }
+      `).join('')
+    : '<div class="rounded-2xl bg-white/5 p-4 text-center text-[10px] font-black uppercase text-slate-500">Личных задач сейчас нет</div>';
+
+  root.innerHTML = `
+    <div class="grid grid-cols-3 gap-2">
+      ${topItems.map(item => `
+        <div class="sidebar-insight rounded-2xl p-3">
+          <div class="text-[9px] font-black uppercase text-slate-400">${item.label}</div>
+          <div class="mt-1 text-xl font-black text-white">${item.value}</div>
+          <div class="mt-1 text-[10px] font-medium text-slate-400">${item.note}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="sidebar-insight rounded-2xl p-4">
+      <div class="mb-3 flex items-center justify-between gap-2">
+        <div>
+          <div class="text-[10px] font-black uppercase text-amber-300">Приоритетные карточки</div>
+          <div class="mt-1 text-[11px] font-medium text-slate-400">То, что лучше не откладывать.</div>
+        </div>
+        <div class="rounded-full bg-white/10 px-2 py-1 text-[9px] font-black text-white">${todayTasks.length + overdue.length}</div>
+      </div>
+      <div class="space-y-2">
+        ${priority || '<div class="rounded-2xl bg-white/5 p-3 text-[11px] font-medium text-slate-400">Срочных карточек сейчас нет.</div>'}
+      </div>
+    </div>
+
+    <div class="sidebar-insight rounded-2xl p-4">
+      <div class="mb-3 flex items-center justify-between gap-2">
+        <div>
+          <div class="text-[10px] font-black uppercase text-blue-300">Мои задачи в работе</div>
+          <div class="mt-1 text-[11px] font-medium text-slate-400">Быстрый доступ к личному фокусу.</div>
+        </div>
+        <div class="rounded-full bg-white/10 px-2 py-1 text-[9px] font-black text-white">${mine.length}</div>
+      </div>
+      <div class="space-y-2">${myTasksHtml}</div>
+    </div>
+
+    <div class="sidebar-insight rounded-2xl p-4 text-[11px] font-medium text-slate-300">
+      Без исполнителя: <span class="font-black text-white">${unassigned.length}</span>
+    </div>
+  `;
+}
 
     function renderTrash() {
       const list = $('#trashList');
@@ -1517,7 +1527,6 @@ const overdue = date && date < todayStart && task.status !== 'published';
 
       $('#trashBadge').textContent = String(state.trash.length);
       renderSmartSidebar();
-      renderPersonalTasks();
       renderDashboardSummary();
     }
 
