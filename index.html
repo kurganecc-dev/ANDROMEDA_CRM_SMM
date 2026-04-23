@@ -1924,9 +1924,13 @@
       }
 
       TaskState.patchTask(taskId, payload);
-      state.inlineEditId = null;
-      state.inlineDraft = null;
-      renderAll();
+state.inlineEditId = null;
+state.inlineDraft = null;
+
+if (state.currentView === 'list') renderCards();
+if (state.currentView === 'kanban') renderKanban();
+if (state.currentView === 'calendar') renderCalendar();
+renderMetaOnly();
 
       updateToast(loadingToast, 'Карточка обновлена без открытия модалки.', 'success', 'Сохранено');
     }
@@ -2471,10 +2475,8 @@
         });
       }
 
-            if (state.currentView === 'list') renderCards();
-      if (state.currentView === 'kanban') renderKanban();
-      if (state.currentView === 'calendar') renderCalendar();
-      renderMetaOnly();
+            renderKanban();
+renderMetaOnly();
       await logAction('delete', task?.title || 'Задача', 'Перенесено в корзину');
     }
 
