@@ -1853,6 +1853,136 @@
         `;
       }
     };
+
+    const AnalyticsUI = {
+      getPublishedTasksForMonth() {
+        const filter = $('#statsPlatformFilter')?.value || 'ALL';
+
+        return state.tasks
+          .filter(task => {
+            const date = parseLocalDate(task.date);
+            const dateMatch = date && isSameMonthYear(date, state.statsDate);
+
+            if (!dateMatch || task.status !== 'published') return false;
+            if (filter === 'ALL') return true;
+            if (filter === 'Telegram') return TG_LIST.some(tg => task.links?.[tg]);
+
+            return Boolean(task.links?.[filter]);
+          })
+          .sort((a, b) => {
+            const dateA = parseLocalDate(a.date)?.getTime() || 0;
+            const dateB = parseLocalDate(b.date)?.getTime() || 0;
+            return dateB - dateA;
+          });
+      },
+
+      getTaskViews(task) {
+        const filter = $('#statsPlatformFilter')?.value || 'ALL';
+
+        if (filter === 'ALL') {
+          return Number(task.play_count || 0);
+        }
+
+        if (filter === 'Telegram') {
+          return TG_LIST.reduce((sum, tg) => sum + Number(task.play_counts?.[tg] || 0), 0);
+        }
+
+        return Number(task.play_counts?.[filter] || 0);
+      },
+
+      renderTaskLinks(task) {
+        const filter = $('#statsPlatformFilter')?.value || 'ALL';
+
+        if (filter === 'ALL') {
+          return Object.entries(task.links || {})
+            .map(([platform, url]) => url
+              ? `<a target="_blank" rel="noopener noreferrer" class="mx-1" href="${escapeHtml(url)}">${getSocialIcon(platform)}</a>`
+              : ''
+            )
+            .join('');
+        }
+
+        if (filter === 'Telegram') {
+          return TG_LIST
+            .map(tg => task.links?.[tg]
+              ? `<a target="_blank" rel="noopener noreferrer" class="mx-1" href="${escapeHtml(task.links[tg])}">${getSocialIcon(tg)}</a>`
+              : ''
+            )
+            .join('');
+        }
+
+        return task.links?.[filter]
+          ? `<a target="_blank" rel="noopener noreferrer" href="${escapeHtml(task.links[filter])}">${getSocialIcon(filter)}</a>`
+          : '';
+      },
+
+      renderTableRows(tasks) {
+        if (!tasks.length) {
+          return `
+            <tr>
+              <td colspan="4" class="p-10 text-center text-[11px] font-black uppercase text-slate-400">
+                Нет опубликованных задач за выбранный период
+              </td>
+            </tr>
+          `;
+        }
+
+        return tasks.map(task => {
+          const views = AnalyticsUI.getTaskViews(task);
+          const linksHtml = AnalyticsUI.renderTaskLinks(task);
+
+          return `
+            <tr class="border-b" style="border-color: var(--border);">
+              <td class="p-4 text-[10px] text-slate-400">${formatShortDate(task.date)}</td>
+              <td class="p-4 font-black uppercase">${escapeHtml(task.title || 'Без названия')}</td>
+              <td class="p-4 font-black text-emerald-600">${views.toLocaleString('ru-RU')}</td>
+              <td class="p-4 text-center">${linksHtml}</td>
+            </tr>
+          `;
+        }).join('');
+      },
+
+      renderTable(tasks) {
+        return `
+          <table class="w-full text-left text-[11px] font-bold">
+            <thead style="background: var(--surface-2); color: var(--muted);">
+              <tr>
+                <th class="p-4">Дата</th>
+                <th class="p-4">Тема</th>
+                <th class="p-4">Охват</th>
+                <th class="p-4 text-center">Линки</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${AnalyticsUI.renderTableRows(tasks)}
+            </tbody>
+          </table>
+        `;
+      },
+
+      renderSummary(tasks) {
+        const totalViews = tasks.reduce((sum, task) => sum + AnalyticsUI.getTaskViews(task), 0);
+
+        if ($('#stat-total')) $('#stat-total').textContent = tasks.length;
+        if ($('#stat-views')) $('#stat-views').textContent = totalViews.toLocaleString('ru-RU');
+      },
+
+      renderStatsTable() {
+        const label = $('#statsMonthLabel');
+        if (label) {
+          label.textContent = state.statsDate.toLocaleString('ru-RU', {
+            month: 'long',
+            year: 'numeric'
+          });
+        }
+
+        const tasks = AnalyticsUI.getPublishedTasksForMonth();
+        AnalyticsUI.renderSummary(tasks);
+
+        const container = $('#statsTableContainer');
+        if (container) container.innerHTML = AnalyticsUI.renderTable(tasks);
+      }
+    };
     
     const ViewController = {
       applyLayout() {
@@ -2225,67 +2355,8 @@ renderMetaOnly();
     }
     
     function renderCalendarTabs() { CalendarUI.renderTabs();}
-    function renderCalendar() { CalendarUI.render(); }
-    function renderStats() {
-      const label = $('#statsMonthLabel');
-      const filter = $('#statsPlatformFilter')?.value || 'ALL';
-      if (label) label.textContent = state.statsDate.toLocaleString('ru-RU', { month: 'long', year: 'numeric' });
-
-      const results = state.tasks.filter(task => {
-        const date = parseLocalDate(task.date);
-        const dateMatch = date && isSameMonthYear(date, state.statsDate);
-        if (!dateMatch || task.status !== 'published') return false;
-        if (filter === 'ALL') return true;
-        if (filter === 'Telegram') return TG_LIST.some(tg => task.links?.[tg]);
-        return Boolean(task.links?.[filter]);
-      }).sort((a, b) => (parseLocalDate(b.date)?.getTime() || 0) - (parseLocalDate(a.date)?.getTime() || 0));
-
-      let totalViews = 0;
-      let html = `
-        <table class="w-full text-left text-[11px] font-bold">
-          <thead style="background: var(--surface-2); color: var(--muted);">
-            <tr>
-              <th class="p-4">Дата</th>
-              <th class="p-4">Тема</th>
-              <th class="p-4">Охват</th>
-              <th class="p-4 text-center">Линки</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-
-      results.forEach(task => {
-        let value = 0;
-        let linksHtml = '';
-        if (filter === 'ALL') {
-          value = Number(task.play_count || 0);
-          linksHtml = Object.entries(task.links || {}).map(([platform, url]) => url ? `<a target="_blank" rel="noopener noreferrer" class="mx-1" href="${escapeHtml(url)}">${getSocialIcon(platform)}</a>` : '').join('');
-        } else if (filter === 'Telegram') {
-          TG_LIST.forEach(tg => {
-            value += Number(task.play_counts?.[tg] || 0);
-            if (task.links?.[tg]) linksHtml += `<a target="_blank" rel="noopener noreferrer" class="mx-1" href="${escapeHtml(task.links[tg])}">${getSocialIcon(tg)}</a>`;
-          });
-        } else {
-          value = Number(task.play_counts?.[filter] || 0);
-          if (task.links?.[filter]) linksHtml = `<a target="_blank" rel="noopener noreferrer" href="${escapeHtml(task.links[filter])}">${getSocialIcon(filter)}</a>`;
-        }
-
-        totalViews += value;
-        html += `
-          <tr class="border-b" style="border-color: var(--border);">
-            <td class="p-4 text-[10px] text-slate-400">${formatShortDate(task.date)}</td>
-            <td class="p-4 font-black uppercase">${escapeHtml(task.title || 'Без названия')}</td>
-            <td class="p-4 font-black text-emerald-600">${value.toLocaleString('ru-RU')}</td>
-            <td class="p-4 text-center">${linksHtml}</td>
-          </tr>
-        `;
-      });
-      html += '</tbody></table>';
-
-      $('#stat-total').textContent = results.length;
-      $('#stat-views').textContent = totalViews.toLocaleString('ru-RU');
-      $('#statsTableContainer').innerHTML = html;
-    }
+    function renderCalendar() { CalendarUI.render();}
+    function renderStats() { AnalyticsUI.renderStatsTable();}
 
     function renderCharts() {
       const canvas = $('#reachChart');
