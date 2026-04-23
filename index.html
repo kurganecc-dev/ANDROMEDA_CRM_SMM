@@ -2864,11 +2864,6 @@ renderMetaOnly();
       await logAction('delete', task.title || 'Задача', 'Перенесено в корзину');
     }
 
-            renderKanban();
-renderMetaOnly();
-      await logAction('delete', task?.title || 'Задача', 'Перенесено в корзину');
-    }
-
         function showUndoDeleteToast(task) {
       const container = $('#toastContainer');
       if (!container || !task) return;
