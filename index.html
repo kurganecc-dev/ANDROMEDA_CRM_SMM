@@ -224,14 +224,15 @@
     .chat-shell {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
+  min-height: 0;
 }
 
 .chat-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
 }
 
 .chat-presence {
@@ -253,11 +254,12 @@
 }
 
 .chat-feed {
-  min-height: 380px;
-  max-height: 520px;
+  height: 360px;
+  max-height: 50vh;
   overflow-y: auto;
-  padding-right: 6px;
+  padding-right: 4px;
   scroll-behavior: smooth;
+  min-height: 0;
 }
 
 .chat-day-divider {
@@ -282,7 +284,7 @@
 .chat-row {
   display: flex;
   flex-direction: column;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .chat-row.me {
@@ -313,10 +315,10 @@
 
 .chat-bubble {
   position: relative;
-  max-width: 88%;
-  border-radius: 22px;
-  padding: 12px 14px;
-  box-shadow: 0 10px 24px rgba(2,6,23,.14);
+  max-width: 85%;
+  border-radius: 20px;
+  padding: 10px 12px;
+  box-shadow: 0 8px 18px rgba(2,6,23,.12);
   backdrop-filter: blur(10px);
 }
 
@@ -433,17 +435,17 @@
 .chat-composer {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  border-radius: 22px;
+  gap: 8px;
+  border-radius: 18px;
   background: rgba(15,23,42,.92);
   border: 1px solid rgba(255,255,255,.06);
-  padding: 12px;
+  padding: 10px;
 }
 
 .chat-quick-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 5px;
 }
 
 .chat-quick-btn {
@@ -451,8 +453,8 @@
   background: rgba(255,255,255,.05);
   color: #cbd5e1;
   border-radius: 999px;
-  padding: 6px 10px;
-  font-size: 10px;
+  padding: 5px 8px;
+  font-size: 9px;
   font-weight: 800;
   text-transform: uppercase;
   cursor: pointer;
@@ -473,23 +475,23 @@
 
 .chat-input-wrap {
   flex: 1;
-  border-radius: 18px;
+  border-radius: 16px;
   background: rgba(255,255,255,.04);
   border: 1px solid rgba(255,255,255,.06);
-  padding: 10px 12px;
+  padding: 8px 10px;
 }
 
 .chat-input {
   width: 100%;
-  min-height: 24px;
-  max-height: 120px;
+  min-height: 20px;
+  max-height: 96px;
   resize: none;
   border: 0;
   outline: none;
   background: transparent;
   color: white;
-  font-size: 14px;
-  line-height: 1.4;
+  font-size: 13px;
+  line-height: 1.35;
 }
 
 .chat-input::placeholder {
@@ -498,14 +500,14 @@
 
 .chat-send-btn {
   border: 0;
-  border-radius: 16px;
-  min-width: 48px;
-  height: 48px;
+  border-radius: 14px;
+  min-width: 44px;
+  height: 44px;
   background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: white;
-  font-size: 18px;
+  font-size: 17px;
   cursor: pointer;
-  box-shadow: 0 12px 20px rgba(37,99,235,.26);
+  box-shadow: 0 10px 18px rgba(37,99,235,.24);
   transition: .18s ease;
 }
 
@@ -762,7 +764,7 @@
       </section>
 
      <aside id="rightSidebar" class="space-y-6 lg:col-span-3">
-  <div class="sidebar-panel rounded-[2rem] p-6 text-slate-100" style="background: #0f172a; box-shadow: var(--shadow);">
+  <div class="sidebar-panel rounded-[2rem] p-5 text-slate-100 overflow-hidden" style="background: #0f172a; box-shadow: var(--shadow);">
     <h3 class="mb-4 border-b border-slate-800 pb-4 text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">Фокус и мои задачи</h3>
     <div id="focusSidebar" class="space-y-4"></div>
   </div>
