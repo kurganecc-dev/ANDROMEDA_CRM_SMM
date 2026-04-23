@@ -1236,12 +1236,12 @@
       },
 
       async create(task) {
-        return db.from(Services.tables.tasks).insert([task]);
-      },
+  return db.from(Services.tables.tasks).insert([task]).select().single();
+},
 
       async update(id, payload) {
-        return db.from(Services.tables.tasks).update(payload).eq('id', id);
-      },
+  return db.from(Services.tables.tasks).update(payload).eq('id', id).select().single();
+},
 
       async moveToTrash(id, deletedBy) {
         return db.from(Services.tables.tasks).update({
@@ -2919,11 +2919,17 @@ renderMetaOnly();
       const oldTask = state.tasks.find(item => String(item.id) === String(id));
       const payload = TaskHelpers.collectEditPayload();
 
-      const { error } = await TaskService.update(id, payload);
-      if (error) return notify('Не удалось сохранить изменения', 'error', 'Ошибка');
+      const { data, error } = await TaskService.update(id, payload);
+if (error) return notify('Не удалось сохранить изменения', 'error', 'Ошибка');
 
-      await loadAllData();
-      closeModal('editModal');
+TaskState.patchTask(id, data || payload);
+
+if (state.currentView === 'list') renderCards();
+if (state.currentView === 'kanban') renderKanban();
+if (state.currentView === 'calendar') renderCalendar();
+renderMetaOnly();
+
+closeModal('editModal');
 
       if (oldTask && oldTask.status !== payload.status) {
         await logAction('status_change', oldTask.title, `Статус: ${oldTask.status} → ${payload.status}`);
@@ -2940,11 +2946,15 @@ renderMetaOnly();
       }
 
       const task = TaskHelpers.collectCreatePayload();
-      const { error } = await TaskService.create(task);
+      const { data, error } = await TaskService.create(task);
 
-      if (error) return notify('Не удалось создать задачу', 'error', 'Ошибка');
+if (error) return notify('Не удалось создать задачу', 'error', 'Ошибка');
 
-      await loadAllData();
+TaskState.addTask(data || task);
+          if (state.currentView === 'list') renderCards();
+if (state.currentView === 'kanban') renderKanban();
+if (state.currentView === 'calendar') renderCalendar();
+renderMetaOnly();
       $('#ideaForm').reset();
       $$('input[type="checkbox"]', $('#createModal')).forEach(cb => cb.checked = false);
       closeModal('createModal');
