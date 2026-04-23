@@ -1873,6 +1873,54 @@
       updateToast(loadingToast, 'Карточка обновлена без открытия модалки.', 'success', 'Сохранено');
     }
 
+    function renderCards() {
+      const container = $('#view-list');
+      if (!container) return;
+
+      if (state.isLoadingTasks) {
+        renderListSkeleton();
+        return;
+      }
+
+      const tasks = getFilteredTasks();
+
+      if (!tasks.length) {
+        container.innerHTML = `
+          <div class="empty-state col-span-full rounded-[2rem] p-10 text-center">
+            <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl" style="background: var(--surface);">📭</div>
+            <div class="text-lg font-black">Ничего не найдено</div>
+            <p class="mx-auto mt-2 max-w-md text-sm font-medium" style="color: var(--muted);">
+              Попробуй очистить поиск или снять фильтр по тегу. В новой версии пустое состояние тоже подсказывает следующий шаг.
+            </p>
+            <button type="button" id="resetFiltersBtn" class="mt-5 rounded-2xl px-5 py-3 text-[11px] font-black uppercase text-white" style="background: var(--text);">
+              Сбросить фильтры
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = tasks.map(task => {
+        const isEditing = state.inlineEditId === String(task.id);
+        const draft = isEditing ? (state.inlineDraft || {}) : {};
+        return TaskUI.renderListCard(task, { isEditing, draft });
+      }).join('');
+    }
+
+    function renderKanban() {
+      const tasks = getFilteredTasks();
+
+      getWorkflowOrder().forEach(status => {
+        const col = document.querySelector(`[data-kanban="${status}"]`);
+        const count = document.getElementById(`count-${status}`);
+        if (!col || !count) return;
+
+        const filtered = tasks.filter(task => task.status === status);
+        count.textContent = filtered.length;
+        col.innerHTML = filtered.map(task => TaskUI.renderKanbanCard(task)).join('');
+      });
+    }
+    
     function renderCalendarTabs() {
       const container = $('#calendarTabs');
       const buttons = ['ALL', ...CHANNELS].map(channel => {
