@@ -553,6 +553,24 @@
   transform: none;
 }
 
+.chat-template-btn {
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.05);
+  transition: .18s ease;
+}
+
+.chat-template-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(59,130,246,.16);
+  border-color: rgba(59,130,246,.32);
+}
+
+.chat-feed {
+  background:
+    radial-gradient(circle at top left, rgba(59,130,246,.08), transparent 34%),
+    color-mix(in srgb, var(--surface-2) 84%, transparent);
+}
+    
 .chat-empty {
   display: grid;
   place-items: center;
@@ -793,37 +811,86 @@
         </div>
 
         <div id="view-accounts" class="hidden grid grid-cols-1 gap-6 md:grid-cols-2"></div>
-        <div id="view-chat" class="hidden">
-  <div class="app-surface rounded-[2rem] p-6">
-    <div class="mb-6 flex items-center justify-between border-b pb-5" style="border-color: var(--border);">
-      <div>
-        <h2 class="text-xl font-black uppercase">Командный чат</h2>
-        <p class="mt-2 text-sm font-medium" style="color: var(--muted);">
-          Общение команды, быстрые статусы и обсуждение рабочих задач.
-        </p>
-      </div>
-      <div class="chat-presence">
-        <span class="chat-presence-dot"></span>
-        <span>Команда на связи</span>
-      </div>
-    </div>
+       <div id="view-chat" class="hidden">
+  <div class="grid grid-cols-1 gap-6 xl:grid-cols-12">
+    <div class="xl:col-span-8">
+      <div class="app-surface overflow-hidden rounded-[2rem]">
+        <div class="border-b p-6" style="border-color: var(--border);">
+          <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <div class="mb-2 inline-flex rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em]" style="background: rgba(37,99,235,.10); color: var(--primary);">
+                Командная связь
+              </div>
+              <h2 class="text-2xl font-black uppercase">Командный чат</h2>
+              <p class="mt-2 text-sm font-medium" style="color: var(--muted);">
+                Быстрые статусы, вопросы по задачам и рабочие договорённости.
+              </p>
+            </div>
 
-    <div id="chatMessages" class="chat-feed" style="height: 560px; max-height: 62vh;"></div>
-
-    <div class="chat-composer mt-5">
-      <div class="chat-quick-actions">
-        <button type="button" class="chat-quick-btn" data-quick-message="Взял в работу">Взял в работу</button>
-        <button type="button" class="chat-quick-btn" data-quick-message="Нужен фидбек">Нужен фидбек</button>
-        <button type="button" class="chat-quick-btn" data-quick-message="Готово к проверке">Готово к проверке</button>
-      </div>
-
-      <div class="chat-input-row">
-        <div class="chat-input-wrap">
-          <textarea id="chatInput" class="chat-input" rows="1" placeholder="Напиши сообщение команде..."></textarea>
+            <div class="chat-presence rounded-2xl px-4 py-3" style="background:#0f172a;">
+              <span class="chat-presence-dot"></span>
+              <span>Команда на связи</span>
+            </div>
+          </div>
         </div>
-        <button id="sendChatBtn" class="chat-send-btn" type="button">➤</button>
+
+        <div id="chatMessages" class="chat-feed px-6 py-5" style="height: 610px; max-height: 64vh;"></div>
+
+        <div class="border-t p-5" style="border-color: var(--border);">
+          <div class="chat-composer">
+            <div class="chat-quick-actions">
+              <button type="button" class="chat-quick-btn" data-quick-message="Взял в работу">Взял в работу</button>
+              <button type="button" class="chat-quick-btn" data-quick-message="Нужен фидбек по задаче">Нужен фидбек</button>
+              <button type="button" class="chat-quick-btn" data-quick-message="Готово к проверке">Готово к проверке</button>
+              <button type="button" class="chat-quick-btn" data-quick-message="Есть блокер, нужна помощь">Блокер</button>
+              <button type="button" class="chat-quick-btn" data-quick-message="Перенёс дедлайн, проверьте пожалуйста">Дедлайн</button>
+            </div>
+
+            <div class="chat-input-row">
+              <div class="chat-input-wrap">
+                <textarea id="chatInput" class="chat-input" rows="1" placeholder="Напиши сообщение команде..."></textarea>
+              </div>
+              <button id="sendChatBtn" class="chat-send-btn" type="button">➤</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+
+    <aside class="xl:col-span-4">
+      <div class="space-y-4">
+        <div class="rounded-[2rem] p-5 text-white" style="background:#0f172a; box-shadow: var(--shadow);">
+          <h3 class="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-blue-300">Рабочие сценарии</h3>
+
+          <div class="space-y-3">
+            <button type="button" class="chat-template-btn w-full rounded-2xl p-4 text-left" data-template="Коллеги, нужен фидбек по задаче: ">
+              <div class="text-[11px] font-black uppercase text-white">Запросить фидбек</div>
+              <div class="mt-1 text-[11px] font-medium text-slate-400">Быстро начать обсуждение задачи</div>
+            </button>
+
+            <button type="button" class="chat-template-btn w-full rounded-2xl p-4 text-left" data-template="Есть блокер: ">
+              <div class="text-[11px] font-black uppercase text-white">Сообщить о блокере</div>
+              <div class="mt-1 text-[11px] font-medium text-slate-400">Чтобы команда быстрее отреагировала</div>
+            </button>
+
+            <button type="button" class="chat-template-btn w-full rounded-2xl p-4 text-left" data-template="Статус по задаче: ">
+              <div class="text-[11px] font-black uppercase text-white">Дать статус</div>
+              <div class="mt-1 text-[11px] font-medium text-slate-400">Короткий апдейт без лишнего шума</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="app-surface rounded-[2rem] p-5">
+          <h3 class="mb-4 text-[10px] font-black uppercase tracking-[0.2em]" style="color: var(--primary);">Подсказка</h3>
+          <div class="space-y-3 text-sm font-medium" style="color: var(--muted);">
+            <p>Пиши в формате: задача → проблема → что нужно от команды.</p>
+            <p class="rounded-2xl p-4 text-[12px] font-bold" style="background: var(--surface-2); color: var(--text);">
+              Пример: “Нужен фидбек по ролику для VK. Не уверен в первом хуке. Посмотрите до 16:00?”
+            </p>
+          </div>
+        </div>
+      </div>
+    </aside>
   </div>
 </div>
       </section>
@@ -1599,9 +1666,11 @@
         return `
           <div class="chat-empty">
             <div>
-              <div class="mb-2 text-lg">💬</div>
-              <div>Чат пуст</div>
-              <div class="mt-2 normal-case font-medium text-slate-500">Начни коротким сообщением для команды</div>
+              <div class="mb-3 text-3xl">💬</div>
+              <div class="text-sm font-black uppercase" style="color: var(--text);">Пока нет сообщений</div>
+              <div class="mx-auto mt-3 max-w-md normal-case text-sm font-medium" style="color: var(--muted);">
+                Начни с короткого статуса, запроса фидбека или сообщения о блокере. Так чат станет рабочей лентой команды, а не просто перепиской.
+              </div>
             </div>
           </div>
         `;
@@ -3301,6 +3370,16 @@ renderMetaOnly();
         btn.addEventListener('click', () => {
           const input = $('#chatInput');
           input.value = btn.dataset.quickMessage || '';
+          input.focus();
+          input.dispatchEvent(new Event('input'));
+        });
+      });
+            $$('[data-template]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const input = $('#chatInput');
+          if (!input) return;
+
+          input.value = btn.dataset.template || '';
           input.focus();
           input.dispatchEvent(new Event('input'));
         });
