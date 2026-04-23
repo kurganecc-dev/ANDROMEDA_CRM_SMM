@@ -959,153 +959,212 @@
   <div id="toastContainer" class="toast-wrap"></div>
 
   <script>
-    const SUPABASE_URL = 'https://snfdwowgattembkueops.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_thlOsL_shAho6ohPV-KVDg_k-GEm5jW';
-    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const AppConfig = {
+      supabase: {
+        url: 'https://snfdwowgattembkueops.supabase.co',
+        key: 'sb_publishable_thlOsL_shAho6ohPV-KVDg_k-GEm5jW'
+      },
 
-    const USERS = [
-      'Андрей Чебыкин', 'Павел Храмцов', 'Дмитрий Хандюков', 'Татьяна Петрова',
-      'Любовь Карелина', 'Ксения Потапенкова', 'Яна Толкаченко', 'Арина Краснова',
-      'Евгения Щитова', 'Анастасия Ершова', 'Вячеслав Александров', 'Олеся Подъелец', 'admin'
-    ];
+      users: [
+        'Андрей Чебыкин', 'Павел Храмцов', 'Дмитрий Хандюков', 'Татьяна Петрова',
+        'Любовь Карелина', 'Ксения Потапенкова', 'Яна Толкаченко', 'Арина Краснова',
+        'Евгения Щитова', 'Анастасия Ершова', 'Вячеслав Александров', 'Олеся Подъелец', 'admin'
+      ],
 
-    const DEPARTMENTS = {
-      'Продакшн': ['Дмитрий Хандюков', 'Андрей Чебыкин', 'Павел Храмцов'],
-      'Бренд': ['Вячеслав Александров', 'Татьяна Петрова'],
-      'Коммуникации': ['Яна Толкаченко', 'Олеся Подъелец', 'Ксения Потапенкова', 'Евгения Щитова', 'Анастасия Ершова', 'Арина Краснова'],
-      'Другие': ['Любовь Карелина', 'Олег Сытов']
+      departments: {
+        'Продакшн': ['Дмитрий Хандюков', 'Андрей Чебыкин', 'Павел Храмцов'],
+        'Бренд': ['Вячеслав Александров', 'Татьяна Петрова'],
+        'Коммуникации': ['Яна Толкаченко', 'Олеся Подъелец', 'Ксения Потапенкова', 'Евгения Щитова', 'Анастасия Ершова', 'Арина Краснова'],
+        'Другие': ['Любовь Карелина', 'Олег Сытов']
+      },
+
+      channels: ['YouTube', 'TikTok', 'Instagram', 'VK', 'Этажи SMM', 'NewsRoom', 'Echat', 'Max', 'ОК'],
+      telegramChannels: ['Этажи SMM', 'NewsRoom', 'Echat', 'Max'],
+      workTypes: ['Пост', 'Картинка', 'Короткое видео', 'Длинное видео'],
+      tags: ['ФРК', 'УТП', 'прочее'],
+
+      statusMap: {
+        idea: 'Идея',
+        script: 'Сценарий',
+        production: 'Продакшн',
+        editing: 'Монтаж',
+        review: 'Проверка',
+        scheduled: 'Запланировано',
+        published: 'Опубликовано'
+      },
+
+      views: ['list', 'kanban', 'calendar', 'analytics', 'accounts'],
+
+      workAccounts: [
+        { name: 'Вконтакте', platform: 'VK', url: 'https://vk.com/etagi.realty', handle: '@etagi.realty' },
+        { name: 'NewsRoom', platform: 'Telegram', url: 'https://t.me/nedvij_etagi', handle: '@nedvij_etagi' },
+        { name: 'Этажи SMM', platform: 'Telegram', url: 'https://t.me/+ZVAp3anMnm9lNmQy', handle: 'Direct Link' },
+        { name: 'Одноклассники', platform: 'ОК', url: 'https://ok.ru/etagi.realty', handle: 'etagi.realty' },
+        { name: 'YouTube', platform: 'YouTube', url: 'https://www.youtube.com/@etagi.realty', handle: '@etagi.realty' },
+        { name: 'Instagram', platform: 'Instagram', url: 'https://www.instagram.com/etagi_com', handle: '@etagi_com' }
+      ]
     };
 
-    const CHANNELS = ['YouTube', 'TikTok', 'Instagram', 'VK', 'Этажи SMM', 'NewsRoom', 'Echat', 'Max', 'ОК'];
-    const TG_LIST = ['Этажи SMM', 'NewsRoom', 'Echat', 'Max'];
-    const WORK_TYPES = ['Пост', 'Картинка', 'Короткое видео', 'Длинное видео'];
-    const TAGS = ['ФРК', 'УТП', 'прочее'];
-    const STATUS_MAP = {idea: 'Идея', script: 'Сценарий', production: 'Продакшн', editing: 'Монтаж', review: 'Проверка', scheduled: 'Запланировано', published: 'Опубликовано'};
-    const VIEWS = ['list', 'kanban', 'calendar', 'analytics', 'accounts'];
-    const WORK_ACCOUNTS = [
-      { name: 'Вконтакте', platform: 'VK', url: 'https://vk.com/etagi.realty', handle: '@etagi.realty' },
-      { name: 'NewsRoom', platform: 'Telegram', url: 'https://t.me/nedvij_etagi', handle: '@nedvij_etagi' },
-      { name: 'Этажи SMM', platform: 'Telegram', url: 'https://t.me/+ZVAp3anMnm9lNmQy', handle: 'Direct Link' },
-      { name: 'Одноклассники', platform: 'ОК', url: 'https://ok.ru/etagi.realty', handle: 'etagi.realty' },
-      { name: 'YouTube', platform: 'YouTube', url: 'https://www.youtube.com/@etagi.realty', handle: '@etagi.realty' },
-      { name: 'Instagram', platform: 'Instagram', url: 'https://www.instagram.com/etagi_com', handle: '@etagi_com' }
-    ];
-
-    const state = {
-  tasks: [],
-  trash: [],
-  currentView: 'list',
-  analyticsSubView: 'table',
-  chartMode: 'months',
-  calendarChannel: 'ALL',
-  viewDate: new Date(),
-  statsDate: new Date(),
-  createPrefillDate: '',
-  chart: null,
-  currentUser: null,
-  currentRole: null,
-  isLoadingTasks: false,
-  inlineEditId: null,
-  inlineDraft: null,
-  chatChannel: null
-};
-
-    const $ = (sel, root = document) => root.querySelector(sel);
-    const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
-
-    function escapeHtml(value = '') {
-      return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    function parseLocalDate(dateStr) {
-      if (!dateStr) return null;
-      const [y, m, d] = String(dateStr).split('-').map(Number);
-      if (!y || !m || !d) return null;
-      return new Date(y, m - 1, d);
-    }
-
-    function formatShortDate(dateStr) {
-      const d = parseLocalDate(dateStr);
-      return d ? d.toLocaleDateString('ru-RU') : '—';
-    }
-
-    function getDeadlineMeta(dateStr, status = '') {
-  const d = parseLocalDate(dateStr);
-  if (!d) {
-    return {
-      className: 'deadline-normal',
-      label: 'Без дедлайна',
-      shortLabel: 'Без даты'
+    const AppState = {
+      tasks: [],
+      trash: [],
+      currentView: 'list',
+      analyticsSubView: 'table',
+      chartMode: 'months',
+      calendarChannel: 'ALL',
+      viewDate: new Date(),
+      statsDate: new Date(),
+      createPrefillDate: '',
+      chart: null,
+      currentUser: null,
+      currentRole: null,
+      isLoadingTasks: false,
+      inlineEditId: null,
+      inlineDraft: null,
+      chatChannel: null
     };
-  }
 
-  const today = new Date();
-  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const tomorrowStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
-
-  if (status !== 'published' && d < todayStart) {
-    return {
-      className: 'deadline-overdue',
-      label: 'Просрочено',
-      shortLabel: 'Просрочено'
+    const DOM = {
+      get(selector, root = document) {
+        return root.querySelector(selector);
+      },
+      getAll(selector, root = document) {
+        return Array.from(root.querySelectorAll(selector));
+      }
     };
-  }
 
-  if (d.getTime() === todayStart.getTime()) {
-    return {
-      className: 'deadline-today',
-      label: 'Сегодня',
-      shortLabel: 'Сегодня'
+    const Utils = {
+      escapeHtml(value = '') {
+        return String(value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      },
+
+      parseLocalDate(dateStr) {
+        if (!dateStr) return null;
+        const [y, m, d] = String(dateStr).split('-').map(Number);
+        if (!y || !m || !d) return null;
+        return new Date(y, m - 1, d);
+      },
+
+      formatShortDate(dateStr) {
+        const d = Utils.parseLocalDate(dateStr);
+        return d ? d.toLocaleDateString('ru-RU') : '—';
+      },
+
+      getDeadlineMeta(dateStr, status = '') {
+        const d = Utils.parseLocalDate(dateStr);
+        if (!d) {
+          return {
+            className: 'deadline-normal',
+            label: 'Без дедлайна',
+            shortLabel: 'Без даты'
+          };
+        }
+
+        const today = new Date();
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const tomorrowStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+
+        if (status !== 'published' && d < todayStart) {
+          return {
+            className: 'deadline-overdue',
+            label: 'Просрочено',
+            shortLabel: 'Просрочено'
+          };
+        }
+
+        if (d.getTime() === todayStart.getTime()) {
+          return {
+            className: 'deadline-today',
+            label: 'Сегодня',
+            shortLabel: 'Сегодня'
+          };
+        }
+
+        if (d.getTime() === tomorrowStart.getTime()) {
+          return {
+            className: 'deadline-tomorrow',
+            label: 'Завтра',
+            shortLabel: 'Завтра'
+          };
+        }
+
+        return {
+          className: 'deadline-normal',
+          label: Utils.formatShortDate(dateStr),
+          shortLabel: Utils.formatShortDate(dateStr)
+        };
+      },
+
+      getWorkflowOrder() {
+        return ['idea', 'script', 'production', 'editing', 'review', 'scheduled', 'published'];
+      },
+
+      getProgress(status) {
+        const order = Utils.getWorkflowOrder();
+        const index = order.indexOf(status);
+        if (index === -1) return 0;
+        return ((index + 1) / order.length) * 100;
+      },
+
+      getNextStepHint(status) {
+        const hints = {
+          idea: 'Следующий шаг: создать сценарий',
+          script: 'Следующий шаг: передать в продакшн',
+          production: 'Следующий шаг: отправить на монтаж',
+          editing: 'Следующий шаг: отправить на проверку',
+          review: 'Следующий шаг: запланировать публикацию',
+          scheduled: 'Следующий шаг: дождаться публикации',
+          published: 'Следующий шаг: проанализировать результат'
+        };
+        return hints[status] || 'Следующий шаг не определён';
+      },
+
+      isSameMonthYear(date, sample) {
+        return date && sample && date.getMonth() === sample.getMonth() && date.getFullYear() === sample.getFullYear();
+      }
     };
-  }
 
-  if (d.getTime() === tomorrowStart.getTime()) {
-    return {
-      className: 'deadline-tomorrow',
-      label: 'Завтра',
-      shortLabel: 'Завтра'
+    const Services = {
+      db: supabase.createClient(AppConfig.supabase.url, AppConfig.supabase.key),
+
+      tables: {
+        tasks: 'tasks',
+        profiles: 'profiles',
+        config: 'config',
+        activityLogs: 'activity_logs',
+        teamChat: 'team_chat'
+      }
     };
-  }
 
-  return {
-    className: 'deadline-normal',
-    label: formatShortDate(dateStr),
-    shortLabel: formatShortDate(dateStr)
-  };
-}
-    
-      function getWorkflowOrder() {
-  return ['idea', 'script', 'production', 'editing', 'review', 'scheduled', 'published'];
-}
+    const db = Services.db;
 
-function getProgress(status) {
-  const order = getWorkflowOrder();
-  const index = order.indexOf(status);
-  if (index === -1) return 0;
-  return ((index + 1) / order.length) * 100;
-}
+    const $ = DOM.get;
+    const $$ = DOM.getAll;
 
-function getNextStepHint(status) {
-  const hints = {
-    idea: 'Следующий шаг: создать сценарий',
-    script: 'Следующий шаг: передать в продакшн',
-    production: 'Следующий шаг: отправить на монтаж',
-    editing: 'Следующий шаг: отправить на проверку',
-    review: 'Следующий шаг: запланировать публикацию',
-    scheduled: 'Следующий шаг: дождаться публикации',
-    published: 'Следующий шаг: проанализировать результат'
-  };
-  return hints[status] || 'Следующий шаг не определён';
-}
-    
-    function isSameMonthYear(date, sample) {
-      return date && sample && date.getMonth() === sample.getMonth() && date.getFullYear() === sample.getFullYear();
-    }
+    const USERS = AppConfig.users;
+    const DEPARTMENTS = AppConfig.departments;
+    const CHANNELS = AppConfig.channels;
+    const TG_LIST = AppConfig.telegramChannels;
+    const WORK_TYPES = AppConfig.workTypes;
+    const TAGS = AppConfig.tags;
+    const STATUS_MAP = AppConfig.statusMap;
+    const VIEWS = AppConfig.views;
+    const WORK_ACCOUNTS = AppConfig.workAccounts;
+    const state = AppState;
+
+    const escapeHtml = Utils.escapeHtml;
+    const parseLocalDate = Utils.parseLocalDate;
+    const formatShortDate = Utils.formatShortDate;
+    const getDeadlineMeta = Utils.getDeadlineMeta;
+    const getWorkflowOrder = Utils.getWorkflowOrder;
+    const getProgress = Utils.getProgress;
+    const getNextStepHint = Utils.getNextStepHint;
+    const isSameMonthYear = Utils.isSameMonthYear;
 
     function setLoadingTasks(isLoading) {
       state.isLoadingTasks = isLoading;
