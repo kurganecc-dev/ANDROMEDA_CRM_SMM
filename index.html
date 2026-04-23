@@ -281,25 +281,52 @@
         <div id="view-list" class="grid grid-cols-1 gap-6 md:grid-cols-2"></div>
 
         <div id="view-kanban" class="hidden overflow-x-auto pb-4">
-          <div class="flex min-w-[1080px] gap-4">
-            <div class="flex-1">
-              <div class="mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-[10px] font-black uppercase app-surface">💡 Идеи <span id="count-idea">0</span></div>
-              <div data-kanban="idea" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: var(--border); background: color-mix(in srgb, var(--surface) 70%, transparent);"></div>
-            </div>
-            <div class="flex-1">
-              <div class="mb-3 flex items-center justify-between rounded-xl bg-blue-600 px-4 py-3 text-[10px] font-black uppercase text-white">🛠️ В работе <span id="count-work">0</span></div>
-              <div data-kanban="work" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: #bfdbfe; background: rgba(59,130,246,.06);"></div>
-            </div>
-            <div class="flex-1">
-              <div class="mb-3 flex items-center justify-between rounded-xl bg-emerald-500 px-4 py-3 text-[10px] font-black uppercase text-white">✅ Готово <span id="count-ready">0</span></div>
-              <div data-kanban="ready" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: #a7f3d0; background: rgba(16,185,129,.06);"></div>
-            </div>
-            <div class="flex-1">
-              <div class="mb-3 flex items-center justify-between rounded-xl bg-slate-900 px-4 py-3 text-[10px] font-black uppercase text-white">🚀 Опубликовано <span id="count-published">0</span></div>
-              <div data-kanban="published" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: var(--border); background: rgba(15,23,42,.06);"></div>
-            </div>
-          </div>
-        </div>
+  <div class="flex min-w-[1400px] gap-4">
+
+    <!-- IDEA -->
+    <div class="kanban-stage" data-stage="idea">
+      <h3>💡 Идеи</h3>
+      <div class="kanban-col" data-kanban="idea"></div>
+    </div>
+
+    <!-- SCRIPT -->
+    <div class="kanban-stage" data-stage="script">
+      <h3>✍️ Сценарий</h3>
+      <div class="kanban-col" data-kanban="script"></div>
+    </div>
+
+    <!-- PRODUCTION -->
+    <div class="kanban-stage" data-stage="production">
+      <h3>🎬영 Продакшн</h3>
+      <div class="kanban-col" data-kanban="production"></div>
+    </div>
+
+    <!-- EDITING -->
+    <div class="kanban-stage" data-stage="editing">
+      <h3>✂️ Монтаж</h3>
+      <div class="kanban-col" data-kanban="editing"></div>
+    </div>
+
+    <!-- REVIEW -->
+    <div class="kanban-stage" data-stage="review">
+      <h3>👀 Проверка</h3>
+      <div class="kanban-col" data-kanban="review"></div>
+    </div>
+
+    <!-- SCHEDULED -->
+    <div class="kanban-stage" data-stage="scheduled">
+      <h3>📅 Запланировано</h3>
+      <div class="kanban-col" data-kanban="scheduled"></div>
+    </div>
+
+    <!-- PUBLISHED -->
+    <div class="kanban-stage" data-stage="published">
+      <h3>🚀 Опубликовано</h3>
+      <div class="kanban-col" data-kanban="published"></div>
+    </div>
+
+  </div>
+</div>
 
         <div id="view-calendar" class="hidden space-y-4">
           <div id="calendarTabs" class="flex flex-wrap gap-2"></div>
@@ -559,7 +586,7 @@
     const TG_LIST = ['Этажи SMM', 'NewsRoom', 'Echat', 'Max'];
     const WORK_TYPES = ['Пост', 'Картинка', 'Короткое видео', 'Длинное видео'];
     const TAGS = ['ФРК', 'УТП', 'прочее'];
-    const STATUS_MAP = { idea: 'Идея', work: 'В работе', ready: 'Готово', published: 'Опубликовано' };
+    const STATUS_MAP = {idea: 'Идея', script: 'Сценарий', production: 'Продакшн', editing: 'Монтаж', review: 'Проверка', scheduled: 'Запланировано', published: 'Опубликовано'};
     const VIEWS = ['list', 'kanban', 'calendar', 'analytics', 'accounts'];
     const WORK_ACCOUNTS = [
       { name: 'Вконтакте', platform: 'VK', url: 'https://vk.com/etagi.realty', handle: '@etagi.realty' },
