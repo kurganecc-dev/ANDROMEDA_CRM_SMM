@@ -2749,92 +2749,165 @@ function createEmptyPeopleStats() {
   return {
     views: 0,
     tasks: 0,
-    published: 0
+    published: 0,
+    avg: 0
   };
 }
 
+function getPeopleTaskViews(task) {
+  const filter = $('#statsPlatformFilter')?.value || 'ALL';
+
+  if (filter === 'ALL') {
+    return Number(task.play_count || 0);
+  }
+
+  if (filter === 'Telegram') {
+    return TG_LIST.reduce((sum, tg) => {
+      return sum + Number(task.play_counts?.[tg] || 0);
+    }, 0);
+  }
+
+  return Number(task.play_counts?.[filter] || 0);
+}
+
+function getPublishedPeopleTasks() {
+  const filter = $('#statsPlatformFilter')?.value || 'ALL';
+
+  return state.tasks.filter(task => {
+    const date = parseLocalDate(task.date);
+    const dateMatch = date && isSameMonthYear(date, state.statsDate);
+
+    if (!dateMatch || task.status !== 'published') return false;
+    if (filter === 'ALL') return true;
+    if (filter === 'Telegram') return TG_LIST.some(tg => task.links?.[tg]);
+
+    return Boolean(task.links?.[filter]);
+  });
+}
+
+function addPeopleStat(stats, name, views) {
+  if (!name) return;
+
+  if (!stats[name]) {
+    stats[name] = createEmptyPeopleStats();
+  }
+
+  stats[name].views += views;
+  stats[name].tasks += 1;
+  stats[name].published += 1;
+}
+
 function calculatePeopleStats(tasks) {
-  const stats = {};
+  const responsibleStats = {};
+  const executorStats = {};
 
   tasks.forEach(task => {
-    if (task.status !== 'published') return;
+    const views = getPeopleTaskViews(task);
+    if (!views) return;
 
-    const views = Number(task.play_count || 0);
-    const responsible = task.responsible;
-    const executors = task.executors || [];
+    addPeopleStat(responsibleStats, task.responsible, views);
 
-    if (responsible) {
-      if (!stats[responsible]) stats[responsible] = createEmptyPeopleStats();
-      stats[responsible].views += views * 0.5;
-      stats[responsible].tasks += 1;
-      stats[responsible].published += 1;
-    }
-
-    const executorShare = executors.length ? (views * 0.5) / executors.length : 0;
-
+    const executors = Array.isArray(task.executors) ? task.executors : [];
     executors.forEach(name => {
-      if (!stats[name]) stats[name] = createEmptyPeopleStats();
-      stats[name].views += executorShare;
-      stats[name].tasks += 1;
-      stats[name].published += 1;
+      addPeopleStat(executorStats, name, views);
     });
   });
 
-  return stats;
+  const normalize = stats => {
+    Object.values(stats).forEach(item => {
+      item.avg = item.published ? item.views / item.published : 0;
+    });
+
+    return stats;
+  };
+
+  return {
+    responsible: normalize(responsibleStats),
+    executors: normalize(executorStats)
+  };
 }
 
-function renderPeopleAnalytics() {
-  const container = $('#analytics-people');
-  if (!container) return;
-
-  const stats = calculatePeopleStats(state.tasks);
-
-  const rows = Object.entries(stats)
-    .sort((a, b) => b[1].views - a[1].views)
+function renderPeopleRows(stats) {
+  return Object.entries(stats)
+    .sort((a, b) => b[1].avg - a[1].avg)
     .map(([name, data], index) => {
-      const avg = data.published ? data.views / data.published : 0;
       const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
 
       return `
         <tr class="border-b" style="border-color: var(--border);">
           <td class="p-4 font-black uppercase">${medal} ${escapeHtml(name)}</td>
           <td class="p-4 font-black text-emerald-600">${Math.round(data.views).toLocaleString('ru-RU')}</td>
-          <td class="p-4">${data.tasks}</td>
           <td class="p-4">${data.published}</td>
-          <td class="p-4">${Math.round(avg).toLocaleString('ru-RU')}</td>
+          <td class="p-4 font-black text-blue-600">${Math.round(data.avg).toLocaleString('ru-RU')}</td>
         </tr>
       `;
     }).join('');
+}
+
+function renderPeopleTable(title, subtitle, stats) {
+  const rows = renderPeopleRows(stats);
+
+  return `
+    <div class="rounded-[1.5rem] border p-5" style="border-color: var(--border);">
+      <div class="mb-4">
+        <h4 class="text-sm font-black uppercase">${title}</h4>
+        <p class="mt-1 text-xs font-medium" style="color: var(--muted);">${subtitle}</p>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-[11px] font-bold">
+          <thead style="background: var(--surface-2); color: var(--muted);">
+            <tr>
+              <th class="p-4">Человек</th>
+              <th class="p-4">Суммарный охват</th>
+              <th class="p-4">Публикаций</th>
+              <th class="p-4">Средний охват</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows || `
+              <tr>
+                <td colspan="4" class="p-8 text-center text-[11px] font-black uppercase text-slate-400">
+                  Нет данных
+                </td>
+              </tr>
+            `}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function renderPeopleAnalytics() {
+  const container = $('#analytics-people');
+  if (!container) return;
+
+  const tasks = getPublishedPeopleTasks();
+  const stats = calculatePeopleStats(tasks);
+  const filter = $('#statsPlatformFilter')?.value || 'ALL';
+  const totalViews = tasks.reduce((sum, task) => sum + getPeopleTaskViews(task), 0);
 
   container.innerHTML = `
     <div class="mb-6">
-      <h3 class="text-lg font-black uppercase">👥 Аналитика по команде</h3>
+      <h3 class="text-lg font-black uppercase">👥 Корреляция охват / человек</h3>
       <p class="mt-2 text-sm font-medium" style="color: var(--muted);">
-        Охват распределяется: 50% ответственному, 50% между исполнителями.
+        Фильтр: ${escapeHtml(filter)} · Публикаций: ${tasks.length} · Охват: ${totalViews.toLocaleString('ru-RU')}
       </p>
     </div>
 
-    <div class="overflow-x-auto rounded-[1.5rem] border" style="border-color: var(--border);">
-      <table class="w-full text-left text-[11px] font-bold">
-        <thead style="background: var(--surface-2); color: var(--muted);">
-          <tr>
-            <th class="p-4">Человек</th>
-            <th class="p-4">Охват</th>
-            <th class="p-4">Задачи</th>
-            <th class="p-4">Опубликовано</th>
-            <th class="p-4">Средний охват</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows || `
-            <tr>
-              <td colspan="5" class="p-10 text-center text-[11px] font-black uppercase text-slate-400">
-                Пока нет опубликованных задач
-              </td>
-            </tr>
-          `}
-        </tbody>
-      </table>
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+      ${renderPeopleTable(
+        'Ответственные',
+        'Кто вёл задачу. Здесь охват считается полностью на ответственного.',
+        stats.responsible
+      )}
+
+      ${renderPeopleTable(
+        'Исполнители',
+        'Кто участвовал в задаче. Здесь охват считается полностью каждому исполнителю, без деления.',
+        stats.executors
+      )}
     </div>
   `;
 }
