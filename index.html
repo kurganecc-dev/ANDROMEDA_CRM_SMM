@@ -702,7 +702,22 @@
       .calendar-day { min-height: 92px; padding: 5px; }
       .chat-bubble { max-width: 92%; }
     }
+#middlePanel,
+#rightSidebar {
+  display: flex;
+  flex-direction: column;
+}
 
+#view-chat {
+  flex: 1;
+  display: flex;
+}
+
+#view-chat > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
   </style>
 </head>
 <body class="min-h-screen">
@@ -926,7 +941,7 @@
         </div>
 
         <div id="view-accounts" class="hidden grid grid-cols-1 gap-6 md:grid-cols-2"></div>
-      <div id="view-chat" class="hidden">
+     <div id="view-chat" class="hidden h-full">
   <div class="app-surface overflow-hidden rounded-[2rem]">
     <div class="border-b p-6" style="border-color: var(--border);">
       <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
