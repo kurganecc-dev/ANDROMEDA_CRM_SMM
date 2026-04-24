@@ -1,0 +1,3829 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ANDROMEDA | CRM SMM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+    :root {
+      --bg: #f1f5f9;
+      --surface: #ffffff;
+      --surface-2: #f8fafc;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-strong: #1d4ed8;
+      --danger: #e11d48;
+      --success: #10b981;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    }
+
+    body.theme-dark {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-2: #172334;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --border: #334155;
+      --primary: #3b82f6;
+      --primary-strong: #60a5fa;
+      --shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+    }
+
+    body.theme-pink {
+      --bg: #fff1f2;
+      --surface: #ffffff;
+      --surface-2: #fff7f8;
+      --text: #881337;
+      --muted: #9f1239;
+      --border: #fecdd3;
+      --primary: #e11d48;
+      --primary-strong: #be123c;
+      --shadow: 0 12px 30px rgba(190, 24, 93, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background-color .25s ease, color .25s ease;
+    }
+
+    .app-surface {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .surface-muted {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+    }
+
+    .text-muted { color: var(--muted); }
+    .border-soft { border-color: var(--border); }
+    .status-idea { border-left: 5px solid #9ca3af; }
+.status-script { border-left: 5px solid #8b5cf6; }
+.status-production { border-left: 5px solid #3b82f6; }
+.status-editing { border-left: 5px solid #f59e0b; }
+.status-review { border-left: 5px solid #ec4899; }
+.status-scheduled { border-left: 5px solid #14b8a6; }
+.status-published { border-left: 5px solid #6366f1; }
+
+.progress-track {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--primary);
+  transition: width .25s ease;
+}
+
+.stage-hint {
+  margin-top: 10px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+    .deadline-chip {
+  border-radius: 12px;
+  padding: 8px 10px;
+  font-weight: 800;
+  font-size: 10px;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.deadline-overdue {
+  background: rgba(225,29,72,.12);
+  color: #e11d48;
+  border-color: rgba(225,29,72,.22);
+}
+
+.deadline-today {
+  background: rgba(245,158,11,.14);
+  color: #b45309;
+  border-color: rgba(245,158,11,.24);
+}
+
+.deadline-tomorrow {
+  background: rgba(59,130,246,.10);
+  color: #2563eb;
+  border-color: rgba(59,130,246,.18);
+}
+
+.deadline-normal {
+  background: var(--surface-2);
+  color: var(--muted);
+  border-color: var(--border);
+}
+    .tab-active { background: var(--text) !important; color: white !important; }
+
+    .view-animate { animation: slideUpFade .25s ease; }
+    @keyframes slideUpFade {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .kanban-col.drag-over {
+      outline: 2px dashed var(--primary);
+      background: rgba(37, 99, 235, 0.08);
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .calendar-day {
+      min-height: 108px;
+      background: var(--surface);
+      padding: 6px;
+      overflow-y: auto;
+    }
+
+    .calendar-item {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 6px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+
+    .multi-select-box {
+      max-height: 170px;
+      overflow: auto;
+      padding: 10px;
+      border-radius: 16px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+    }
+
+    ::-webkit-scrollbar { width: 7px; height: 7px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+    body.theme-dark ::-webkit-scrollbar-thumb { background: #475569; }
+
+    .hidden-safe { display: none !important; }
+
+    .hero-shell {
+      background: radial-gradient(circle at top left, rgba(59,130,246,.10), transparent 38%), linear-gradient(180deg, rgba(255,255,255,.78), rgba(255,255,255,.92));
+    }
+    body.theme-dark .hero-shell {
+      background: radial-gradient(circle at top left, rgba(96,165,250,.12), transparent 38%), linear-gradient(180deg, rgba(30,41,59,.88), rgba(30,41,59,.96));
+    }
+    .kpi-card { background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow); }
+    .soft-pill { background: var(--surface-2); border: 1px solid var(--border); }
+    .calendar-day:hover { background: color-mix(in srgb, var(--surface) 82%, var(--primary) 18%); }
+    .calendar-day.create-target { outline: 2px solid var(--primary); outline-offset: -2px; }
+    .empty-state { border: 1px dashed var(--border); background: color-mix(in srgb, var(--surface-2) 75%, transparent); }
+    .toast-wrap {
+      position: fixed; right: 20px; bottom: 20px; z-index: 999;
+      display: flex; flex-direction: column; gap: 10px; max-width: 360px;
+    }
+    .toast {
+      background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: var(--shadow);
+      border-radius: 18px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start;
+      animation: slideToast .24s ease;
+    }
+    .toast strong { display: block; font-size: 12px; text-transform: uppercase; margin-bottom: 3px; }
+    .toast-success { border-color: rgba(16,185,129,.25); }
+    .toast-error { border-color: rgba(225,29,72,.25); }
+    .toast-info { border-color: rgba(37,99,235,.2); }
+    @keyframes slideToast { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes toastProgress { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+    .skeleton-card, .skeleton-line, .skeleton-chip, .skeleton-bar {
+      position: relative; overflow: hidden;
+      background: color-mix(in srgb, var(--surface-2) 82%, var(--border));
+    }
+    .skeleton-card::after, .skeleton-line::after, .skeleton-chip::after, .skeleton-bar::after {
+      content: ''; position: absolute; inset: 0;
+      transform: translateX(-100%);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+      animation: shimmer 1.15s infinite;
+    }
+    body.theme-dark .skeleton-card::after, body.theme-dark .skeleton-line::after, body.theme-dark .skeleton-chip::after, body.theme-dark .skeleton-bar::after {
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+    }
+    @keyframes shimmer { 100% { transform: translateX(100%); } }
+    .field-error { margin-top: 6px; font-size: 12px; font-weight: 700; color: #e11d48; }
+    .input-error { border-color: rgba(225,29,72,.45) !important; box-shadow: 0 0 0 3px rgba(225,29,72,.08); }
+    .sidebar-panel { border: 1px solid rgba(255,255,255,.06); }
+    .sidebar-insight { border: 1px solid rgba(255,255,255,.06); background: rgba(255,255,255,.05); }
+    .sidebar-task-urgent { border-color: rgba(251,146,60,.35); background: rgba(251,146,60,.12); }
+    .sidebar-task-overdue { border-color: rgba(244,63,94,.35); background: rgba(244,63,94,.12); }
+    .toast-warning { border-color: rgba(245,158,11,.28); }
+    .toast-loading { border-color: rgba(148,163,184,.24); }
+    .toast-icon { font-size: 20px; line-height: 1; }
+    .toast-body { flex: 1; }
+    .toast-close { margin-left: auto; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 18px; line-height: 1; padding: 0; }
+    .toast-progress { margin-top: 10px; height: 4px; border-radius: 999px; background: color-mix(in srgb, var(--surface-2) 82%, var(--border)); overflow: hidden; }
+    .toast-progress > span { display: block; height: 100%; width: 100%; background: var(--primary); transform-origin: left center; }
+    .toast-success .toast-progress > span { background: var(--success); }
+    .toast-error .toast-progress > span { background: var(--danger); }
+    .toast-warning .toast-progress > span { background: #f59e0b; }
+    .inline-edit-shell { margin-top: 14px; padding: 14px; border-radius: 18px; background: var(--surface-2); border: 1px solid var(--border); }
+    .inline-edit-shell input, .inline-edit-shell select { width: 100%; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text); padding: 10px 12px; font-size: 12px; font-weight: 700; outline: none; }
+    .inline-edit-shell label { display: block; margin-bottom: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--muted); }
+    .inline-edit-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .inline-edit-actions button { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; font-size: 11px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
+    .inline-edit-actions .primary { background: var(--text); color: white; border-color: transparent; }
+    .inline-edit-actions .secondary { background: var(--surface); color: var(--text); }
+    .chat-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.chat-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.chat-presence {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #93c5fd;
+}
+
+.chat-presence-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 6px rgba(34,197,94,.12);
+}
+.chat-drop-zone {
+  border: 1px dashed rgba(59,130,246,.32);
+  background: rgba(59,130,246,.08);
+  border-radius: 22px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-align: center;
+  transition: .18s ease;
+}
+
+.chat-drop-zone.drag-over {
+  background: rgba(59,130,246,.18);
+  border-color: rgba(59,130,246,.65);
+  transform: scale(1.01);
+}
+
+.chat-task-bubble {
+  display: block;
+  width: 100%;
+  border: 1px solid rgba(59,130,246,.28);
+  background: rgba(59,130,246,.12);
+  color: inherit;
+  border-radius: 16px;
+  padding: 12px;
+  margin-top: 4px;
+  text-align: left;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.chat-task-bubble:hover {
+  transform: translateY(-1px);
+  background: rgba(59,130,246,.18);
+}
+
+.chat-task-bubble-title {
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.chat-task-bubble-meta {
+  margin-top: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  opacity: .75;
+}
+    
+.chat-feed {
+  height: 360px;
+  max-height: 50vh;
+  overflow-y: auto;
+  padding-right: 4px;
+  scroll-behavior: smooth;
+  min-height: 0;
+}
+
+.chat-day-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 2px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.chat-day-divider::before,
+.chat-day-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(148,163,184,.18);
+}
+
+.chat-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.chat-row.me {
+  align-items: flex-end;
+}
+
+.chat-row.other {
+  align-items: flex-start;
+}
+
+.chat-meta {
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.chat-author {
+  color: #cbd5e1;
+}
+
+.chat-time {
+  color: #64748b;
+}
+
+.chat-bubble {
+  position: relative;
+  max-width: 85%;
+  border-radius: 20px;
+  padding: 10px 12px;
+  box-shadow: 0 8px 18px rgba(2,6,23,.12);
+  backdrop-filter: blur(10px);
+}
+
+.chat-bubble.me {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  border-top-right-radius: 8px;
+}
+
+.chat-bubble.other {
+  background: rgba(30,41,59,.88);
+  color: #e2e8f0;
+  border: 1px solid rgba(255,255,255,.06);
+  border-top-left-radius: 8px;
+}
+
+.chat-text {
+  font-size: 13px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.chat-actions {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chat-reaction {
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.06);
+  color: #fff;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.chat-reaction:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,.12);
+}
+
+.chat-reaction.active {
+  border-color: rgba(96,165,250,.8);
+  background: rgba(59,130,246,.22);
+}
+
+.chat-emoji-bar {
+  position: absolute;
+  top: -14px;
+  display: none;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(15,23,42,.94);
+  border: 1px solid rgba(255,255,255,.06);
+  box-shadow: 0 12px 24px rgba(0,0,0,.22);
+}
+
+.chat-row.me .chat-emoji-bar {
+  left: -6px;
+  transform: translateX(-100%);
+}
+
+.chat-row.other .chat-emoji-bar {
+  right: -6px;
+  transform: translateX(100%);
+}
+
+.chat-row:hover .chat-emoji-bar {
+  display: inline-flex;
+}
+
+.chat-emoji-btn {
+  border: 0;
+  background: transparent;
+  color: white;
+  cursor: pointer;
+  border-radius: 999px;
+  width: 28px;
+  height: 28px;
+  transition: .18s ease;
+}
+
+.chat-emoji-btn:hover {
+  background: rgba(255,255,255,.08);
+  transform: scale(1.08);
+}
+
+.chat-delete-btn {
+  position: absolute;
+  top: 10px;
+  opacity: 0;
+  border: 0;
+  background: transparent;
+  color: #fb7185;
+  font-size: 12px;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.chat-row.me:hover .chat-delete-btn {
+  opacity: 1;
+}
+
+.chat-row.me .chat-delete-btn {
+  left: -22px;
+}
+
+.chat-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: 18px;
+  background: rgba(15,23,42,.92);
+  border: 1px solid rgba(255,255,255,.06);
+  padding: 10px;
+}
+
+.chat-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.chat-quick-btn {
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.05);
+  color: #cbd5e1;
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.chat-quick-btn:hover {
+  background: rgba(59,130,246,.16);
+  color: white;
+  border-color: rgba(59,130,246,.32);
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.chat-input-wrap {
+  flex: 1;
+  border-radius: 16px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.06);
+  padding: 8px 10px;
+}
+
+.chat-input {
+  width: 100%;
+  min-height: 20px;
+  max-height: 96px;
+  resize: none;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: white;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.chat-input::placeholder {
+  color: #64748b;
+}
+
+.chat-send-btn {
+  border: 0;
+  border-radius: 14px;
+  min-width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  font-size: 17px;
+  cursor: pointer;
+  box-shadow: 0 10px 18px rgba(37,99,235,.24);
+  transition: .18s ease;
+}
+
+.chat-send-btn:hover {
+  transform: translateY(-1px) scale(1.02);
+}
+
+.chat-send-btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.chat-template-btn {
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.05);
+  transition: .18s ease;
+}
+
+.chat-template-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(59,130,246,.16);
+  border-color: rgba(59,130,246,.32);
+}
+
+.chat-feed {
+  background:
+    radial-gradient(circle at top left, rgba(59,130,246,.08), transparent 34%),
+    color-mix(in srgb, var(--surface-2) 84%, transparent);
+}
+    
+.chat-empty {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  border-radius: 20px;
+  border: 1px dashed rgba(255,255,255,.08);
+  background: rgba(255,255,255,.03);
+  text-align: center;
+  padding: 20px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+    .task-card.is-editing { border-color: color-mix(in srgb, var(--primary) 40%, var(--border)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 14%, transparent), var(--shadow); }
+    body.theme-dark .bg-white, body.theme-dark .bg-slate-50, body.theme-dark .bg-slate-100 { background-color: var(--surface) !important; }
+    body.theme-dark .text-slate-900, body.theme-dark .text-slate-800, body.theme-dark .text-slate-700, body.theme-dark .text-slate-600 { color: var(--text) !important; }
+    body.theme-dark .text-slate-500, body.theme-dark .text-slate-400, body.theme-dark .text-slate-300 { color: var(--muted) !important; }
+    body.theme-dark .border-slate-700, body.theme-dark .border-slate-800 { border-color: var(--border) !important; }
+
+
+    /* Alignment polish: consistent grids, equal-height cards, responsive controls */
+    #appContent header > div { align-items: center; }
+    #mainTabs { align-items: center; }
+    .view-tab,
+    #listControls > button,
+    #listControls > input,
+    #listControls > select,
+    #themeSelect,
+    #logsBtn,
+    #trashBtn,
+    #logoutBtn,
+    .calendar-filter,
+    #analyticsTableBtn,
+    #analyticsVisualsBtn,
+    #analyticsPeopleBtn {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    #listControls { align-items: stretch; }
+    @media (min-width: 768px) {
+      #listControls { align-items: center; }
+      #openCreateBtn { flex: 0 0 auto; }
+      #tagFilter { flex: 0 0 180px; }
+    }
+    #view-list { align-items: stretch; }
+    .task-card, .kpi-card, .app-surface { min-width: 0; }
+    .task-card { height: 100%; display: flex; flex-direction: column; }
+    .task-card > .mt-4 { margin-top: auto; }
+    .task-card h3, .kanban-card h4, .sidebar-insight, .calendar-item { overflow-wrap: anywhere; }
+    .deadline-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      text-align: center;
+      line-height: 1.15;
+    }
+    #view-kanban > .flex > div { min-width: 240px; }
+    .kanban-col { display: flex; flex-direction: column; gap: 12px; }
+    .kanban-card { margin-bottom: 0; }
+    .calendar-grid { overflow: hidden; border-radius: 24px; }
+    .calendar-day { display: flex; flex-direction: column; gap: 4px; }
+    #statsTableContainer table th,
+    #statsTableContainer table td,
+    #analytics-people table th,
+    #analytics-people table td { vertical-align: middle; }
+    #view-accounts > a { min-height: 112px; }
+    @media (max-width: 767px) {
+      header.sticky { padding-left: 16px; padding-right: 16px; }
+      main.mx-auto { padding-left: 16px; padding-right: 16px; }
+      #mainTabs { width: 100%; }
+      .view-tab { flex: 1 1 calc(50% - 4px); }
+      .calendar-day { min-height: 92px; padding: 5px; }
+      .chat-bubble { max-width: 92%; }
+    }
+
+  </style>
+</head>
+<body class="min-h-screen">
+  <div id="loginOverlay" class="fixed inset-0 z-[1000] flex items-center justify-center p-4" style="background: radial-gradient(circle at center, #1e293b 0%, #000 100%);">
+    <div class="app-surface w-full max-w-sm rounded-[2rem] p-8 text-center">
+      <h1 class="text-3xl font-black tracking-tight">ANDROMEDA</h1>
+      <p class="mt-1 text-[10px] font-black uppercase tracking-[0.3em]" style="color: var(--primary);">CRM SMM SYSTEM</p>
+      <div class="mt-8 space-y-4">
+        <select id="loginUser" class="w-full rounded-2xl border p-3 text-center font-bold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></select>
+        <input id="loginPass" type="password" placeholder="Пароль" class="w-full rounded-2xl border p-3 text-center font-bold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" />
+        <button id="loginBtn" class="w-full rounded-2xl px-4 py-4 text-xs font-black uppercase tracking-[0.2em] text-white" style="background: var(--text);">Войти</button>
+        <p id="loginError" class="hidden text-xs font-bold text-rose-500">Ошибка входа</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="appContent" class="hidden opacity-0 transition-opacity duration-500">
+    <header class="sticky top-0 z-50 border-b px-6 py-4" style="background: var(--surface); border-color: var(--border);">
+      <div class="mx-auto flex max-w-[1800px] flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-8">
+          <div>
+            <h1 class="text-xl font-black leading-none">ANDROMEDA</h1>
+            <p class="mt-1 text-[10px] font-black uppercase" style="color: var(--primary);">CRM SMM</p>
+          </div>
+          <div id="mainTabs" class="flex flex-wrap gap-1 rounded-2xl p-1 surface-muted text-[10px] font-black uppercase"></div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <select id="themeSelect" class="rounded-xl border px-3 py-2 text-[10px] font-black uppercase outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);">
+            <option value="light">☀️ Светлая</option>
+            <option value="dark">🌙 Тёмная</option>
+            <option value="pink">🌸 Розовая</option>
+          </select>
+
+          <button id="logsBtn" class="relative rounded-xl border p-2" style="background: var(--surface-2); border-color: var(--border);">🔔
+            <span id="logBadge" class="hidden absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[8px] font-black text-white">!</span>
+          </button>
+
+          <button id="trashBtn" class="relative rounded-xl border p-2" style="background: var(--surface-2); border-color: var(--border);">🗑️
+            <span id="trashBadge" class="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-slate-900 px-1 text-[8px] font-black text-white">0</span>
+          </button>
+
+          <div id="currentUserDisplay" class="border-l pl-4 text-[11px] font-black uppercase" style="border-color: var(--border);"></div>
+          <button id="logoutBtn" class="text-[10px] font-black uppercase text-rose-500">Выход</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto grid max-w-[1800px] grid-cols-1 gap-6 px-6 py-6 lg:grid-cols-12">
+      <section id="middlePanel" class="space-y-6 lg:col-span-9">
+       <div id="heroBlock" class="hero-shell app-surface rounded-[2rem] p-6">
+          <div class="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+            <div>
+              <div class="mb-2 inline-flex rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em]" style="background: rgba(37,99,235,.10); color: var(--primary);">Приоритеты</div>
+              <h2 class="text-2xl font-black tracking-tight">Вся работа в одном месте</h2>
+              <p class="mt-2 max-w-2xl text-sm font-medium" style="color: var(--muted);">Быстрый доступ к задачам, понятные фильтры, командный чат и многое другое.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3 xl:min-w-[440px] xl:grid-cols-4">
+              <div class="kpi-card rounded-[1.5rem] p-4"><div class="text-[10px] font-black uppercase" style="color: var(--muted);">Активные</div><div id="kpiActive" class="mt-2 text-2xl font-black">0</div></div>
+              <div class="kpi-card rounded-[1.5rem] p-4"><div class="text-[10px] font-black uppercase" style="color: var(--muted);">В работе</div><div id="kpiWork" class="mt-2 text-2xl font-black">0</div></div>
+              <div class="kpi-card rounded-[1.5rem] p-4"><div class="text-[10px] font-black uppercase" style="color: var(--muted);">Дедлайны сегодня</div><div id="kpiToday" class="mt-2 text-2xl font-black">0</div></div>
+              <div class="kpi-card rounded-[1.5rem] p-4"><div class="text-[10px] font-black uppercase" style="color: var(--muted);">Опубликовано</div><div id="kpiPublished" class="mt-2 text-2xl font-black">0</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="listControls" class="flex flex-col gap-4 md:flex-row">
+          <button id="openCreateBtn" class="rounded-2xl px-6 py-4 text-[11px] font-black uppercase text-white" style="background: var(--primary);">+ Создать задачу</button>
+          <input id="taskSearch" type="text" placeholder="Поиск по названию" class="flex-1 rounded-2xl border px-4 py-4 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);" />
+          <select id="tagFilter" class="rounded-2xl border px-4 py-4 text-[11px] font-black uppercase outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);">
+            <option value="ALL">Все теги</option>
+            <option value="ФРК">ФРК</option>
+            <option value="УТП">УТП</option>
+            <option value="прочее">Прочее</option>
+          </select>
+        </div>
+
+        <div id="view-list" class="grid grid-cols-1 gap-6 md:grid-cols-2"></div>
+
+       <div id="view-kanban" class="hidden overflow-x-auto pb-4">
+  <div class="flex min-w-[1760px] gap-4">
+    <div class="flex-1">
+      <div class="mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-[10px] font-black uppercase app-surface">
+        💡 Идеи <span id="count-idea">0</span>
+      </div>
+      <div data-kanban="idea" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: var(--border); background: color-mix(in srgb, var(--surface) 70%, transparent);"></div>
+    </div>
+
+    <div class="flex-1">
+      <div class="mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-[10px] font-black uppercase text-white" style="background:#8b5cf6;">
+        ✍️ Сценарий <span id="count-script">0</span>
+      </div>
+      <div data-kanban="script" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: rgba(139,92,246,.28); background: rgba(139,92,246,.06);"></div>
+    </div>
+
+    <div class="flex-1">
+      <div class="mb-3 flex items-center justify-between rounded-xl bg-blue-600 px-4 py-3 text-[10px] font-black uppercase text-white">
+        🎬 Продакшн <span id="count-production">0</span>
+      </div>
+      <div data-kanban="production" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color:#bfdbfe; background:rgba(59,130,246,.06);"></div>
+    </div>
+
+    <div class="flex-1">
+      <div class="mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-[10px] font-black uppercase text-white" style="background:#f59e0b;">
+        ✂️ Монтаж <span id="count-editing">0</span>
+      </div>
+      <div data-kanban="editing" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: rgba(245,158,11,.28); background: rgba(245,158,11,.06);"></div>
+    </div>
+
+    <div class="flex-1">
+      <div class="mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-[10px] font-black uppercase text-white" style="background:#ec4899;">
+        👀 Проверка <span id="count-review">0</span>
+      </div>
+      <div data-kanban="review" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: rgba(236,72,153,.28); background: rgba(236,72,153,.06);"></div>
+    </div>
+
+    <div class="flex-1">
+      <div class="mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-[10px] font-black uppercase text-white" style="background:#14b8a6;">
+        📅 Запланировано <span id="count-scheduled">0</span>
+      </div>
+      <div data-kanban="scheduled" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: rgba(20,184,166,.28); background: rgba(20,184,166,.06);"></div>
+    </div>
+
+    <div class="flex-1">
+      <div class="mb-3 flex items-center justify-between rounded-xl bg-slate-900 px-4 py-3 text-[10px] font-black uppercase text-white">
+        🚀 Опубликовано <span id="count-published">0</span>
+      </div>
+      <div data-kanban="published" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: var(--border); background: rgba(15,23,42,.06);"></div>
+    </div>
+  </div>
+</div>
+
+        <div id="view-calendar" class="hidden space-y-4">
+          <div id="calendarTabs" class="flex flex-wrap gap-2"></div>
+          <div class="app-surface rounded-[2rem] p-6 text-center">
+            <div class="mb-4 flex items-center justify-between">
+              <button id="calendarPrevBtn" class="rounded-xl border px-3 py-2" style="border-color: var(--border);">←</button>
+              <h2 id="calendarMonthLabel" class="text-sm font-black uppercase"></h2>
+              <button id="calendarNextBtn" class="rounded-xl border px-3 py-2" style="border-color: var(--border);">→</button>
+            </div>
+            <div class="mb-2 grid grid-cols-7 text-[10px] font-black uppercase text-slate-400">
+              <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
+            </div>
+            <div id="calendarGrid" class="calendar-grid"></div>
+          </div>
+        </div>
+
+        <div id="view-analytics" class="hidden space-y-6">
+          <div class="mx-auto flex w-fit gap-1 rounded-2xl p-1 surface-muted text-[10px] font-black uppercase">
+  <button id="analyticsTableBtn" class="tab-active rounded-xl px-6 py-2.5">📊 Таблица</button>
+  <button id="analyticsVisualsBtn" class="rounded-xl px-6 py-2.5 text-slate-400">📈 Графики</button>
+  <button id="analyticsPeopleBtn" class="rounded-xl px-6 py-2.5 text-slate-400">👥 Команда</button>
+</div>
+
+          <div id="analytics-table" class="space-y-6">
+            <div id="adminPanel" class="hidden rounded-[2rem] p-6 text-white" style="background: #0f172a;">
+              <p class="mb-4 text-center text-[10px] font-black uppercase tracking-[0.25em] text-blue-400">Конфигурация API</p>
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label class="mb-1 block text-[10px] font-bold uppercase text-slate-400">YouTube Key</label>
+                  <input id="ytApiKey" type="password" class="w-full rounded-xl border-none bg-slate-800 p-3 text-sm text-white outline-none" />
+                </div>
+                <div>
+                  <label class="mb-1 block text-[10px] font-bold uppercase text-slate-400">Apify Token</label>
+                  <input id="apifyToken" type="password" class="w-full rounded-xl border-none bg-slate-800 p-3 text-sm text-white outline-none" />
+                </div>
+              </div>
+              <button id="saveAdminSettingsBtn" class="mt-4 w-full rounded-xl bg-blue-600 py-3 text-[10px] font-black uppercase">Сохранить</button>
+            </div>
+
+            <div class="app-surface flex flex-col gap-4 rounded-[2rem] p-6 md:flex-row md:items-center md:justify-between">
+              <div class="flex items-center gap-2">
+                <button id="statsPrevBtn" class="rounded-xl border px-3 py-2" style="border-color: var(--border);">←</button>
+                <h2 id="statsMonthLabel" class="w-36 text-center text-sm font-black uppercase"></h2>
+                <button id="statsNextBtn" class="rounded-xl border px-3 py-2" style="border-color: var(--border);">→</button>
+              </div>
+              <select id="statsPlatformFilter" class="rounded-xl border px-3 py-2 text-xs font-bold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);">
+                <option value="ALL">Все площадки</option>
+                <option value="YouTube">YouTube</option>
+                <option value="TikTok">TikTok</option>
+                <option value="Instagram">Instagram</option>
+                <option value="VK">VK</option>
+                <option value="Telegram">Telegram (Все)</option>
+              </select>
+              <div class="flex gap-2">
+                <button id="btnUpdateAll" class="rounded-xl bg-emerald-500 px-4 py-3 text-[10px] font-black uppercase text-white">Обновить</button>
+                <button id="exportStatsBtn" class="rounded-xl bg-slate-900 px-4 py-3 text-[10px] font-black uppercase text-white">CSV</button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div class="app-surface rounded-[2rem] p-6 text-center">
+                <p class="text-[10px] font-black uppercase text-slate-400">Опубликовано</p>
+                <h3 id="stat-total" class="mt-2 text-4xl font-black">0</h3>
+              </div>
+              <div class="app-surface rounded-[2rem] p-6 text-center">
+                <p class="text-[10px] font-black uppercase text-slate-400">Суммарный охват</p>
+                <h3 id="stat-views" class="mt-2 text-4xl font-black text-emerald-600">0</h3>
+              </div>
+            </div>
+
+            <div id="statsTableContainer" class="app-surface overflow-x-auto rounded-[2rem]"></div>
+          </div>
+
+          <div id="analytics-visuals" class="hidden">
+            <div class="app-surface rounded-[2rem] p-8">
+              <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <h3 id="chartTitle" class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Аналитика охватов</h3>
+                <div class="flex gap-1 rounded-xl p-1 surface-muted text-[10px] font-black uppercase">
+                  <button id="chartMonthsBtn" class="tab-active rounded-lg px-3 py-1.5">6 месяцев</button>
+                  <button id="chartDaysBtn" class="rounded-lg px-3 py-1.5 text-slate-400">По дням</button>
+                </div>
+              </div>
+              <div class="relative h-[420px]">
+                <canvas id="reachChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div id="analytics-people" class="hidden app-surface rounded-[2rem] p-6"></div>
+        </div>
+
+        <div id="view-accounts" class="hidden grid grid-cols-1 gap-6 md:grid-cols-2"></div>
+      <div id="view-chat" class="hidden">
+  <div class="app-surface overflow-hidden rounded-[2rem]">
+    <div class="border-b p-6" style="border-color: var(--border);">
+      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 class="flex items-center gap-2 text-2xl font-black uppercase">
+            Командный чат
+            <span class="rounded-full px-2 py-1 text-[10px]" style="background: rgba(59,130,246,.15); color: var(--primary);">
+              LIVE
+            </span>
+          </h2>
+          <p class="mt-2 text-sm font-medium" style="color: var(--muted);">
+            Обсуждение задач и быстрые рабочие статусы.
+          </p>
+        </div>
+
+        <div class="chat-presence rounded-2xl px-4 py-3" style="background:#0f172a;">
+          <span class="chat-presence-dot"></span>
+          <span>Команда на связи</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="px-6 pt-5">
+      <div id="chatDropZone" class="chat-drop-zone">
+        Перетащи сюда задачу из блока «Фокус и мои задачи»
+      </div>
+    </div>
+
+    <div id="chatMessages" class="chat-feed px-6 pb-5" style="height: 620px; max-height: 66vh;"></div>
+
+    <div class="border-t p-5" style="border-color: var(--border);">
+      <div class="chat-composer">
+        <div class="chat-quick-actions">
+          <button type="button" class="chat-quick-btn" data-quick-message="Взял в работу">Взял в работу</button>
+          <button type="button" class="chat-quick-btn" data-quick-message="Нужен фидбек">Нужен фидбек</button>
+          <button type="button" class="chat-quick-btn" data-quick-message="Готово к проверке">Готово к проверке</button>
+        </div>
+
+        <div class="chat-input-row">
+          <div class="chat-input-wrap">
+            <textarea id="chatInput" class="chat-input" rows="1" placeholder="Напиши сообщение команде..."></textarea>
+          </div>
+          <button id="sendChatBtn" class="chat-send-btn" type="button">➤</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      </section>
+
+     <aside id="rightSidebar" class="space-y-6 lg:col-span-3">
+  <div class="sidebar-panel rounded-[2rem] p-5 text-slate-100 overflow-hidden" style="background: #0f172a; box-shadow: var(--shadow);">
+    <h3 class="mb-4 border-b border-slate-800 pb-4 text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">Фокус и мои задачи</h3>
+    <div id="focusSidebar" class="space-y-4"></div>
+  </div>
+</aside>
+    </main>
+  </div>
+
+  <div id="editModal" class="hidden fixed inset-0 z-[200] items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+    <div class="app-surface flex max-h-[92vh] w-full max-w-5xl flex-col rounded-[2rem]">
+      <div class="flex items-center justify-between border-b p-5" style="border-color: var(--border);">
+        <h2 class="font-black uppercase">Правка задачи</h2>
+        <button data-close-modal="editModal" class="text-4xl text-slate-400">&times;</button>
+      </div>
+      <form id="editForm" class="space-y-6 overflow-y-auto p-8">
+        <input id="edit_id" type="hidden" />
+        <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
+          <div class="space-y-4 text-[11px] font-black uppercase">
+            <label>Тема
+              <input id="edit_title" type="text" required class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" />
+            </label>
+            <div class="grid grid-cols-2 gap-2">
+              <label>Тип
+                <select id="edit_work_type" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></select>
+              </label>
+              <label>Тег
+                <select id="edit_tag" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></select>
+              </label>
+            </div>
+            <label>Статус
+              <select id="edit_status" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></select>
+            </label>
+            <label>Описание
+              <textarea id="edit_description" class="mt-1 h-32 w-full rounded-xl border p-3 text-sm font-medium normal-case outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></textarea>
+            </label>
+          </div>
+
+          <div class="space-y-4 text-[11px] font-black uppercase">
+            <label>Площадки</label>
+            <div id="editChannelList" class="multi-select-box"></div>
+            <div class="grid grid-cols-2 gap-3">
+              <label>Старт
+                <input id="edit_start_date" type="date" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" />
+              </label>
+              <label>Срок
+                <input id="edit_date" type="date" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" />
+              </label>
+            </div>
+          </div>
+
+          <div class="space-y-4 text-[11px] font-black uppercase">
+            <label>Исполнители</label>
+            <div id="editExecList" class="multi-select-box"></div>
+            <div class="rounded-[1.5rem] border p-5" style="background: rgba(16,185,129,.06); border-color: rgba(16,185,129,.2);">
+              <label class="mb-3 block text-emerald-700">Ссылки</label>
+              <div id="multiLinkContainer" class="space-y-3"></div>
+            </div>
+          </div>
+        </div>
+        <button class="w-full rounded-2xl px-4 py-5 text-xs font-black uppercase text-white" style="background: var(--text);">Сохранить</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="createModal" class="hidden fixed inset-0 z-[200] items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+    <div class="app-surface flex max-h-[92vh] w-full max-w-4xl flex-col rounded-[2rem]">
+      <div class="flex items-center justify-between border-b p-6" style="border-color: var(--border);">
+        <div><div class="text-[10px] font-black uppercase tracking-[0.22em]" style="color: var(--primary);">Быстрое создание</div><h2 id="createModalTitle" class="mt-1 font-black uppercase">Новая задача</h2><p id="createModalSubtitle" class="mt-2 text-sm font-medium" style="color: var(--muted);">Короткая форма без лишнего шума — только то, что нужно для старта.</p></div>
+        <button data-close-modal="createModal" class="text-4xl text-slate-400">&times;</button>
+      </div>
+      <form id="ideaForm" class="space-y-6 overflow-y-auto p-8"><div class="grid grid-cols-1 gap-3 md:grid-cols-3"><div class="soft-pill rounded-2xl p-4"><div class="text-[10px] font-black uppercase" style="color: var(--muted);">Дата</div><div id="createPreviewDate" class="mt-1 text-sm font-black">Не выбрана</div></div><div class="soft-pill rounded-2xl p-4"><div class="text-[10px] font-black uppercase" style="color: var(--muted);">Сценарий</div><div class="mt-1 text-sm font-black">Календарь или кнопка</div></div><div class="soft-pill rounded-2xl p-4"><div class="text-[10px] font-black uppercase" style="color: var(--muted);">Подсказка</div><div class="mt-1 text-sm font-black">Сначала тема, потом площадки</div></div></div>
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div class="space-y-4">
+            <label class="block text-[11px] font-black uppercase text-slate-400">Основная информация</label>
+            <input id="title" type="text" required placeholder="Тема поста" class="w-full rounded-xl border-2 p-3.5 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" /><div id="error_title" class="field-error hidden"></div>
+            <div class="grid grid-cols-2 gap-2">
+              <select id="work_type" class="w-full rounded-xl border-2 p-3 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);"></select>
+              <select id="tag" class="w-full rounded-xl border-2 p-3 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);"></select>
+            </div>
+            <textarea id="description" placeholder="Описание / ТЗ" class="h-32 w-full rounded-xl border-2 p-3 text-sm font-medium outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></textarea><div id="error_description" class="field-error hidden"></div><p class="text-xs font-medium" style="color: var(--muted);">Добавь короткий контекст: что делаем, для какой площадки и какой результат нужен.</p>
+            <div class="grid grid-cols-2 gap-4">
+              <label class="text-[10px] font-black uppercase text-slate-400">Старт
+                <input id="start_date_val" type="date" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold" style="background: var(--surface); border-color: var(--border); color: var(--text);" /><div id="error_start_date_val" class="field-error hidden"></div>
+              </label>
+              <label class="text-[10px] font-black uppercase text-slate-400">Дедлайн
+                <input id="date_val" type="date" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold" style="background: var(--surface); border-color: var(--border); color: var(--text);" /><div id="error_date_val" class="field-error hidden"></div>
+              </label>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <div class="mb-2 flex items-center justify-between">
+                <label class="text-[11px] font-black uppercase text-slate-400">Площадки</label>
+                <label class="cursor-pointer text-[10px] font-black uppercase" style="color: var(--primary);">
+                  <input id="toggleAllChannels" type="checkbox" class="mr-1" /> Все
+                </label>
+              </div>
+              <div id="channelList" class="grid grid-cols-3 gap-1 rounded-2xl border p-2" style="background: var(--surface-2); border-color: var(--border);"></div><div id="error_channels" class="field-error hidden"></div>
+            </div>
+            <div>
+              <label class="mb-2 block text-[11px] font-black uppercase text-purple-500">Исполнители</label>
+              <div id="executorList" class="multi-select-box"></div><div id="error_executors" class="field-error hidden"></div>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"><p class="text-xs font-medium" style="color: var(--muted);">После сохранения задача появится в списке и в календаре.</p><button class="rounded-2xl px-6 py-4 text-sm font-black uppercase text-white" style="background: var(--text);">Создать задачу</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div id="trashModal" class="hidden fixed inset-0 z-[220] items-center justify-center bg-slate-900/60 p-4">
+    <div class="app-surface flex max-h-[80vh] w-full max-w-2xl flex-col rounded-[2rem] p-8">
+      <div class="mb-6 flex items-center justify-between">
+        <h2 class="text-lg font-black uppercase">Корзина</h2>
+        <button data-close-modal="trashModal" class="text-3xl text-slate-400">&times;</button>
+      </div>
+      <div id="trashList" class="space-y-3 overflow-y-auto pr-2"></div>
+    </div>
+  </div>
+
+  <div id="logsPanel" class="fixed right-0 top-0 z-[180] flex h-full w-80 translate-x-full flex-col border-l transition-transform duration-300" style="background: var(--surface); border-color: var(--border); box-shadow: var(--shadow);">
+    <div class="flex items-center justify-between border-b p-6" style="background: var(--surface-2); border-color: var(--border);">
+      <h3 class="text-xs font-black uppercase">История действий</h3>
+      <button id="closeLogsBtn" class="text-2xl text-slate-400">&times;</button>
+    </div>
+    <div id="logsContent" class="flex-1 space-y-3 overflow-y-auto p-4"></div>
+  </div>
+
+  <div id="toastContainer" class="toast-wrap"></div>
+
+  <script>
+        const AppConfig = {
+      supabase: {
+        url: 'https://snfdwowgattembkueops.supabase.co',
+        key: 'sb_publishable_thlOsL_shAho6ohPV-KVDg_k-GEm5jW'
+      },
+
+      users: [
+        'Андрей Чебыкин', 'Павел Храмцов', 'Дмитрий Хандюков', 'Татьяна Петрова',
+        'Любовь Карелина', 'Ксения Потапенкова', 'Яна Толкаченко', 'Арина Краснова',
+        'Евгения Щитова', 'Анастасия Ершова', 'Вячеслав Александров', 'Олеся Подъелец', 'admin'
+      ],
+
+      departments: {
+        'Продакшн': ['Дмитрий Хандюков', 'Андрей Чебыкин', 'Павел Храмцов'],
+        'Бренд': ['Вячеслав Александров', 'Татьяна Петрова'],
+        'Коммуникации': ['Яна Толкаченко', 'Олеся Подъелец', 'Ксения Потапенкова', 'Евгения Щитова', 'Анастасия Ершова', 'Арина Краснова'],
+        'Другие': ['Любовь Карелина', 'Олег Сытов']
+      },
+
+      channels: ['YouTube', 'TikTok', 'Instagram', 'VK', 'Этажи SMM', 'NewsRoom', 'Echat', 'Max', 'ОК'],
+      telegramChannels: ['Этажи SMM', 'NewsRoom', 'Echat', 'Max'],
+      workTypes: ['Пост', 'Картинка', 'Короткое видео', 'Длинное видео'],
+      tags: ['ФРК', 'УТП', 'прочее'],
+
+      statusMap: {
+        idea: 'Идея',
+        script: 'Сценарий',
+        production: 'Продакшн',
+        editing: 'Монтаж',
+        review: 'Проверка',
+        scheduled: 'Запланировано',
+        published: 'Опубликовано'
+      },
+
+      views: ['list', 'kanban', 'calendar', 'analytics', 'accounts', 'chat'],
+
+      workAccounts: [
+        { name: 'Вконтакте', platform: 'VK', url: 'https://vk.com/etagi.realty', handle: '@etagi.realty' },
+        { name: 'NewsRoom', platform: 'Telegram', url: 'https://t.me/nedvij_etagi', handle: '@nedvij_etagi' },
+        { name: 'Этажи SMM', platform: 'Telegram', url: 'https://t.me/+ZVAp3anMnm9lNmQy', handle: 'Direct Link' },
+        { name: 'Одноклассники', platform: 'ОК', url: 'https://ok.ru/etagi.realty', handle: 'etagi.realty' },
+        { name: 'YouTube', platform: 'YouTube', url: 'https://www.youtube.com/@etagi.realty', handle: '@etagi.realty' },
+        { name: 'Instagram', platform: 'Instagram', url: 'https://www.instagram.com/etagi_com', handle: '@etagi_com' }
+      ]
+    };
+
+    const AppState = {
+      tasks: [],
+      trash: [],
+      currentView: 'list',
+      analyticsSubView: 'table',
+      chartMode: 'months',
+      calendarChannel: 'ALL',
+      viewDate: new Date(),
+      statsDate: new Date(),
+      createPrefillDate: '',
+      chart: null,
+      currentUser: null,
+      currentRole: null,
+      isLoadingTasks: false,
+      inlineEditId: null,
+      inlineDraft: null,
+      chatChannel: null,
+      unreadChatCount: 0,
+      lastSeenChatMessageId: null
+    };
+
+    const DOM = {
+      get(selector, root = document) {
+        return root.querySelector(selector);
+      },
+      getAll(selector, root = document) {
+        return Array.from(root.querySelectorAll(selector));
+      }
+    };
+
+    const Utils = {
+      escapeHtml(value = '') {
+        return String(value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      },
+
+      parseLocalDate(dateStr) {
+        if (!dateStr) return null;
+        const [y, m, d] = String(dateStr).split('-').map(Number);
+        if (!y || !m || !d) return null;
+        return new Date(y, m - 1, d);
+      },
+
+      formatShortDate(dateStr) {
+        const d = Utils.parseLocalDate(dateStr);
+        return d ? d.toLocaleDateString('ru-RU') : '—';
+      },
+
+      getDeadlineMeta(dateStr, status = '') {
+        const d = Utils.parseLocalDate(dateStr);
+        if (!d) {
+          return {
+            className: 'deadline-normal',
+            label: 'Без дедлайна',
+            shortLabel: 'Без даты'
+          };
+        }
+
+        const today = new Date();
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const tomorrowStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+
+        if (status !== 'published' && d < todayStart) {
+          return {
+            className: 'deadline-overdue',
+            label: 'Просрочено',
+            shortLabel: 'Просрочено'
+          };
+        }
+
+        if (d.getTime() === todayStart.getTime()) {
+          return {
+            className: 'deadline-today',
+            label: 'Сегодня',
+            shortLabel: 'Сегодня'
+          };
+        }
+
+        if (d.getTime() === tomorrowStart.getTime()) {
+          return {
+            className: 'deadline-tomorrow',
+            label: 'Завтра',
+            shortLabel: 'Завтра'
+          };
+        }
+
+        return {
+          className: 'deadline-normal',
+          label: Utils.formatShortDate(dateStr),
+          shortLabel: Utils.formatShortDate(dateStr)
+        };
+      },
+
+      getWorkflowOrder() {
+        return ['idea', 'script', 'production', 'editing', 'review', 'scheduled', 'published'];
+      },
+
+      getProgress(status) {
+        const order = Utils.getWorkflowOrder();
+        const index = order.indexOf(status);
+        if (index === -1) return 0;
+        return ((index + 1) / order.length) * 100;
+      },
+
+      getNextStepHint(status) {
+        const hints = {
+          idea: 'Следующий шаг: создать сценарий',
+          script: 'Следующий шаг: передать в продакшн',
+          production: 'Следующий шаг: отправить на монтаж',
+          editing: 'Следующий шаг: отправить на проверку',
+          review: 'Следующий шаг: запланировать публикацию',
+          scheduled: 'Следующий шаг: дождаться публикации',
+          published: 'Следующий шаг: проанализировать результат'
+        };
+        return hints[status] || 'Следующий шаг не определён';
+      },
+
+      isSameMonthYear(date, sample) {
+        return date && sample && date.getMonth() === sample.getMonth() && date.getFullYear() === sample.getFullYear();
+      }
+    };
+
+    const Services = {
+      db: supabase.createClient(AppConfig.supabase.url, AppConfig.supabase.key),
+
+      tables: {
+        tasks: 'tasks',
+        profiles: 'profiles',
+        config: 'config',
+        activityLogs: 'activity_logs',
+        teamChat: 'team_chat'
+      }
+    };
+
+    const db = Services.db;
+
+    const $ = DOM.get;
+    const $$ = DOM.getAll;
+
+    const USERS = AppConfig.users;
+    const DEPARTMENTS = AppConfig.departments;
+    const CHANNELS = AppConfig.channels;
+    const TG_LIST = AppConfig.telegramChannels;
+    const WORK_TYPES = AppConfig.workTypes;
+    const TAGS = AppConfig.tags;
+    const STATUS_MAP = AppConfig.statusMap;
+    const VIEWS = AppConfig.views;
+    const WORK_ACCOUNTS = AppConfig.workAccounts;
+    const state = AppState;
+
+    const escapeHtml = Utils.escapeHtml;
+    const parseLocalDate = Utils.parseLocalDate;
+    const formatShortDate = Utils.formatShortDate;
+    const getDeadlineMeta = Utils.getDeadlineMeta;
+    const getWorkflowOrder = Utils.getWorkflowOrder;
+    const getProgress = Utils.getProgress;
+    const getNextStepHint = Utils.getNextStepHint;
+    const isSameMonthYear = Utils.isSameMonthYear;
+        const TaskHelpers = {
+      normalizeLinks(links = {}) {
+        return Object.fromEntries(
+          Object.entries(links).map(([key, value]) => [key, String(value || '').trim()])
+        );
+      },
+
+      collectCreatePayload() {
+        const startDate = $('#start_date_val').value;
+        const endDate = $('#date_val').value;
+
+        return {
+          id: Date.now(),
+          title: $('#title').value.trim(),
+          work_type: $('#work_type').value,
+          tag: $('#tag').value,
+          description: $('#description').value.trim(),
+          channels: $$('input[name="chan"]:checked').map(cb => cb.value),
+          executors: $$('input[name="exec"]:checked').map(cb => cb.value),
+          responsible: state.currentUser,
+          start_date: startDate || new Date().toISOString().split('T')[0],
+          date: endDate || new Date().toISOString().split('T')[0],
+          status: 'idea',
+          links: {},
+          play_counts: {},
+          play_count: 0,
+          is_deleted: false
+        };
+      },
+
+      collectEditPayload() {
+        const links = {};
+        $$('.multi-link-input').forEach(input => {
+          links[input.dataset.platform] = input.value.trim();
+        });
+
+        return {
+          title: $('#edit_title').value.trim(),
+          work_type: $('#edit_work_type').value,
+          tag: $('#edit_tag').value,
+          description: $('#edit_description').value.trim(),
+          status: $('#edit_status').value,
+          start_date: $('#edit_start_date').value || null,
+          date: $('#edit_date').value || null,
+          channels: $$('input[name="edit_chan"]:checked').map(cb => cb.value),
+          executors: $$('input[name="edit_exec"]:checked').map(cb => cb.value),
+          links: TaskHelpers.normalizeLinks(links)
+        };
+      },
+
+      collectInlinePayload(draft = {}) {
+        return {
+          title: String(draft.title || '').trim(),
+          status: draft.status || 'idea',
+          date: draft.date,
+          responsible: String(draft.responsible || '').trim() || state.currentUser,
+          work_type: draft.work_type || 'Пост'
+        };
+      }
+    };
+
+    const TaskService = {
+      async getAllActive() {
+        return db.from(Services.tables.tasks).select('*').eq('is_deleted', false);
+      },
+
+      async getAllTrash() {
+        return db.from(Services.tables.tasks).select('*').eq('is_deleted', true);
+      },
+
+      async create(task) {
+  return db.from(Services.tables.tasks).insert([task]).select().single();
+},
+
+      async update(id, payload) {
+  return db.from(Services.tables.tasks).update(payload).eq('id', id).select().single();
+},
+
+      async moveToTrash(id, deletedBy) {
+        return db.from(Services.tables.tasks).update({
+          is_deleted: true,
+          deleted_by: deletedBy
+        }).eq('id', id);
+      },
+
+      async restore(id) {
+        return db.from(Services.tables.tasks).update({
+          is_deleted: false,
+          deleted_by: null
+        }).eq('id', id);
+      },
+
+      async removeForever(id) {
+        return db.from(Services.tables.tasks).delete().eq('id', id);
+      }
+    };
+
+    const TaskState = {
+      setTasks(tasks = []) {
+        state.tasks = Array.isArray(tasks) ? tasks : [];
+      },
+
+      setTrash(trash = []) {
+        state.trash = Array.isArray(trash) ? trash : [];
+      },
+
+      findTaskIndex(id) {
+        return state.tasks.findIndex(task => String(task.id) === String(id));
+      },
+
+      findTrashIndex(id) {
+        return state.trash.findIndex(task => String(task.id) === String(id));
+      },
+
+      patchTask(id, patch = {}) {
+        const index = TaskState.findTaskIndex(id);
+        if (index === -1) return null;
+
+        state.tasks[index] = {
+          ...state.tasks[index],
+          ...patch
+        };
+
+        return state.tasks[index];
+      },
+
+      removeTask(id) {
+        const index = TaskState.findTaskIndex(id);
+        if (index === -1) return null;
+
+        const [removed] = state.tasks.splice(index, 1);
+        return removed || null;
+      },
+
+      addTask(task) {
+        if (!task) return;
+        state.tasks.unshift(task);
+      },
+
+      addToTrash(task) {
+        if (!task) return;
+        state.trash.unshift(task);
+      },
+
+      removeFromTrash(id) {
+        const index = TaskState.findTrashIndex(id);
+        if (index === -1) return null;
+
+        const [removed] = state.trash.splice(index, 1);
+        return removed || null;
+      },
+
+      restoreTask(task) {
+        if (!task) return;
+        state.tasks.unshift(task);
+      }
+    };
+    
+        const TaskUI = {
+      getTagClass(tag) {
+        if (tag === 'ФРК') return 'bg-amber-100 text-amber-700';
+        if (tag === 'УТП') return 'bg-indigo-100 text-indigo-700';
+        return 'bg-slate-100 text-slate-600';
+      },
+
+      renderChannels(channels = [], limit = null) {
+        const list = limit ? channels.slice(0, limit) : channels;
+        return list.map(ch => `
+          <span class="rounded bg-slate-900 px-2 py-0.5 text-[8px] font-black uppercase text-white">${escapeHtml(ch)}</span>
+        `).join('');
+      },
+
+      renderInlineEdit(task, draft = {}) {
+        return `
+          <div class="inline-edit-shell">
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div class="md:col-span-2">
+                <label>Название</label>
+                <input type="text" class="inline-edit-input" data-inline-field="title" data-task-id="${escapeHtml(task.id)}" value="${escapeHtml(draft.title || '')}" />
+              </div>
+              <div>
+                <label>Статус</label>
+                <select class="inline-edit-input" data-inline-field="status" data-task-id="${escapeHtml(task.id)}">
+                  ${Object.entries(STATUS_MAP).map(([value, label]) => `
+                    <option value="${escapeHtml(value)}" ${String(draft.status || '') === value ? 'selected' : ''}>${escapeHtml(label)}</option>
+                  `).join('')}
+                </select>
+              </div>
+              <div>
+                <label>Тип</label>
+                <select class="inline-edit-input" data-inline-field="work_type" data-task-id="${escapeHtml(task.id)}">
+                  ${WORK_TYPES.map(value => `
+                    <option value="${escapeHtml(value)}" ${String(draft.work_type || '') === value ? 'selected' : ''}>${escapeHtml(value)}</option>
+                  `).join('')}
+                </select>
+              </div>
+              <div>
+                <label>Дедлайн</label>
+                <input type="date" class="inline-edit-input" data-inline-field="date" data-task-id="${escapeHtml(task.id)}" value="${escapeHtml(draft.date || '')}" />
+              </div>
+              <div>
+                <label>Ответственный</label>
+                <input type="text" class="inline-edit-input" data-inline-field="responsible" data-task-id="${escapeHtml(task.id)}" value="${escapeHtml(draft.responsible || '')}" />
+              </div>
+            </div>
+            <div class="inline-edit-actions">
+              <button type="button" class="primary save-inline-edit" data-task-id="${escapeHtml(task.id)}">Сохранить</button>
+              <button type="button" class="secondary cancel-inline-edit">Отмена</button>
+            </div>
+          </div>
+        `;
+      },
+
+      renderListCard(task, options = {}) {
+        const isEditing = options.isEditing || false;
+        const draft = options.draft || {};
+        const tagClass = TaskUI.getTagClass(task.tag);
+        const channels = TaskUI.renderChannels(task.channels || []);
+        const responsible = escapeHtml(task.responsible || 'Не назначен');
+        const title = escapeHtml(task.title || 'Без названия');
+        const views = Number(task.play_count || 0).toLocaleString('ru-RU');
+        const deadlineMeta = getDeadlineMeta(task.date, task.status);
+        const inlineEditHtml = isEditing ? TaskUI.renderInlineEdit(task, draft) : '';
+
+        return `
+          <article class="task-card ${isEditing ? 'is-editing' : ''} status-${escapeHtml(task.status || 'idea')} app-surface rounded-[2rem] border-2 border-transparent p-6 transition hover:-translate-y-1 hover:border-blue-200" data-task-id="${escapeHtml(task.id)}">
+            <div class="mb-4 flex items-start justify-between gap-3">
+              <div class="flex max-w-[80%] flex-wrap gap-1">${channels}</div>
+              <div class="flex items-center gap-1">
+                <button type="button" class="inline-edit-trigger rounded-full p-2 text-slate-400 hover:bg-blue-50 hover:text-blue-600" data-task-id="${escapeHtml(task.id)}" title="Быстрое редактирование">✎</button>
+                <button type="button" class="trash-task rounded-full p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-500" data-task-id="${escapeHtml(task.id)}" title="В корзину">✕</button>
+              </div>
+            </div>
+
+            <div class="mb-2 flex items-center gap-2">
+              <span class="rounded-full px-2 py-0.5 text-[8px] font-black uppercase ${tagClass}">${escapeHtml(task.tag || 'прочее')}</span>
+              <span class="text-[9px] font-black uppercase" style="color: var(--primary);">${escapeHtml(task.work_type || 'Пост')}</span>
+              <span class="rounded-full px-2 py-0.5 text-[8px] font-black uppercase soft-pill">${escapeHtml(STATUS_MAP[task.status] || 'Идея')}</span>
+            </div>
+
+            <h3 class="mb-3 text-[15px] font-black uppercase leading-tight">${title}</h3>
+
+            <div class="mb-4">
+              <div class="progress-track">
+                <div class="progress-fill" style="width:${Math.round(getProgress(task.status))}%"></div>
+              </div>
+              <div class="mt-1 flex items-center justify-between text-[10px] font-bold" style="color: var(--muted);">
+                <span>Прогресс: ${Math.round(getProgress(task.status))}%</span>
+                <span>${escapeHtml(STATUS_MAP[task.status] || 'Идея')}</span>
+              </div>
+              <div class="stage-hint">${escapeHtml(getNextStepHint(task.status))}</div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-[10px] font-bold" style="color: var(--muted);">
+              <div class="rounded-xl px-3 py-2 soft-pill">👤 ${responsible}</div>
+              <div class="deadline-chip ${deadlineMeta.className}">📅 ${escapeHtml(deadlineMeta.label)}</div>
+            </div>
+
+            <div class="mt-4 flex items-center justify-between border-t pt-4 text-[10px] font-bold" style="border-color: var(--border); color: var(--muted);">
+              <span>Старт: ${escapeHtml(formatShortDate(task.start_date))}</span>
+              <span class="rounded-lg bg-emerald-50 px-2 py-1 font-black text-emerald-600">👁️ ${views}</span>
+            </div>
+
+            ${inlineEditHtml}
+          </article>
+        `;
+      },
+
+      renderKanbanCard(task) {
+        const responsible = escapeHtml((task.responsible || 'Не назначен').split(' ')[0]);
+        const deadlineMeta = getDeadlineMeta(task.date, task.status);
+        const progress = Math.round(getProgress(task.status));
+
+        return `
+          <div class="kanban-card status-${escapeHtml(task.status || 'idea')} mb-3 cursor-grab rounded-2xl border p-4 shadow-sm active:cursor-grabbing" draggable="true" data-task-id="${escapeHtml(task.id)}" style="border-color: var(--border); color: var(--text); background: var(--surface);">
+            <div class="mb-2 flex flex-wrap gap-1">
+              ${TaskUI.renderChannels(task.channels || [], 3)}
+            </div>
+
+            <div class="mb-2 text-[9px] font-black uppercase" style="color: var(--primary);">${escapeHtml(STATUS_MAP[task.status] || 'Идея')}</div>
+
+            <h4 class="mb-3 text-[12px] font-black uppercase leading-tight">${escapeHtml(task.title || 'Без названия')}</h4>
+
+            <div class="mb-3">
+              <div class="progress-track">
+                <div class="progress-fill" style="width:${progress}%"></div>
+              </div>
+              <div class="mt-1 text-[9px] font-bold" style="color: var(--muted);">Прогресс: ${progress}%</div>
+            </div>
+
+            <div class="text-[9px] font-black uppercase stage-hint">${escapeHtml(getNextStepHint(task.status))}</div>
+
+            <div class="mt-3 flex items-center justify-between border-t pt-2 text-[9px] font-bold" style="border-color: var(--border); color: var(--muted);">
+              <span>👤 ${responsible}</span>
+              <span class="deadline-chip ${deadlineMeta.className}" style="padding:6px 8px; font-size:9px;">
+                📅 ${escapeHtml(deadlineMeta.shortLabel)}
+              </span>
+            </div>
+          </div>
+        `;
+      }
+    };
+        const ChatService = {
+      async fetchMessages(limit = 50) {
+        return db
+          .from(Services.tables.teamChat)
+          .select('*')
+          .order('created_at', { ascending: true })
+          .limit(limit);
+      },
+
+      async sendMessage(payload) {
+        return db.from(Services.tables.teamChat).insert([payload]);
+      },
+
+      async deleteMessage(messageId) {
+        return db.from(Services.tables.teamChat).delete().eq('id', messageId);
+      },
+
+      async getReactions(messageId) {
+        return db.from(Services.tables.teamChat).select('reactions').eq('id', messageId).single();
+      },
+
+      async updateReactions(messageId, reactions) {
+        return db.from(Services.tables.teamChat).update({ reactions }).eq('id', messageId);
+      },
+
+      subscribe(onChange) {
+        return db
+          .channel('room1')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: Services.tables.teamChat },
+            onChange
+          )
+          .subscribe();
+      }
+    };
+
+        const ConfigService = {
+      async getAll() {
+        return db.from(Services.tables.config).select('*');
+      },
+
+      async saveApiKeys(ytKey, apifyToken) {
+        const [ytRes, apifyRes] = await Promise.all([
+          db.from(Services.tables.config).upsert({ id: 'yt_key', value: ytKey }),
+          db.from(Services.tables.config).upsert({ id: 'apify_token', value: apifyToken })
+        ]);
+
+        return {
+          error: ytRes.error || apifyRes.error
+        };
+      },
+
+      applyToLocalStorage(rows = []) {
+        rows.forEach(row => localStorage.setItem(row.id, row.value));
+
+        if ($('#ytApiKey')) $('#ytApiKey').value = localStorage.getItem('yt_key') || '';
+        if ($('#apifyToken')) $('#apifyToken').value = localStorage.getItem('apify_token') || '';
+      }
+    };
+
+    const LogService = {
+      async create(actionType, taskTitle, details = '') {
+        return db.from(Services.tables.activityLogs).insert([{
+          user_name: state.currentUser,
+          action_type: actionType,
+          task_title: taskTitle,
+          details
+        }]);
+      },
+
+      async getLatest(limit = 30) {
+        return db
+          .from(Services.tables.activityLogs)
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(limit);
+      }
+    };
+
+    const AuthService = {
+      sessionKeys: {
+        active: 'e_active',
+        uid: 'e_uid',
+        name: 'e_name',
+        role: 'e_role'
+      },
+
+      async login(username, password) {
+        return db
+          .from(Services.tables.profiles)
+          .select('*')
+          .eq('username', username)
+          .eq('password', password)
+          .single();
+      },
+
+      saveSession(profile) {
+        sessionStorage.setItem(AuthService.sessionKeys.active, 'true');
+        sessionStorage.setItem(AuthService.sessionKeys.uid, profile.username);
+        sessionStorage.setItem(AuthService.sessionKeys.name, profile.display_name);
+        sessionStorage.setItem(AuthService.sessionKeys.role, profile.role);
+      },
+
+      clearSession() {
+        sessionStorage.clear();
+      },
+
+      isActive() {
+        return sessionStorage.getItem(AuthService.sessionKeys.active) === 'true';
+      },
+
+      getCurrentUser() {
+        return {
+          uid: sessionStorage.getItem(AuthService.sessionKeys.uid),
+          name: sessionStorage.getItem(AuthService.sessionKeys.name),
+          role: sessionStorage.getItem(AuthService.sessionKeys.role)
+        };
+      }
+    };
+    
+    const ChatUI = {
+      commonEmojis: ['👍', '❤️', '🔥', '✅', '🚀'],
+      taskTokenRegex: /\[\[task:(.+?)\]\]/g,
+
+      getTaskToken(taskId) {
+        return `[[task:${taskId}]]`;
+      },
+
+      isTaskTokenMessage(messageText = '') {
+        return ChatUI.taskTokenRegex.test(String(messageText || ''));
+      },
+
+      getTaskFromToken(messageText = '') {
+        ChatUI.taskTokenRegex.lastIndex = 0;
+        const match = ChatUI.taskTokenRegex.exec(String(messageText || ''));
+        if (!match) return null;
+
+        const taskId = match[1];
+        return state.tasks.find(task => String(task.id) === String(taskId))
+          || state.trash.find(task => String(task.id) === String(taskId))
+          || null;
+      },
+
+      renderTaskBubbleFromMessage(messageText = '') {
+        const task = ChatUI.getTaskFromToken(messageText);
+
+        if (!task) {
+          return `
+            <div class="chat-task-bubble">
+              <div class="chat-task-bubble-title">Задача не найдена</div>
+              <div class="chat-task-bubble-meta">Возможно, она удалена или недоступна</div>
+            </div>
+          `;
+        }
+
+        const deadline = getDeadlineMeta(task.date, task.status);
+        const channels = (task.channels || []).slice(0, 3).join(', ') || 'без площадок';
+
+        return `
+          <button type="button" class="chat-task-bubble open-chat-task" data-task-id="${escapeHtml(task.id)}">
+            <div class="chat-task-bubble-title">📌 ${escapeHtml(task.title || 'Без названия')}</div>
+            <div class="chat-task-bubble-meta">
+              ${escapeHtml(STATUS_MAP[task.status] || 'Идея')} · ${escapeHtml(deadline.shortLabel)} · ${escapeHtml(channels)}
+            </div>
+          </button>
+        `;
+      },
+      renderEmptyState() {
+        return `
+          <div class="chat-empty">
+            <div>
+              <div class="mb-3 text-3xl">💬</div>
+              <div class="text-sm font-black uppercase" style="color: var(--text);">Пока нет сообщений</div>
+              <div class="mx-auto mt-3 max-w-md normal-case text-sm font-medium" style="color: var(--muted);">
+                Начни с короткого статуса, запроса фидбека или сообщения о проблеме. Так чат станет рабочей лентой команды, а не просто перепиской.
+              </div>
+            </div>
+          </div>
+        `;
+      },
+
+      renderReactionButtons(reactions = {}, myUid = '') {
+        return Object.entries(reactions).map(([emoji, users]) => {
+          if (!Array.isArray(users) || !users.length) return '';
+          const active = users.includes(myUid);
+
+          return `
+            <button class="toggle-reaction chat-reaction ${active ? 'active' : ''}" data-message-id="${escapeHtml(emoji && emoji.length ? '' : '')}${''}" data-emoji="${escapeHtml(emoji)}">
+              ${emoji} <span>${users.length}</span>
+            </button>
+          `;
+        }).join('');
+      },
+
+      renderReactionButtonsSafe(messageId, reactions = {}, myUid = '') {
+        return Object.entries(reactions).map(([emoji, users]) => {
+          if (!Array.isArray(users) || !users.length) return '';
+          const active = users.includes(myUid);
+
+          return `
+            <button class="toggle-reaction chat-reaction ${active ? 'active' : ''}" data-message-id="${escapeHtml(messageId)}" data-emoji="${escapeHtml(emoji)}">
+              ${emoji} <span>${users.length}</span>
+            </button>
+          `;
+        }).join('');
+      },
+
+      renderEmojiPicker(messageId) {
+        return ChatUI.commonEmojis.map(emoji => `
+          <button class="toggle-reaction chat-emoji-btn" data-message-id="${escapeHtml(messageId)}" data-emoji="${escapeHtml(emoji)}">${emoji}</button>
+        `).join('');
+      },
+
+      renderMessage(message, context = {}) {
+        const myUid = context.myUid || '';
+        const dateObj = new Date(message.created_at);
+        const dayLabel = dateObj.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long' });
+        const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const isMe = message.sender_uid === myUid;
+        const reactions = message.reactions || {};
+        const divider = context.showDivider ? `<div class="chat-day-divider">${escapeHtml(dayLabel)}</div>` : '';
+        const reactionsHtml = ChatUI.renderReactionButtonsSafe(message.id, reactions, myUid);
+        const picker = ChatUI.renderEmojiPicker(message.id);
+        const isTaskMessage = ChatUI.isTaskTokenMessage(message.message || '');
+        const messageContent = isTaskMessage
+  ? ChatUI.renderTaskBubbleFromMessage(message.message || '')
+  : `<div class="chat-text">${escapeHtml(message.message || '')}</div>`;
+        return `
+          ${divider}
+          <div class="chat-row ${isMe ? 'me' : 'other'}">
+            <div class="chat-meta">
+              <span class="chat-author">${escapeHtml(message.sender_name || '')}</span>
+              <span class="chat-time">${escapeHtml(time)}</span>
+            </div>
+
+            <div class="chat-bubble ${isMe ? 'me' : 'other'}">
+              <div class="chat-emoji-bar">${picker}</div>
+              ${messageContent}
+
+              ${reactionsHtml ? `<div class="chat-actions">${reactionsHtml}</div>` : ''}
+
+              ${isMe ? `
+                <button class="delete-message chat-delete-btn" data-message-id="${escapeHtml(message.id)}" title="Удалить сообщение">✕</button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      },
+
+      renderMessages(messages = [], myUid = '') {
+        if (!messages.length) return ChatUI.renderEmptyState();
+
+        let lastDayLabel = '';
+
+        return messages.map(message => {
+          const dateObj = new Date(message.created_at);
+          const dayLabel = dateObj.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long' });
+          const showDivider = dayLabel !== lastDayLabel;
+          lastDayLabel = dayLabel;
+
+          return ChatUI.renderMessage(message, { myUid, showDivider });
+        }).join('');
+      },
+
+      scrollToBottom() {
+        const root = $('#chatMessages');
+        if (!root) return;
+        root.scrollTop = root.scrollHeight;
+      },
+
+      resetComposer() {
+        const input = $('#chatInput');
+        if (!input) return;
+        input.value = '';
+        input.style.height = '24px';
+      }
+    };
+
+    const CalendarUI = {
+      renderTabs() {
+        const container = $('#calendarTabs');
+        if (!container) return;
+
+        const buttons = ['ALL', ...CHANNELS].map(channel => {
+          const isActive = state.calendarChannel === channel;
+          const label = channel === 'ALL' ? 'Общий' : channel;
+
+          return `
+            <button
+              class="calendar-filter rounded-xl border px-3 py-2 text-[10px] font-black uppercase ${isActive ? 'tab-active' : ''}"
+              data-channel="${escapeHtml(channel)}"
+              style="border-color: var(--border); background: ${isActive ? '' : 'var(--surface)'}; color: ${isActive ? '' : 'var(--muted)'};"
+            >
+              ${escapeHtml(label)}
+            </button>
+          `;
+        });
+
+        container.innerHTML = buttons.join('');
+      },
+
+      getMonthMeta(date) {
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const shift = (firstDay.getDay() || 7) - 1;
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        return { year, month, shift, daysInMonth };
+      },
+
+      getTasksForDate(dateStr) {
+        return state.tasks.filter(task => {
+          const channelMatch =
+            state.calendarChannel === 'ALL' ||
+            (task.channels || []).includes(state.calendarChannel);
+
+          return channelMatch && (task.start_date === dateStr || task.date === dateStr);
+        });
+      },
+
+      renderTaskItem(task, dateStr) {
+        const isStart = task.start_date === dateStr;
+        const cls = isStart
+          ? 'border border-dashed opacity-70 text-slate-600'
+          : `status-${escapeHtml(task.status || 'idea')}`;
+
+        return `
+          <button class="calendar-item ${cls} w-full text-left" data-task-id="${escapeHtml(task.id)}">
+            ${isStart ? '🚀' : '🏁'} ${escapeHtml(task.title || 'Без названия')}
+          </button>
+        `;
+      },
+
+      renderDay(dateStr, day) {
+        const items = CalendarUI.getTasksForDate(dateStr);
+        const itemsHtml = items.map(task => CalendarUI.renderTaskItem(task, dateStr)).join('');
+
+        return `
+          <div class="calendar-day cursor-pointer ${dateStr === state.createPrefillDate ? 'create-target' : ''}" data-date="${dateStr}">
+            <div class="mb-1 text-[10px] font-black text-slate-400">${day}</div>
+            ${itemsHtml}
+          </div>
+        `;
+      },
+
+      renderGrid() {
+        const grid = $('#calendarGrid');
+        const label = $('#calendarMonthLabel');
+        if (!grid || !label) return;
+
+        const { year, month, shift, daysInMonth } = CalendarUI.getMonthMeta(state.viewDate);
+
+        label.textContent = new Intl.DateTimeFormat('ru-RU', {
+          month: 'long',
+          year: 'numeric'
+        }).format(state.viewDate);
+
+        let html = '';
+
+        for (let i = 0; i < shift; i++) {
+          html += `<div class="calendar-day opacity-40" style="background: var(--surface-2);"></div>`;
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          html += CalendarUI.renderDay(dateStr, day);
+        }
+
+        grid.innerHTML = html;
+      },
+
+      render() {
+        CalendarUI.renderTabs();
+        CalendarUI.renderGrid();
+      }
+    };
+
+    const SidebarUI = {
+      getTodayMeta() {
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        return { today, todayStr, dayStart };
+      },
+
+      getData() {
+        const { todayStr, dayStart } = SidebarUI.getTodayMeta();
+        const me = state.currentUser;
+
+        const active = state.tasks.filter(task => task.status !== 'published');
+        const todayTasks = active.filter(task => task.date === todayStr);
+        const overdue = active.filter(task => {
+          const d = parseLocalDate(task.date);
+          return d && d < dayStart && task.status !== 'published';
+        });
+        const mine = active.filter(task => ((task.executors || []).includes(me) || task.responsible === me));
+        const unassigned = active.filter(task => !(task.executors || []).length);
+
+        return { active, todayTasks, overdue, mine, unassigned, dayStart };
+      },
+
+      renderTopItems(data) {
+        const items = [
+          {
+            label: 'На сегодня',
+            value: data.todayTasks.length,
+            note: data.todayTasks.length ? 'есть задачи с дедлайном сегодня' : 'сегодня дедлайнов нет'
+          },
+          {
+            label: 'Просрочено',
+            value: data.overdue.length,
+            note: data.overdue.length ? 'нужно срочно разобрать' : 'просрочки нет'
+          },
+          {
+            label: 'На мне',
+            value: data.mine.length,
+            note: data.mine.length ? 'задачи в личном фокусе' : 'личных задач нет'
+          }
+        ];
+
+        return `
+          <div class="grid grid-cols-3 gap-2">
+            ${items.map(item => `
+              <div class="sidebar-insight rounded-2xl p-3">
+                <div class="text-[9px] font-black uppercase text-slate-400">${item.label}</div>
+                <div class="mt-1 text-xl font-black text-white">${item.value}</div>
+                <div class="mt-1 text-[10px] font-medium text-slate-400">${item.note}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      },
+
+      renderPriority(data) {
+        const priority = [...data.todayTasks, ...data.overdue.filter(task => !data.todayTasks.some(todayTask => String(todayTask.id) === String(task.id)))]
+          .slice(0, 4)
+          .map(task => {
+            const due = formatShortDate(task.date);
+            const d = parseLocalDate(task.date);
+            const overdueTask = d && d < data.dayStart;
+
+            return `
+              <button class="open-task sidebar-insight ${overdueTask ? 'sidebar-task-overdue' : 'sidebar-task-urgent'} w-full rounded-2xl p-3 text-left" data-task-id="${escapeHtml(task.id)}">
+                <div class="mb-1 flex items-center justify-between gap-2">
+                  <span class="text-[9px] font-black uppercase ${overdueTask ? 'text-rose-300' : 'text-amber-300'}">${overdueTask ? 'Просрочено' : 'Сегодня'}</span>
+                  <span class="text-[10px] font-bold text-slate-300">${escapeHtml(due)}</span>
+                </div>
+                <div class="text-[11px] font-black uppercase leading-tight text-white">${escapeHtml(task.title || 'Без названия')}</div>
+              </button>
+            `;
+          }).join('');
+
+        return `
+          <div class="sidebar-insight rounded-2xl p-4">
+            <div class="mb-3 flex items-center justify-between gap-2">
+              <div>
+                <div class="text-[10px] font-black uppercase text-amber-300">Приоритетные карточки</div>
+                <div class="mt-1 text-[11px] font-medium text-slate-400">То, что лучше не откладывать.</div>
+              </div>
+              <div class="rounded-full bg-white/10 px-2 py-1 text-[9px] font-black text-white">${data.todayTasks.length + data.overdue.length}</div>
+            </div>
+            <div class="space-y-2">
+              ${priority || '<div class="rounded-2xl bg-white/5 p-3 text-[11px] font-medium text-slate-400">Срочных карточек сейчас нет.</div>'}
+            </div>
+          </div>
+        `;
+      },
+
+      renderMyTasks(data) {
+        const myTasksHtml = data.mine.length
+          ? data.mine.slice(0, 5).map(task => `
+              <button   class="open-task focus-task-draggable w-full rounded-2xl bg-slate-800 p-4 text-left transition hover:bg-slate-700"   data-task-id="${escapeHtml(task.id)}"   draggable="true" >
+                <div class="mb-1 flex items-center justify-between gap-2">
+                  <span class="text-[8px] font-black uppercase text-blue-400">${escapeHtml(task.work_type || 'Пост')}</span>
+                  <span class="text-[8px] font-black uppercase text-slate-500">${escapeHtml(STATUS_MAP[task.status] || 'Идея')}</span>
+                </div>
+                <div class="text-[10px] font-black uppercase leading-tight text-white">${escapeHtml(task.title || 'Без названия')}</div>
+              </button>
+            `).join('')
+          : '<div class="rounded-2xl bg-white/5 p-4 text-center text-[10px] font-black uppercase text-slate-500">Личных задач сейчас нет</div>';
+
+        return `
+          <div class="sidebar-insight rounded-2xl p-4">
+            <div class="mb-3 flex items-center justify-between gap-2">
+              <div>
+                <div class="text-[10px] font-black uppercase text-blue-300">Мои задачи в работе</div>
+                <div class="mt-1 text-[11px] font-medium text-slate-400">Быстрый доступ к личному фокусу.</div>
+              </div>
+              <div class="rounded-full bg-white/10 px-2 py-1 text-[9px] font-black text-white">${data.mine.length}</div>
+            </div>
+            <div class="space-y-2">${myTasksHtml}</div>
+          </div>
+        `;
+      },
+
+      renderUnassigned(data) {
+        return `
+          <div class="sidebar-insight rounded-2xl p-4 text-[11px] font-medium text-slate-300">
+            Без исполнителя: <span class="font-black text-white">${data.unassigned.length}</span>
+          </div>
+        `;
+      },
+
+      render() {
+        const root = $('#focusSidebar');
+        if (!root) return;
+
+        const data = SidebarUI.getData();
+
+        root.innerHTML = `
+          ${SidebarUI.renderTopItems(data)}
+          ${SidebarUI.renderPriority(data)}
+          ${SidebarUI.renderMyTasks(data)}
+          ${SidebarUI.renderUnassigned(data)}
+        `;
+      }
+    };
+
+    const AnalyticsUI = {
+      getPublishedTasksForMonth() {
+        const filter = $('#statsPlatformFilter')?.value || 'ALL';
+
+        return state.tasks
+          .filter(task => {
+            const date = parseLocalDate(task.date);
+            const dateMatch = date && isSameMonthYear(date, state.statsDate);
+
+            if (!dateMatch || task.status !== 'published') return false;
+            if (filter === 'ALL') return true;
+            if (filter === 'Telegram') return TG_LIST.some(tg => task.links?.[tg]);
+
+            return Boolean(task.links?.[filter]);
+          })
+          .sort((a, b) => {
+            const dateA = parseLocalDate(a.date)?.getTime() || 0;
+            const dateB = parseLocalDate(b.date)?.getTime() || 0;
+            return dateB - dateA;
+          });
+      },
+
+      getTaskViews(task) {
+        const filter = $('#statsPlatformFilter')?.value || 'ALL';
+
+        if (filter === 'ALL') {
+          return Number(task.play_count || 0);
+        }
+
+        if (filter === 'Telegram') {
+          return TG_LIST.reduce((sum, tg) => sum + Number(task.play_counts?.[tg] || 0), 0);
+        }
+
+        return Number(task.play_counts?.[filter] || 0);
+      },
+
+      renderTaskLinks(task) {
+        const filter = $('#statsPlatformFilter')?.value || 'ALL';
+
+        if (filter === 'ALL') {
+          return Object.entries(task.links || {})
+            .map(([platform, url]) => url
+              ? `<a target="_blank" rel="noopener noreferrer" class="mx-1" href="${escapeHtml(url)}">${getSocialIcon(platform)}</a>`
+              : ''
+            )
+            .join('');
+        }
+
+        if (filter === 'Telegram') {
+          return TG_LIST
+            .map(tg => task.links?.[tg]
+              ? `<a target="_blank" rel="noopener noreferrer" class="mx-1" href="${escapeHtml(task.links[tg])}">${getSocialIcon(tg)}</a>`
+              : ''
+            )
+            .join('');
+        }
+
+        return task.links?.[filter]
+          ? `<a target="_blank" rel="noopener noreferrer" href="${escapeHtml(task.links[filter])}">${getSocialIcon(filter)}</a>`
+          : '';
+      },
+
+      renderTableRows(tasks) {
+        if (!tasks.length) {
+          return `
+            <tr>
+              <td colspan="4" class="p-10 text-center text-[11px] font-black uppercase text-slate-400">
+                Нет опубликованных задач за выбранный период
+              </td>
+            </tr>
+          `;
+        }
+
+        return tasks.map(task => {
+          const views = AnalyticsUI.getTaskViews(task);
+          const linksHtml = AnalyticsUI.renderTaskLinks(task);
+
+          return `
+            <tr class="border-b" style="border-color: var(--border);">
+              <td class="p-4 text-[10px] text-slate-400">${formatShortDate(task.date)}</td>
+              <td class="p-4 font-black uppercase">${escapeHtml(task.title || 'Без названия')}</td>
+              <td class="p-4 font-black text-emerald-600">${views.toLocaleString('ru-RU')}</td>
+              <td class="p-4 text-center">${linksHtml}</td>
+            </tr>
+          `;
+        }).join('');
+      },
+
+      renderTable(tasks) {
+        return `
+          <table class="w-full text-left text-[11px] font-bold">
+            <thead style="background: var(--surface-2); color: var(--muted);">
+              <tr>
+                <th class="p-4">Дата</th>
+                <th class="p-4">Тема</th>
+                <th class="p-4">Охват</th>
+                <th class="p-4 text-center">Линки</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${AnalyticsUI.renderTableRows(tasks)}
+            </tbody>
+          </table>
+        `;
+      },
+
+      renderSummary(tasks) {
+        const totalViews = tasks.reduce((sum, task) => sum + AnalyticsUI.getTaskViews(task), 0);
+
+        if ($('#stat-total')) $('#stat-total').textContent = tasks.length;
+        if ($('#stat-views')) $('#stat-views').textContent = totalViews.toLocaleString('ru-RU');
+      },
+
+      renderStatsTable() {
+        const label = $('#statsMonthLabel');
+        if (label) {
+          label.textContent = state.statsDate.toLocaleString('ru-RU', {
+            month: 'long',
+            year: 'numeric'
+          });
+        }
+
+        const tasks = AnalyticsUI.getPublishedTasksForMonth();
+        AnalyticsUI.renderSummary(tasks);
+
+        const container = $('#statsTableContainer');
+        if (container) container.innerHTML = AnalyticsUI.renderTable(tasks);
+      }
+    };
+
+    const ChartUI = {
+      platforms: ['YouTube', 'Instagram', 'TikTok', 'VK', 'Telegram'],
+
+      platformColors: {
+        YouTube: '#FF0000',
+        Instagram: '#E4405F',
+        TikTok: '#000000',
+        VK: '#0077FF',
+        Telegram: '#229ED9'
+      },
+
+      getPlatformViews(task, platform) {
+        if (platform === 'Telegram') {
+          return TG_LIST.reduce((sum, tg) => sum + Number(task.play_counts?.[tg] || 0), 0);
+        }
+
+        return Number(task.play_counts?.[platform] || 0);
+      },
+
+      getPublishedTasks() {
+        return state.tasks.filter(task => task.status === 'published');
+      },
+
+      buildMonthlyPeriods() {
+        const now = new Date();
+        const periods = [];
+
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          periods.push({
+            month: d.getMonth(),
+            year: d.getFullYear(),
+            label: d.toLocaleString('ru-RU', { month: 'short' })
+          });
+        }
+
+        return periods;
+      },
+
+      buildMonthlyData(platform, periods) {
+        const published = ChartUI.getPublishedTasks();
+
+        return periods.map(period => {
+          return published
+            .filter(task => {
+              const date = parseLocalDate(task.date);
+              return date && date.getMonth() === period.month && date.getFullYear() === period.year;
+            })
+            .reduce((sum, task) => sum + ChartUI.getPlatformViews(task, platform), 0);
+        });
+      },
+
+      buildDailyLabels() {
+        const now = new Date();
+        const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        return Array.from({ length: days }, (_, index) => String(index + 1));
+      },
+
+      buildDailyData(platform, labels) {
+        const now = new Date();
+        const published = ChartUI.getPublishedTasks();
+
+        return labels.map(label => {
+          const day = Number(label);
+
+          return published
+            .filter(task => {
+              const date = parseLocalDate(task.date);
+              return date &&
+                date.getDate() === day &&
+                date.getMonth() === now.getMonth() &&
+                date.getFullYear() === now.getFullYear();
+            })
+            .reduce((sum, task) => sum + ChartUI.getPlatformViews(task, platform), 0);
+        });
+      },
+
+      buildDataset(platform, data) {
+        const color = ChartUI.platformColors[platform];
+
+        return {
+          label: platform,
+          data,
+          borderColor: color,
+          backgroundColor: `${color}22`,
+          fill: true,
+          tension: 0.3
+        };
+      },
+
+      buildChartData() {
+        if (state.chartMode === 'months') {
+          $('#chartTitle').textContent = 'Аналитика охватов (6 мес)';
+
+          const periods = ChartUI.buildMonthlyPeriods();
+          const labels = periods.map(period => period.label);
+          const datasets = ChartUI.platforms.map(platform =>
+            ChartUI.buildDataset(platform, ChartUI.buildMonthlyData(platform, periods))
+          );
+
+          return { labels, datasets };
+        }
+
+        $('#chartTitle').textContent = `Аналитика по дням (${new Date().toLocaleString('ru-RU', { month: 'long' })})`;
+
+        const labels = ChartUI.buildDailyLabels();
+        const datasets = ChartUI.platforms.map(platform =>
+          ChartUI.buildDataset(platform, ChartUI.buildDailyData(platform, labels))
+        );
+
+        return { labels, datasets };
+      },
+
+      render() {
+        const canvas = $('#reachChart');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        const data = ChartUI.buildChartData();
+
+        if (state.chart) state.chart.destroy();
+
+        state.chart = new Chart(ctx, {
+          type: 'line',
+          data,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  font: { weight: 'bold', size: 10 }
+                }
+              },
+              tooltip: {
+                mode: 'index',
+                intersect: false
+              }
+            },
+            scales: {
+              y: { beginAtZero: true },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+      }
+    };
+    
+    const ViewController = {
+      applyLayout() {
+        const controls = $('#listControls');
+        const rightSidebar = $('#rightSidebar');
+        const middle = $('#middlePanel');
+        const listLike = state.currentView === 'list' || state.currentView === 'kanban';
+        const heroBlock = $('#heroBlock');
+        if (controls) controls.classList.toggle('hidden', !listLike);
+        if (heroBlock) heroBlock.classList.toggle('hidden', state.currentView === 'chat');
+        if (rightSidebar) rightSidebar.classList.toggle('hidden', state.currentView === 'kanban');
+
+        if (middle) {
+          middle.classList.toggle('lg:col-span-12', state.currentView === 'kanban');
+          middle.classList.toggle('lg:col-span-9', state.currentView !== 'kanban');
+        }
+
+        VIEWS.forEach(view => {
+          const el = document.getElementById(`view-${view}`);
+          if (!el) return;
+
+          const active = view === state.currentView;
+          el.classList.toggle('hidden', !active);
+          el.classList.toggle('view-animate', active);
+        });
+      },
+
+      renderActiveView() {
+        if (state.currentView === 'list') renderCards();
+        if (state.currentView === 'kanban') renderKanban();
+        if (state.currentView === 'calendar') renderCalendar();
+
+       if (state.currentView === 'analytics') {
+  $('#analytics-table')?.classList.toggle('hidden', state.analyticsSubView !== 'table');
+  $('#analytics-visuals')?.classList.toggle('hidden', state.analyticsSubView !== 'visuals');
+  $('#analytics-people')?.classList.toggle('hidden', state.analyticsSubView !== 'people');
+
+  $('#analyticsTableBtn')?.classList.toggle('tab-active', state.analyticsSubView === 'table');
+  $('#analyticsVisualsBtn')?.classList.toggle('tab-active', state.analyticsSubView === 'visuals');
+  $('#analyticsPeopleBtn')?.classList.toggle('tab-active', state.analyticsSubView === 'people');
+
+  if (state.analyticsSubView === 'table') renderStats();
+  if (state.analyticsSubView === 'visuals') renderCharts();
+  if (state.analyticsSubView === 'people') renderPeopleAnalytics();
+}
+
+        if (state.currentView === 'accounts') renderAccounts();
+        if (state.currentView === 'chat') {
+  state.unreadChatCount = 0;
+  buildMainTabs();
+  refreshChat();
+}
+      },
+
+      renderMeta() {
+        if ($('#trashBadge')) {
+          $('#trashBadge').textContent = String(state.trash.length);
+        }
+
+        renderSmartSidebar();
+        renderDashboardSummary();
+      }
+    };
+    
+    function setLoadingTasks(isLoading) {
+      state.isLoadingTasks = isLoading;
+      renderAll();
+    }
+
+    function renderListSkeleton() {
+      const container = $('#view-list');
+      if (!container) return;
+      container.innerHTML = Array.from({ length: 4 }).map(() => `
+        <div class="app-surface rounded-[2rem] p-6">
+          <div class="mb-4 flex items-start justify-between">
+            <div class="flex gap-2"><div class="skeleton-chip h-5 w-16 rounded-full"></div><div class="skeleton-chip h-5 w-20 rounded-full"></div></div>
+            <div class="skeleton-chip h-8 w-8 rounded-full"></div>
+          </div>
+          <div class="skeleton-line mb-3 h-4 w-24 rounded-lg"></div>
+          <div class="skeleton-line mb-2 h-5 w-4/5 rounded-lg"></div>
+          <div class="skeleton-line mb-5 h-5 w-3/5 rounded-lg"></div>
+          <div class="flex items-center justify-between border-t pt-4" style="border-color: var(--border);">
+            <div class="skeleton-line h-4 w-24 rounded-lg"></div>
+            <div class="skeleton-chip h-7 w-16 rounded-xl"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function setFieldError(fieldId, message = '') {
+      const input = document.getElementById(fieldId);
+      const error = document.getElementById(`error_${fieldId}`);
+      if (input) input.classList.toggle('input-error', Boolean(message));
+      if (error) {
+        error.textContent = message;
+        error.classList.toggle('hidden', !message);
+      }
+    }
+
+    function clearCreateFormErrors() {
+      ['title','description','start_date_val','date_val','channels','executors'].forEach(id => setFieldError(id, ''));
+    }
+
+    function validateCreateForm() {
+      clearCreateFormErrors();
+      const title = $('#title').value.trim();
+      const description = $('#description').value.trim();
+      const startDate = $('#start_date_val').value;
+      const endDate = $('#date_val').value;
+      const channels = $$('input[name="chan"]:checked').map(cb => cb.value);
+      const executors = $$('input[name="exec"]:checked').map(cb => cb.value);
+      let valid = true;
+      if (title.length < 4) { setFieldError('title', 'Нужно название хотя бы из 4 символов.'); valid = false; }
+      if (description.length < 10) { setFieldError('description', 'Добавь короткое ТЗ: хотя бы 10 символов.'); valid = false; }
+      if (!startDate) { setFieldError('start_date_val', 'Выбери дату старта.'); valid = false; }
+      if (!endDate) { setFieldError('date_val', 'Выбери дедлайн.'); valid = false; }
+      if (startDate && endDate && endDate < startDate) { setFieldError('date_val', 'Дедлайн не может быть раньше старта.'); valid = false; }
+      if (!channels.length) { setFieldError('channels', 'Выбери хотя бы одну площадку.'); valid = false; }
+      if (!executors.length) { setFieldError('executors', 'Назначь хотя бы одного исполнителя.'); valid = false; }
+      return valid;
+    }
+
+    function removeToast(toast) {
+      if (!toast) return;
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(8px)';
+      setTimeout(() => toast.remove(), 180);
+    }
+
+    function notify(message, type = 'info', title = '', opts = {}) {
+      const container = $('#toastContainer');
+      if (!container) return null;
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      const iconMap = { success: '✅', error: '⛔', info: 'ℹ️', warning: '⚠️', loading: '⏳' };
+      const fallbackTitle = { success: 'Готово', error: 'Есть проблема', info: 'Сообщение', warning: 'Обрати внимание', loading: 'В процессе' };
+      const duration = opts.duration ?? (type === 'error' ? 4800 : type === 'loading' ? 0 : 3200);
+      const closable = opts.closable !== false;
+      toast.innerHTML = `
+        <div class="toast-icon">${iconMap[type] || 'ℹ️'}</div>
+        <div class="toast-body">
+          <strong>${escapeHtml(title || fallbackTitle[type] || 'Сообщение')}</strong>
+          <div class="text-sm font-medium">${escapeHtml(message)}</div>
+          ${duration > 0 ? `<div class="toast-progress"><span style="animation: toastProgress ${duration}ms linear forwards;"></span></div>` : ''}
+        </div>
+        ${closable ? '<button type="button" class="toast-close" aria-label="Закрыть">×</button>' : ''}
+      `;
+      const closeBtn = $('.toast-close', toast);
+      if (closeBtn) closeBtn.addEventListener('click', () => removeToast(toast));
+      container.appendChild(toast);
+      if (duration > 0) setTimeout(() => removeToast(toast), duration);
+      return toast;
+    }
+
+    function updateToast(toast, message, type = 'info', title = '') {
+      if (!toast) return notify(message, type, title);
+      toast.className = `toast toast-${type}`;
+      const iconMap = { success: '✅', error: '⛔', info: 'ℹ️', warning: '⚠️', loading: '⏳' };
+      const fallbackTitle = { success: 'Готово', error: 'Есть проблема', info: 'Сообщение', warning: 'Обрати внимание', loading: 'В процессе' };
+      toast.innerHTML = `
+        <div class="toast-icon">${iconMap[type] || 'ℹ️'}</div>
+        <div class="toast-body">
+          <strong>${escapeHtml(title || fallbackTitle[type] || 'Сообщение')}</strong>
+          <div class="text-sm font-medium">${escapeHtml(message)}</div>
+        </div>
+        <button type="button" class="toast-close" aria-label="Закрыть">×</button>
+      `;
+      const closeBtn = $('.toast-close', toast);
+      if (closeBtn) closeBtn.addEventListener('click', () => removeToast(toast));
+      if (type !== 'loading') setTimeout(() => removeToast(toast), 3200);
+      return toast;
+    }
+
+    function getSocialIcon(platform) {
+      const icons = {
+        YouTube: '🔴', TikTok: '⚫', Instagram: '📸', VK: '🔵', Telegram: '✈️',
+        'Этажи SMM': '📢', NewsRoom: '📰', Echat: '💬', Max: '👔', ОК: '🟠'
+      };
+      return icons[platform] || '🔗';
+    }
+
+    function setVisible(el, isVisible, display = 'block') {
+      if (!el) return;
+      el.style.display = isVisible ? display : 'none';
+      el.classList.toggle('hidden', !isVisible);
+    }
+
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove('hidden');
+      el.style.display = 'flex';
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.add('hidden');
+      el.style.display = 'none';
+      if (id === 'createModal') { state.createPrefillDate = ''; renderCalendar(); }
+    }
+
+    function populateSelect(select, items, formatter = x => x) {
+      select.innerHTML = items.map(item => `<option value="${escapeHtml(item)}">${escapeHtml(formatter(item))}</option>`).join('');
+    }
+
+    function renderChecklist(containerId, name, items) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = items.map(item => `
+        <label class="flex cursor-pointer items-center gap-2 rounded-lg p-1.5 transition hover:bg-white/70">
+          <input type="checkbox" name="${name}" value="${escapeHtml(item)}" class="rounded text-blue-600" />
+          <span class="text-[10px] font-black uppercase" style="color: var(--text);">${escapeHtml(item)}</span>
+        </label>
+      `).join('');
+    }
+
+    function renderExecutors(containerId, name) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      let html = '';
+      for (const [dept, members] of Object.entries(DEPARTMENTS)) {
+        html += `<div class="mb-2 mt-3 border-b pb-1 text-[8px] font-black uppercase tracking-[0.2em] first:mt-0" style="color: var(--primary); border-color: var(--border);">${escapeHtml(dept)}</div>`;
+        html += members.map(member => `
+          <label class="flex cursor-pointer items-center gap-2 rounded-lg p-1.5 transition hover:bg-white/70">
+            <input type="checkbox" name="${name}" value="${escapeHtml(member)}" class="rounded text-blue-600" />
+            <span class="text-[10px] font-black uppercase" style="color: var(--text);">${escapeHtml(member)}</span>
+          </label>
+        `).join('');
+      }
+      container.innerHTML = html;
+    }
+
+    function buildMainTabs() {
+      const root = $('#mainTabs');
+      root.innerHTML = VIEWS.map(view => {
+        const label = {
+  list: 'Список',
+  kanban: 'Канбан',
+  calendar: 'Календарь',
+  analytics: 'Аналитика',
+  accounts: 'Аккаунты',
+  chat: 'Чат'
+}[view];
+
+const unreadBadge = view === 'chat' && state.unreadChatCount > 0
+  ? `<span class="ml-2 rounded-full bg-rose-500 px-2 py-0.5 text-[9px] font-black text-white">${state.unreadChatCount}</span>`
+  : '';
+       return `<button data-view="${view}" class="view-tab rounded-xl px-4 py-2 ${view === state.currentView ? 'tab-active' : 'text-slate-400'}">${label}${unreadBadge}</button>`;
+      }).join('');
+    }
+
+    function getFilteredTasks() {
+      const query = ($('#taskSearch')?.value || '').trim().toLowerCase();
+      const tag = $('#tagFilter')?.value || 'ALL';
+      return state.tasks
+        .filter(task => {
+          const title = String(task.title || '').toLowerCase();
+          return title.includes(query) && (tag === 'ALL' || task.tag === tag);
+        })
+        .sort((a, b) => {
+          const dateA = parseLocalDate(a.date)?.getTime() || 0;
+          const dateB = parseLocalDate(b.date)?.getTime() || 0;
+          return dateB - dateA || Number(b.id || 0) - Number(a.id || 0);
+        });
+    }
+
+
+    function renderDashboardSummary() {
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const active = state.tasks.filter(task => task.status !== 'published').length;
+      const inWork = state.tasks.filter(task =>
+  ['script', 'production', 'editing', 'review', 'scheduled'].includes(task.status)
+).length;
+      const deadlinesToday = state.tasks.filter(task => task.date === todayStr && task.status !== 'published').length;
+      const published = state.tasks.filter(task => task.status === 'published').length;
+      if ($('#kpiActive')) $('#kpiActive').textContent = active;
+      if ($('#kpiWork')) $('#kpiWork').textContent = inWork;
+      if ($('#kpiToday')) $('#kpiToday').textContent = deadlinesToday;
+      if ($('#kpiPublished')) $('#kpiPublished').textContent = published;
+    }
+
+
+    function beginInlineEdit(taskId) {
+      const task = state.tasks.find(item => String(item.id) === String(taskId));
+      if (!task) return;
+      state.inlineEditId = String(task.id);
+      state.inlineDraft = {
+        title: task.title || '',
+        status: task.status || 'idea',
+        date: task.date || '',
+        responsible: task.responsible || '',
+        work_type: task.work_type || 'Пост'
+      };
+      renderCards();
+    }
+
+    function cancelInlineEdit() {
+      state.inlineEditId = null;
+      state.inlineDraft = null;
+      renderCards();
+    }
+
+           async function saveInlineEdit(taskId) {
+      const draft = state.inlineDraft || {};
+
+      if (!String(draft.title || '').trim()) {
+        return notify('Для быстрого сохранения нужно указать название.', 'warning', 'Незаполнено');
+      }
+
+      if (!draft.date) {
+        return notify('Укажи дедлайн, чтобы сохранить карточку.', 'warning', 'Незаполнено');
+      }
+
+      const payload = TaskHelpers.collectInlinePayload(draft);
+      const loadingToast = notify('Сохраняю быстрые изменения в карточке…', 'loading', 'Подожди', { closable: false });
+
+      const { error } = await TaskService.update(taskId, payload);
+
+      if (error) {
+        updateToast(loadingToast, 'Не удалось сохранить быстрые изменения.', 'error', 'Ошибка');
+        return;
+      }
+
+      TaskState.patchTask(taskId, payload);
+state.inlineEditId = null;
+state.inlineDraft = null;
+
+if (state.currentView === 'list') renderCards();
+if (state.currentView === 'kanban') renderKanban();
+if (state.currentView === 'calendar') renderCalendar();
+renderMetaOnly();
+
+      updateToast(loadingToast, 'Карточка обновлена без открытия модалки.', 'success', 'Сохранено');
+    }
+
+    function renderCards() {
+      const container = $('#view-list');
+      if (!container) return;
+
+      if (state.isLoadingTasks) {
+        renderListSkeleton();
+        return;
+      }
+
+      const tasks = getFilteredTasks();
+
+      if (!tasks.length) {
+        container.innerHTML = `
+          <div class="empty-state col-span-full rounded-[2rem] p-10 text-center">
+            <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl" style="background: var(--surface);">📭</div>
+            <div class="text-lg font-black">Ничего не найдено</div>
+            <p class="mx-auto mt-2 max-w-md text-sm font-medium" style="color: var(--muted);">
+              Попробуй очистить поиск или снять фильтр по тегу. В новой версии пустое состояние тоже подсказывает следующий шаг.
+            </p>
+            <button type="button" id="resetFiltersBtn" class="mt-5 rounded-2xl px-5 py-3 text-[11px] font-black uppercase text-white" style="background: var(--text);">
+              Сбросить фильтры
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = tasks.map(task => {
+        const isEditing = state.inlineEditId === String(task.id);
+        const draft = isEditing ? (state.inlineDraft || {}) : {};
+        return TaskUI.renderListCard(task, { isEditing, draft });
+      }).join('');
+    }
+
+    function renderKanban() {
+      const tasks = getFilteredTasks();
+
+      getWorkflowOrder().forEach(status => {
+        const col = document.querySelector(`[data-kanban="${status}"]`);
+        const count = document.getElementById(`count-${status}`);
+        if (!col || !count) return;
+
+        const filtered = tasks.filter(task => task.status === status);
+        count.textContent = filtered.length;
+        col.innerHTML = filtered.map(task => TaskUI.renderKanbanCard(task)).join('');
+      });
+    }
+    
+    function renderCalendarTabs() {CalendarUI.renderTabs();}
+    function renderCalendar() {CalendarUI.render();}
+    function renderStats() {AnalyticsUI.renderStatsTable();}
+    function renderCharts() {ChartUI.render();}
+function createEmptyPeopleStats() {
+  return {
+    views: 0,
+    tasks: 0,
+    published: 0
+  };
+}
+
+function calculatePeopleStats(tasks) {
+  const stats = {};
+
+  tasks.forEach(task => {
+    if (task.status !== 'published') return;
+
+    const views = Number(task.play_count || 0);
+    const responsible = task.responsible;
+    const executors = task.executors || [];
+
+    if (responsible) {
+      if (!stats[responsible]) stats[responsible] = createEmptyPeopleStats();
+      stats[responsible].views += views * 0.5;
+      stats[responsible].tasks += 1;
+      stats[responsible].published += 1;
+    }
+
+    const executorShare = executors.length ? (views * 0.5) / executors.length : 0;
+
+    executors.forEach(name => {
+      if (!stats[name]) stats[name] = createEmptyPeopleStats();
+      stats[name].views += executorShare;
+      stats[name].tasks += 1;
+      stats[name].published += 1;
+    });
+  });
+
+  return stats;
+}
+
+function renderPeopleAnalytics() {
+  const container = $('#analytics-people');
+  if (!container) return;
+
+  const stats = calculatePeopleStats(state.tasks);
+
+  const rows = Object.entries(stats)
+    .sort((a, b) => b[1].views - a[1].views)
+    .map(([name, data], index) => {
+      const avg = data.published ? data.views / data.published : 0;
+      const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+
+      return `
+        <tr class="border-b" style="border-color: var(--border);">
+          <td class="p-4 font-black uppercase">${medal} ${escapeHtml(name)}</td>
+          <td class="p-4 font-black text-emerald-600">${Math.round(data.views).toLocaleString('ru-RU')}</td>
+          <td class="p-4">${data.tasks}</td>
+          <td class="p-4">${data.published}</td>
+          <td class="p-4">${Math.round(avg).toLocaleString('ru-RU')}</td>
+        </tr>
+      `;
+    }).join('');
+
+  container.innerHTML = `
+    <div class="mb-6">
+      <h3 class="text-lg font-black uppercase">👥 Аналитика по команде</h3>
+      <p class="mt-2 text-sm font-medium" style="color: var(--muted);">
+        Охват распределяется: 50% ответственному, 50% между исполнителями.
+      </p>
+    </div>
+
+    <div class="overflow-x-auto rounded-[1.5rem] border" style="border-color: var(--border);">
+      <table class="w-full text-left text-[11px] font-bold">
+        <thead style="background: var(--surface-2); color: var(--muted);">
+          <tr>
+            <th class="p-4">Человек</th>
+            <th class="p-4">Охват</th>
+            <th class="p-4">Задачи</th>
+            <th class="p-4">Опубликовано</th>
+            <th class="p-4">Средний охват</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows || `
+            <tr>
+              <td colspan="5" class="p-10 text-center text-[11px] font-black uppercase text-slate-400">
+                Пока нет опубликованных задач
+              </td>
+            </tr>
+          `}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+    function renderAccounts() {
+      $('#view-accounts').innerHTML = WORK_ACCOUNTS.map(acc => `
+        <a class="app-surface flex items-center justify-between rounded-[2rem] p-6 transition hover:-translate-y-1" target="_blank" rel="noopener noreferrer" href="${escapeHtml(acc.url)}">
+          <div class="flex items-center gap-5">
+            <div class="rounded-[1.25rem] p-4 text-xl" style="background: var(--surface-2);">${getSocialIcon(acc.platform)}</div>
+            <div>
+              <h4 class="text-sm font-black uppercase">${escapeHtml(acc.name)}</h4>
+              <p class="mt-1 text-[10px] font-bold uppercase text-slate-400">${escapeHtml(acc.handle)}</p>
+            </div>
+          </div>
+          <div class="text-[10px] font-black uppercase" style="color: var(--primary);">Открыть ↗</div>
+        </a>
+      `).join('');
+    }
+
+    function renderSmartSidebar() { SidebarUI.render();}
+    function renderTrash() {
+      const list = $('#trashList');
+      const isAdmin = state.currentRole === 'admin';
+      if (!state.trash.length) {
+        list.innerHTML = '<p class="py-10 text-center font-bold text-slate-400">ПУСТО</p>';
+        return;
+      }
+      list.innerHTML = state.trash.map(task => `
+        <div class="app-surface flex items-center justify-between rounded-2xl p-4">
+          <div>
+            <div class="text-[11px] font-black uppercase">${escapeHtml(task.title || 'Без названия')}</div>
+            <div class="mt-1 text-[9px] font-bold uppercase text-rose-500">Удалил: ${escapeHtml(task.deleted_by || '???')}</div>
+          </div>
+          <div class="flex gap-2">
+            ${isAdmin ? `
+              <button class="restore-task rounded-lg bg-emerald-500 px-3 py-1.5 text-[9px] font-black uppercase text-white" data-task-id="${escapeHtml(task.id)}">Restore</button>
+              <button class="delete-task-forever rounded-lg bg-rose-500 px-3 py-1.5 text-[9px] font-black uppercase text-white" data-task-id="${escapeHtml(task.id)}">Delete</button>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+        async function renderLogs() {
+      const { data, error } = await LogService.getLatest(30);
+
+      if (error) {
+        $('#logsContent').innerHTML = '<p class="text-sm text-rose-500">Не удалось загрузить логи</p>';
+        return;
+      }
+
+      if (!data?.length) {
+        $('#logsContent').innerHTML = '<p class="py-10 text-center text-[10px] font-bold uppercase text-slate-400">Действий пока нет</p>';
+        return;
+      }
+
+      $('#logsContent').innerHTML = data.map(log => {
+        const time = new Date(log.created_at).toLocaleString('ru-RU', {
+          hour: '2-digit',
+          minute: '2-digit',
+          day: '2-digit',
+          month: 'short'
+        });
+
+        const icon =
+          log.action_type === 'create' ? '➕' :
+          log.action_type === 'delete' ? '🗑️' :
+          log.action_type === 'status_change' ? '🔄' :
+          '📝';
+
+        return `
+          <div class="rounded-2xl border p-3" style="background: var(--surface-2); border-color: var(--border);">
+            <div class="mb-1 flex items-start justify-between gap-2">
+              <span class="text-[10px] font-black uppercase" style="color: var(--primary);">${escapeHtml(log.user_name || '')}</span>
+              <span class="text-[9px] text-slate-400">${escapeHtml(time)}</span>
+            </div>
+            <div class="text-[11px] font-black uppercase">${icon} ${escapeHtml(log.task_title || '')}</div>
+            <div class="mt-1 text-[10px] italic text-slate-500">${escapeHtml(log.details || '')}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+        function renderMessages(messages) {
+      const root = $('#chatMessages');
+      if (!root) return;
+
+      const myUid = sessionStorage.getItem('e_uid') || '';
+      root.innerHTML = ChatUI.renderMessages(messages || [], myUid);
+      ChatUI.scrollToBottom();
+    }
+  
+    async function refreshChat() {
+      const { data, error } = await ChatService.fetchMessages(50);
+      if (!error && data) {
+        renderMessages(data);
+      }
+    }
+
+  async function setupChat() {
+  await refreshChat();
+
+  if (state.chatChannel) return;
+
+  state.chatChannel = ChatService.subscribe(payload => {
+    if (payload.eventType === 'INSERT') {
+      const message = payload.new;
+      const myUid = sessionStorage.getItem('e_uid');
+
+      if (state.currentView !== 'chat' && message.sender_uid !== myUid) {
+        state.unreadChatCount += 1;
+        buildMainTabs();
+      }
+    }
+
+    refreshChat();
+  });
+}
+    function setupTasksRealtime() {
+      if (state.tasksChannel) return;
+
+      state.tasksChannel = db
+        .channel('tasks-realtime')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: Services.tables.tasks },
+          payload => {
+            const { eventType, new: newRow, old: oldRow } = payload;
+
+            if (eventType === 'INSERT') {
+              TaskState.addTask(newRow);
+            }
+
+            if (eventType === 'UPDATE') {
+              TaskState.patchTask(newRow.id, newRow);
+            }
+
+            if (eventType === 'DELETE') {
+              TaskState.removeTask(oldRow.id);
+              TaskState.removeFromTrash(oldRow.id);
+            }
+
+            // мягкий ререндер
+            if (state.currentView === 'list') renderCards();
+            if (state.currentView === 'kanban') renderKanban();
+            if (state.currentView === 'calendar') renderCalendar();
+            renderMetaOnly();
+          }
+        )
+        .subscribe();
+    }
+    
+        function renderAll() {
+      buildMainTabs();
+      ViewController.applyLayout();
+      ViewController.renderActiveView();
+      ViewController.renderMeta();
+    }
+
+    function renderMetaOnly() {
+      ViewController.renderMeta();
+    }
+    
+    function applyTheme(theme) {
+      document.body.classList.remove('theme-dark', 'theme-pink');
+      if (theme === 'dark') document.body.classList.add('theme-dark');
+      if (theme === 'pink') document.body.classList.add('theme-pink');
+      localStorage.setItem('andromeda_theme', theme);
+      if (state.currentView === 'analytics' && state.analyticsSubView === 'visuals') renderCharts();
+    }
+
+    function applySavedTheme() {
+      const theme = localStorage.getItem('andromeda_theme') || 'light';
+      $('#themeSelect').value = theme;
+      applyTheme(theme);
+    }
+
+        async function logAction(actionType, taskTitle, details = '') {await LogService.create(actionType, taskTitle, details);
+    }
+
+        async function loadAllData() {
+      setLoadingTasks(true);
+      try {
+        const [tasksRes, trashRes, configRes] = await Promise.all([
+          TaskService.getAllActive(),
+          TaskService.getAllTrash(),
+         ConfigService.getAll()
+        ]);
+
+        if (tasksRes.error || trashRes.error) {
+          console.error(tasksRes.error || trashRes.error);
+          notify('Не удалось загрузить данные', 'error', 'Ошибка');
+          return;
+        }
+
+                TaskState.setTasks(tasksRes.data || []);
+        TaskState.setTrash(trashRes.data || []);
+
+                if (configRes.data) {
+          ConfigService.applyToLocalStorage(configRes.data);
+        }
+      } finally {
+        setLoadingTasks(false);
+      }
+    }
+
+        async function handleLogin() {
+      const btn = $('#loginBtn');
+      const errorBox = $('#loginError');
+
+      errorBox.classList.add('hidden');
+      btn.disabled = true;
+      btn.textContent = '...';
+
+      const username = $('#loginUser').value;
+      const password = $('#loginPass').value;
+
+      try {
+        const { data, error } = await AuthService.login(username, password);
+        if (error || !data) throw new Error('INVALID');
+
+        AuthService.saveSession(data);
+        await checkAuth();
+      } catch (error) {
+        errorBox.textContent = 'Ошибка входа';
+        errorBox.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Войти';
+      }
+    }
+
+        async function checkAuth() {
+      if (!AuthService.isActive()) return;
+
+      const user = AuthService.getCurrentUser();
+
+      state.currentUser = user.name;
+      state.currentRole = user.role;
+
+      $('#currentUserDisplay').textContent = `👤 ${state.currentUser || ''}`;
+
+      if (state.currentRole === 'admin') {
+        $('#adminPanel').classList.remove('hidden');
+      }
+
+      $('#loginOverlay').style.display = 'none';
+      $('#appContent').classList.remove('hidden');
+
+      applySavedTheme();
+      await loadAllData();
+      await setupChat();
+      await setupTasksRealtime();
+
+      setTimeout(() => $('#appContent').style.opacity = '1', 50);
+    }
+
+        function logout() {
+      AuthService.clearSession();
+      location.reload();
+    }
+
+             async function moveToTrash(id) {
+      const task = state.tasks.find(item => String(item.id) === String(id));
+      if (!task) return;
+
+      const { error } = await TaskService.moveToTrash(id, state.currentUser);
+      if (error) return notify('Не удалось переместить в корзину', 'error', 'Ошибка');
+
+      const removedTask = TaskState.removeTask(id);
+
+      if (removedTask) {
+        TaskState.addToTrash({
+          ...removedTask,
+          is_deleted: true,
+          deleted_by: state.currentUser
+        });
+      }
+
+      if (state.currentView === 'list') renderCards();
+      if (state.currentView === 'kanban') renderKanban();
+      if (state.currentView === 'calendar') renderCalendar();
+      renderMetaOnly();
+
+      showUndoDeleteToast(task);
+      await logAction('delete', task.title || 'Задача', 'Перенесено в корзину');
+    }
+
+        function showUndoDeleteToast(task) {
+      const container = $('#toastContainer');
+      if (!container || !task) return;
+
+      const toast = document.createElement('div');
+      toast.className = 'toast toast-warning';
+
+      toast.innerHTML = `
+        <div class="toast-icon">🗑️</div>
+        <div class="toast-body">
+          <strong>Задача удалена</strong>
+          <div class="text-sm font-medium">«${escapeHtml(task.title || 'Без названия')}» перенесена в корзину.</div>
+          <button
+            type="button"
+            class="undo-delete-btn mt-3 rounded-xl px-3 py-2 text-[10px] font-black uppercase text-white"
+            style="background: var(--text);"
+            data-task-id="${escapeHtml(task.id)}"
+          >
+            Отменить
+          </button>
+        </div>
+        <button type="button" class="toast-close" aria-label="Закрыть">×</button>
+      `;
+
+      $('.toast-close', toast)?.addEventListener('click', () => removeToast(toast));
+
+      $('.undo-delete-btn', toast)?.addEventListener('click', async () => {
+        await restoreFromTrash(task.id);
+        removeToast(toast);
+        notify('Удаление отменено', 'success', 'Готово');
+      });
+
+      container.appendChild(toast);
+      setTimeout(() => removeToast(toast), 7000);
+    }
+
+        async function restoreFromTrash(id) {
+      const { error } = await TaskService.restore(id);
+      if (error) return notify('Не удалось восстановить задачу', 'error', 'Ошибка');
+
+      const restoredTask = TaskState.removeFromTrash(id);
+
+      if (restoredTask) {
+        TaskState.restoreTask({
+          ...restoredTask,
+          is_deleted: false,
+          deleted_by: null
+        });
+      }
+
+            if (state.currentView === 'list') renderCards();
+      if (state.currentView === 'kanban') renderKanban();
+      if (state.currentView === 'calendar') renderCalendar();
+      renderMetaOnly();
+      renderTrash();
+    }
+
+        async function finalDelete(id) {
+      if (!confirm('Навсегда удалить задачу?')) return;
+
+      const { error } = await TaskService.removeForever(id);
+      if (error) return notify('Не удалось удалить задачу', 'error', 'Ошибка');
+
+      TaskState.removeFromTrash(id);
+            renderMetaOnly();
+      renderTrash();
+    }
+
+    function fillTaskForm(task) {
+      $('#edit_id').value = task.id;
+      $('#edit_title').value = task.title || '';
+      $('#edit_work_type').value = task.work_type || 'Пост';
+      $('#edit_tag').value = task.tag || 'прочее';
+      $('#edit_description').value = task.description || '';
+      $('#edit_status').value = task.status || 'idea';
+      $('#edit_start_date').value = task.start_date || '';
+      $('#edit_date').value = task.date || '';
+      $('#edit_date').min = task.start_date || '';
+
+      $$('input[name="edit_chan"]').forEach(cb => cb.checked = (task.channels || []).includes(cb.value));
+      $$('input[name="edit_exec"]').forEach(cb => cb.checked = (task.executors || []).includes(cb.value));
+
+      const linkContainer = $('#multiLinkContainer');
+      linkContainer.innerHTML = (task.channels || []).map(channel => {
+        const value = task.links?.[channel] || '';
+        return `
+          <div>
+            <label class="mb-1 flex items-center gap-2 text-[9px] font-black uppercase text-slate-500">${getSocialIcon(channel)} ${escapeHtml(channel)}</label>
+            <input type="url" class="multi-link-input w-full rounded-xl border p-2 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);" data-platform="${escapeHtml(channel)}" value="${escapeHtml(value)}" />
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openEditModal(id) {
+      const task = state.tasks.find(item => String(item.id) === String(id));
+      if (!task) return;
+      fillTaskForm(task);
+      openModal('editModal');
+    }
+
+    function openCreateModal(prefillDate = '') {
+      $('#ideaForm').reset();
+      clearCreateFormErrors();
+      $$('input[type="checkbox"]', $('#createModal')).forEach(cb => cb.checked = false);
+      const date = prefillDate || new Date().toISOString().split('T')[0];
+      state.createPrefillDate = date;
+      $('#start_date_val').value = date;
+      $('#date_val').value = date;
+      $('#date_val').min = date;
+      const formatted = parseLocalDate(date)?.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) || 'без даты';
+      if ($('#createModalTitle')) $('#createModalTitle').textContent = prefillDate ? 'Новая задача' : 'Новая задача';
+      if ($('#createModalSubtitle')) $('#createModalSubtitle').textContent = prefillDate ? 'Заполни все важное .' : 'Короткая форма без лишнего шума — только то, что нужно для старта.';
+      if ($('#createPreviewDate')) $('#createPreviewDate').textContent = formatted;
+      openModal('createModal');
+      renderCalendar();
+    }
+
+   async function saveEditForm(event) {
+      event.preventDefault();
+
+      const startDate = $('#edit_start_date').value;
+      const endDate = $('#edit_date').value;
+
+      if (startDate && endDate && endDate < startDate) {
+        return notify('Дедлайн не может быть раньше даты старта', 'warning', 'Проверь даты');
+      }
+
+      const id = $('#edit_id').value;
+      const oldTask = state.tasks.find(item => String(item.id) === String(id));
+      const payload = TaskHelpers.collectEditPayload();
+
+      const { data, error } = await TaskService.update(id, payload);
+if (error) return notify('Не удалось сохранить изменения', 'error', 'Ошибка');
+
+TaskState.patchTask(id, data || payload);
+
+if (state.currentView === 'list') renderCards();
+if (state.currentView === 'kanban') renderKanban();
+if (state.currentView === 'calendar') renderCalendar();
+renderMetaOnly();
+
+closeModal('editModal');
+
+      if (oldTask && oldTask.status !== payload.status) {
+        await logAction('status_change', oldTask.title, `Статус: ${oldTask.status} → ${payload.status}`);
+      } else {
+        await logAction('update', oldTask?.title || payload.title, 'Данные обновлены');
+      }
+    }
+
+        async function saveCreateForm(event) {
+      event.preventDefault();
+
+      if (!validateCreateForm()) {
+        return notify('Проверь поля формы: ошибки уже показаны под нужными полями.', 'warning', 'Нужно поправить данные');
+      }
+
+      const task = TaskHelpers.collectCreatePayload();
+      const { data, error } = await TaskService.create(task);
+
+if (error) return notify('Не удалось создать задачу', 'error', 'Ошибка');
+
+TaskState.addTask(data || task);
+          if (state.currentView === 'list') renderCards();
+if (state.currentView === 'kanban') renderKanban();
+if (state.currentView === 'calendar') renderCalendar();
+renderMetaOnly();
+      $('#ideaForm').reset();
+      $$('input[type="checkbox"]', $('#createModal')).forEach(cb => cb.checked = false);
+      closeModal('createModal');
+      notify(`Задача «${task.title}» создана`, 'success', 'Готово');
+      await logAction('create', task.title, 'Создана новая задача');
+    }
+
+        async function saveAdminSettings() {
+      const yt = $('#ytApiKey').value.trim();
+      const apify = $('#apifyToken').value.trim();
+
+      const { error } = await ConfigService.saveApiKeys(yt, apify);
+      if (error) return notify('Не удалось сохранить настройки', 'error', 'Ошибка');
+
+      localStorage.setItem('yt_key', yt);
+      localStorage.setItem('apify_token', apify);
+
+      notify('Настройки сохранены', 'success', 'Готово');
+    }
+
+    function exportStatsToCSV() {
+      const results = state.tasks.filter(task => {
+        const date = parseLocalDate(task.date);
+        return task.status === 'published' && date && isSameMonthYear(date, state.statsDate);
+      });
+      if (!results.length) return notify('Нет данных для экспорта');
+      let csv = '\uFEFFДата;Тема;Тег;Охват;Ответственный\n';
+      results.forEach(task => {
+        csv += `"${formatShortDate(task.date)}";"${String(task.title || '').replace(/"/g, '""')}";"${String(task.tag || '').replace(/"/g, '""')}";"${Number(task.play_count || 0)}";"${String(task.responsible || '').replace(/"/g, '""')}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Report_${state.statsDate.getFullYear()}_${state.statsDate.getMonth() + 1}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function fetchSingleStat(url, platform) {
+      if (!url || url.length < 10) return 0;
+      const ytKey = localStorage.getItem('yt_key');
+      const apifyToken = localStorage.getItem('apify_token');
+      try {
+        if (platform === 'VK' && apifyToken) {
+          const actor = 'apify/vkontakte-scraper';
+          const input = { startUrls: [{ url }], maxItems: 1 };
+          const res = await fetch(`https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${apifyToken}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input)
+          });
+          const data = await res.json();
+          return Number(data?.[0]?.viewsCount || data?.[0]?.views?.count || 0);
+        }
+
+        if (TG_LIST.includes(platform) || url.includes('t.me/')) {
+          const safeUrl = url.trim().replace('t.me/', 't.me/s/');
+          const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(safeUrl)}`);
+          const data = await res.json();
+          const match = data.contents?.match(/class="tgme_widget_message_views">([\d.KM]+)/i);
+          if (match) {
+            const value = match[1].toUpperCase();
+            if (value.includes('K')) return parseFloat(value) * 1000;
+            if (value.includes('M')) return parseFloat(value) * 1000000;
+            return parseInt(value.replace(/\D/g, ''), 10) || 0;
+          }
+        }
+
+        if (platform === 'YouTube' && ytKey) {
+          const videoId = (url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/) || [])[2];
+          if (videoId) {
+            const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoId}&key=${ytKey}`);
+            const data = await res.json();
+            return Number(data.items?.[0]?.statistics?.viewCount || 0);
+          }
+        }
+
+        if ((platform === 'TikTok' || platform === 'Instagram') && apifyToken) {
+          const actor = platform === 'TikTok' ? 'GdWCkxBtKWOsKjdch' : 'apify/instagram-post-scraper';
+          const input = platform === 'TikTok' ? { postURLs: [url] } : { directUrls: [url] };
+          const res = await fetch(`https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${apifyToken}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input)
+          });
+          const data = await res.json();
+          return Number(data?.[0]?.playCount || data?.[0]?.videoViewCount || data?.[0]?.videoPlayCount || data?.[0]?.likesCount || 0);
+        }
+      } catch (error) {
+        console.error('Stat fetch error', error);
+      }
+      return 0;
+    }
+
+    async function updateAllMonthStats() {
+  const btn = $('#btnUpdateAll');
+  const progressToast = notify('Обновляю статистику по публикациям…', 'loading', 'Подожди', { closable: false });
+
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  try {
+    const tasks = state.tasks.filter(task => {
+      const date = parseLocalDate(task.date);
+      return date && isSameMonthYear(date, state.statsDate) && task.links && Object.keys(task.links).length > 0;
+    });
+
+    for (const task of tasks) {
+      let total = 0;
+      const playCounts = { ...(task.play_counts || {}) };
+
+      for (const [platform, url] of Object.entries(task.links || {})) {
+        if (!url) continue;
+        const value = await fetchSingleStat(url, platform);
+        playCounts[platform] = value;
+        total += value;
+      }
+
+      const { error } = await db.from('tasks').update({
+        play_counts: playCounts,
+        play_count: total
+      }).eq('id', task.id);
+
+      if (error) console.error(error);
+    }
+
+    await loadAllData();
+    updateToast(progressToast, 'Статистика обновлена.', 'success', 'Готово');
+  } catch (e) {
+    console.error(e);
+    updateToast(progressToast, 'Не удалось обновить статистику.', 'error', 'Ошибка');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Обновить';
+  }
+}
+        async function sendTaskToChat(taskId) {
+      const task = state.tasks.find(item => String(item.id) === String(taskId));
+      if (!task) return notify('Задача не найдена', 'warning', 'Не получилось');
+
+      const { error } = await ChatService.sendMessage({
+        sender_name: state.currentUser,
+        sender_uid: sessionStorage.getItem('e_uid'),
+        message: ChatUI.getTaskToken(task.id)
+      });
+
+      if (error) return notify('Не удалось отправить задачу в чат', 'error', 'Ошибка');
+
+      notify(`Задача «${task.title || 'Без названия'}» отправлена в чат`, 'success', 'Готово');
+    }
+        async function sendChatMessage() {
+      const input = $('#chatInput');
+      const sendBtn = $('#sendChatBtn');
+      const message = input.value.trim();
+
+      if (!message) return;
+
+      sendBtn.disabled = true;
+
+      const { error } = await ChatService.sendMessage({
+        sender_name: state.currentUser,
+        sender_uid: sessionStorage.getItem('e_uid'),
+        message
+      });
+
+      sendBtn.disabled = false;
+
+      if (error) return notify('Не удалось отправить сообщение', 'error', 'Ошибка');
+
+      ChatUI.resetComposer();
+    }
+
+       async function deleteMessage(id) {
+      if (!confirm('Удалить сообщение?')) return;
+
+      const { error } = await ChatService.deleteMessage(id);
+      if (error) notify('Не удалось удалить сообщение', 'error', 'Ошибка');
+    }
+
+        async function toggleReaction(messageId, emoji) {
+      const myUid = sessionStorage.getItem('e_uid');
+      const { data, error } = await ChatService.getReactions(messageId);
+      if (error || !data) return;
+
+      const reactions = data.reactions || {};
+      if (!Array.isArray(reactions[emoji])) reactions[emoji] = [];
+
+      if (reactions[emoji].includes(myUid)) {
+        reactions[emoji] = reactions[emoji].filter(uid => uid !== myUid);
+      } else {
+        reactions[emoji].push(myUid);
+      }
+
+      await ChatService.updateReactions(messageId, reactions);
+    }
+
+    function toggleLogs(forceOpen = null) {
+      const panel = $('#logsPanel');
+      const isClosed = panel.classList.contains('translate-x-full');
+      const shouldOpen = forceOpen === null ? isClosed : forceOpen;
+      panel.classList.toggle('translate-x-full', !shouldOpen);
+      if (shouldOpen) {
+        $('#logBadge').classList.add('hidden');
+        renderLogs();
+      }
+    }
+
+    function bindEvents() {
+      $('#loginBtn').addEventListener('click', handleLogin);
+      $('#loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+      $('#logoutBtn').addEventListener('click', logout);
+      $('#themeSelect').addEventListener('change', e => applyTheme(e.target.value));
+      $('#openCreateBtn').addEventListener('click', openCreateModal);
+      $('#trashBtn').addEventListener('click', () => { renderTrash(); openModal('trashModal'); });
+      $('#logsBtn').addEventListener('click', () => toggleLogs());
+      $('#closeLogsBtn').addEventListener('click', () => toggleLogs(false));
+      $('#taskSearch').addEventListener('input', renderAll);
+      $('#tagFilter').addEventListener('change', renderAll);
+      $('#analyticsTableBtn').addEventListener('click', () => { state.analyticsSubView = 'table'; renderAll(); });
+      $('#analyticsVisualsBtn').addEventListener('click', () => { state.analyticsSubView = 'visuals'; renderAll(); });
+      $('#chartMonthsBtn').addEventListener('click', () => { state.chartMode = 'months'; $('#chartMonthsBtn').classList.add('tab-active'); $('#chartDaysBtn').classList.remove('tab-active'); $('#chartDaysBtn').classList.add('text-slate-400'); $('#chartMonthsBtn').classList.remove('text-slate-400'); renderCharts(); });
+      $('#chartDaysBtn').addEventListener('click', () => { state.chartMode = 'days'; $('#chartDaysBtn').classList.add('tab-active'); $('#chartMonthsBtn').classList.remove('tab-active'); $('#chartMonthsBtn').classList.add('text-slate-400'); $('#chartDaysBtn').classList.remove('text-slate-400'); renderCharts(); });
+      $('#calendarPrevBtn').addEventListener('click', () => { state.viewDate.setMonth(state.viewDate.getMonth() - 1); renderCalendar(); });
+      $('#calendarNextBtn').addEventListener('click', () => { state.viewDate.setMonth(state.viewDate.getMonth() + 1); renderCalendar(); });
+      $('#calendarGrid').addEventListener('click', event => {
+        const taskButton = event.target.closest('.calendar-item');
+        if (taskButton) {
+          const taskId = taskButton.dataset.taskId;
+          if (taskId) openEditModal(taskId);
+          return;
+        }
+        const dayCell = event.target.closest('.calendar-day[data-date]');
+        if (!dayCell) return;
+        openCreateModal(dayCell.dataset.date || '');
+      });
+      $('#analyticsPeopleBtn').addEventListener('click', () => {
+  state.analyticsSubView = 'people';
+  renderAll();
+});
+      $('#statsPrevBtn').addEventListener('click', () => { state.statsDate.setMonth(state.statsDate.getMonth() - 1); renderStats(); });
+      $('#statsNextBtn').addEventListener('click', () => { state.statsDate.setMonth(state.statsDate.getMonth() + 1); renderStats(); });
+      $('#statsPlatformFilter').addEventListener('change', renderStats);
+      $('#btnUpdateAll').addEventListener('click', updateAllMonthStats);
+      $('#exportStatsBtn').addEventListener('click', exportStatsToCSV);
+      $('#saveAdminSettingsBtn').addEventListener('click', saveAdminSettings);
+      $('#ideaForm').addEventListener('submit', saveCreateForm);
+      $('#editForm').addEventListener('submit', saveEditForm);
+      $('#sendChatBtn').addEventListener('click', sendChatMessage);
+      $('#chatInput').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage();}
+});
+
+      $('#chatInput').addEventListener('input', e => {
+        e.target.style.height = '24px';
+        e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+      });
+
+      $$('[data-quick-message]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const input = $('#chatInput');
+          input.value = btn.dataset.quickMessage || '';
+          input.focus();
+          input.dispatchEvent(new Event('input'));
+        });
+      });
+            $$('[data-template]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const input = $('#chatInput');
+          if (!input) return;
+
+          input.value = btn.dataset.template || '';
+          input.focus();
+          input.dispatchEvent(new Event('input'));
+        });
+      });
+      $('#toggleAllChannels').addEventListener('change', e => $$('input[name="chan"]', $('#createModal')).forEach(cb => cb.checked = e.target.checked));
+      $('#title').addEventListener('input', () => setFieldError('title', $('#title').value.trim().length >= 4 ? '' : 'Нужно название хотя бы из 4 символов.'));
+      $('#description').addEventListener('input', () => setFieldError('description', $('#description').value.trim().length >= 10 ? '' : 'Добавь короткое ТЗ: хотя бы 10 символов.'));
+      $('#start_date_val').addEventListener('change', () => { if ($('#start_date_val').value) setFieldError('start_date_val', ''); });
+      $('#date_val').addEventListener('change', () => { if ($('#date_val').value) setFieldError('date_val', ''); });
+      document.addEventListener('change', event => {
+        if (event.target.name === 'chan') setFieldError('channels', $$('input[name="chan"]:checked').length ? '' : 'Выбери хотя бы одну площадку.');
+        if (event.target.name === 'exec') setFieldError('executors', $$('input[name="exec"]:checked').length ? '' : 'Назначь хотя бы одного исполнителя.');
+      });
+      $('#start_date_val').addEventListener('change', e => {
+        $('#date_val').min = e.target.value;
+        if ($('#date_val').value && $('#date_val').value < e.target.value) $('#date_val').value = e.target.value;
+      });
+      $('#edit_start_date').addEventListener('change', e => {
+        $('#edit_date').min = e.target.value;
+        if ($('#edit_date').value && $('#edit_date').value < e.target.value) $('#edit_date').value = e.target.value;
+      });
+
+      $$('[data-close-modal]').forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.closeModal)));
+
+      document.addEventListener('click', async event => {
+       const viewTab = event.target.closest('.view-tab');
+if (viewTab) {
+  state.currentView = viewTab.dataset.view;
+
+  if (state.currentView === 'chat') {
+    state.unreadChatCount = 0;
+  }
+
+  renderAll();
+  return;
+}
+
+        const inlineTrigger = event.target.closest('.inline-edit-trigger');
+        if (inlineTrigger) {
+          event.stopPropagation();
+          beginInlineEdit(inlineTrigger.dataset.taskId);
+          return;
+        }
+
+        const saveInlineBtn = event.target.closest('.save-inline-edit');
+        if (saveInlineBtn) {
+          event.stopPropagation();
+          saveInlineEdit(saveInlineBtn.dataset.taskId);
+          return;
+        }
+
+        const cancelInlineBtn = event.target.closest('.cancel-inline-edit');
+        if (cancelInlineBtn) {
+          event.stopPropagation();
+          cancelInlineEdit();
+          return;
+        }
+
+        const openTask = event.target.closest('[data-task-id]');
+        if (openTask?.classList.contains('task-card') || openTask?.classList.contains('open-task') || openTask?.classList.contains('calendar-item')) {
+          if (state.inlineEditId && openTask.classList.contains('task-card')) return;
+          openEditModal(openTask.dataset.taskId);
+          return;
+        }
+
+        const resetFiltersBtn = event.target.closest('#resetFiltersBtn');
+        if (resetFiltersBtn) { $('#taskSearch').value = ''; $('#tagFilter').value = 'ALL'; renderAll(); return; }
+
+        const trashTask = event.target.closest('.trash-task');
+        if (trashTask) {
+          event.stopPropagation();
+          await moveToTrash(trashTask.dataset.taskId);
+          return;
+        }
+
+        const restoreBtn = event.target.closest('.restore-task');
+        if (restoreBtn) return restoreFromTrash(restoreBtn.dataset.taskId);
+
+        const deleteForeverBtn = event.target.closest('.delete-task-forever');
+        if (deleteForeverBtn) return finalDelete(deleteForeverBtn.dataset.taskId);
+
+        const calendarFilter = event.target.closest('.calendar-filter');
+        if (calendarFilter) {
+          state.calendarChannel = calendarFilter.dataset.channel;
+          renderCalendar();
+          return;
+        }
+        const chatTaskBubble = event.target.closest('.open-chat-task');
+        if (chatTaskBubble) {
+          openEditModal(chatTaskBubble.dataset.taskId);
+          return;
+        }
+        const reactionBtn = event.target.closest('.toggle-reaction');
+        if (reactionBtn) return toggleReaction(reactionBtn.dataset.messageId, reactionBtn.dataset.emoji);
+
+        const deleteMessageBtn = event.target.closest('.delete-message');
+        if (deleteMessageBtn) return deleteMessage(deleteMessageBtn.dataset.messageId);
+      });
+
+
+      document.addEventListener('input', event => {
+        const inlineField = event.target.closest('.inline-edit-input');
+        if (!inlineField || !state.inlineDraft) return;
+        state.inlineDraft[inlineField.dataset.inlineField] = inlineField.value;
+      });
+
+      document.addEventListener('change', event => {
+        const inlineField = event.target.closest('.inline-edit-input');
+        if (inlineField && state.inlineDraft) {
+          state.inlineDraft[inlineField.dataset.inlineField] = inlineField.value;
+        }
+        if (event.target.name === 'edit_chan') {
+          const channels = $$('input[name="edit_chan"]:checked').map(cb => cb.value);
+          $('#multiLinkContainer').innerHTML = channels.map(channel => `
+            <div>
+              <label class="mb-1 flex items-center gap-2 text-[9px] font-black uppercase text-slate-500">${getSocialIcon(channel)} ${escapeHtml(channel)}</label>
+              <input type="url" class="multi-link-input w-full rounded-xl border p-2 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);" data-platform="${escapeHtml(channel)}" />
+            </div>
+          `).join('');
+        }
+      });
+
+            document.addEventListener('dragstart', event => {
+  const card = event.target.closest('.focus-task-draggable');
+  if (!card) return;
+
+  event.dataTransfer.setData('text/plain', card.dataset.taskId);
+  event.dataTransfer.setData('application/x-andromeda-task-id', card.dataset.taskId);
+});
+      const chatDropZone = $('#chatDropZone');
+
+      if (chatDropZone) {
+        chatDropZone.addEventListener('dragover', event => {
+          event.preventDefault();
+          chatDropZone.classList.add('drag-over');
+        });
+
+        chatDropZone.addEventListener('dragleave', () => {
+          chatDropZone.classList.remove('drag-over');
+        });
+
+        chatDropZone.addEventListener('drop', async event => {
+          event.preventDefault();
+          chatDropZone.classList.remove('drag-over');
+
+          const taskId =
+            event.dataTransfer.getData('application/x-andromeda-task-id') ||
+            event.dataTransfer.getData('text/plain');
+
+          if (!taskId) return;
+
+          await sendTaskToChat(taskId);
+
+          if (state.currentView !== 'chat') {
+            state.currentView = 'chat';
+            renderAll();
+          }
+        });
+      }
+      $$('.kanban-col').forEach(col => {
+        col.addEventListener('dragover', event => {
+          event.preventDefault();
+          col.classList.add('drag-over');
+        });
+        col.addEventListener('dragleave', () => col.classList.remove('drag-over'));
+        col.addEventListener('drop', async event => {
+          event.preventDefault();
+          col.classList.remove('drag-over');
+          const taskId = event.dataTransfer.getData('text/plain');
+          const newStatus = col.dataset.kanban;
+          const task = state.tasks.find(item => String(item.id) === String(taskId));
+          if (!task || task.status === newStatus) return;
+          const oldStatus = task.status;
+                   const { error } = await TaskService.update(taskId, { status: newStatus });
+          if (error) return notify('Не удалось изменить статус');
+
+          TaskState.patchTask(taskId, { status: newStatus });
+                if (state.currentView === 'list') renderCards();
+      if (state.currentView === 'kanban') renderKanban();
+      if (state.currentView === 'calendar') renderCalendar();
+      renderMetaOnly();
+          await logAction('status_change', task.title, `Канбан: ${oldStatus} → ${newStatus}`);
+        });
+      });
+    }
+
+    function initStaticUI() {
+      populateSelect($('#loginUser'), USERS);
+      populateSelect($('#work_type'), WORK_TYPES);
+      populateSelect($('#edit_work_type'), WORK_TYPES);
+      populateSelect($('#tag'), TAGS, x => x.toUpperCase());
+      populateSelect($('#edit_tag'), TAGS, x => x.toUpperCase());
+      populateSelect($('#edit_status'), Object.keys(STATUS_MAP), key => STATUS_MAP[key].toUpperCase());
+      renderChecklist('channelList', 'chan', CHANNELS);
+      renderChecklist('editChannelList', 'edit_chan', CHANNELS);
+      renderExecutors('executorList', 'exec');
+      renderExecutors('editExecList', 'edit_exec');
+      buildMainTabs();
+      renderCalendarTabs();
+      renderAccounts();
+    }
+
+    initStaticUI();
+    bindEvents();
+    checkAuth();
+  </script>
+</body>
+</html>
