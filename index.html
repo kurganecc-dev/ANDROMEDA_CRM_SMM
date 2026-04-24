@@ -791,9 +791,10 @@
 
         <div id="view-analytics" class="hidden space-y-6">
           <div class="mx-auto flex w-fit gap-1 rounded-2xl p-1 surface-muted text-[10px] font-black uppercase">
-            <button id="analyticsTableBtn" class="tab-active rounded-xl px-6 py-2.5">📊 Таблица</button>
-            <button id="analyticsVisualsBtn" class="rounded-xl px-6 py-2.5 text-slate-400">📈 Графики</button>
-          </div>
+  <button id="analyticsTableBtn" class="tab-active rounded-xl px-6 py-2.5">📊 Таблица</button>
+  <button id="analyticsVisualsBtn" class="rounded-xl px-6 py-2.5 text-slate-400">📈 Графики</button>
+  <button id="analyticsPeopleBtn" class="rounded-xl px-6 py-2.5 text-slate-400">👥 Команда</button>
+</div>
 
           <div id="analytics-table" class="space-y-6">
             <div id="adminPanel" class="hidden rounded-[2rem] p-6 text-white" style="background: #0f172a;">
@@ -846,6 +847,7 @@
           </div>
 
           <div id="analytics-visuals" class="hidden">
+            <div id="analytics-people" class="hidden app-surface rounded-[2rem] p-6"></div>
             <div class="app-surface rounded-[2rem] p-8">
               <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <h3 id="chartTitle" class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Аналитика охватов</h3>
@@ -2386,19 +2388,22 @@
         if (state.currentView === 'kanban') renderKanban();
         if (state.currentView === 'calendar') renderCalendar();
 
-        if (state.currentView === 'analytics') {
-          $('#analytics-table')?.classList.toggle('hidden', state.analyticsSubView !== 'table');
-          $('#analytics-visuals')?.classList.toggle('hidden', state.analyticsSubView !== 'visuals');
-          $('#analyticsTableBtn')?.classList.toggle('tab-active', state.analyticsSubView === 'table');
-          $('#analyticsVisualsBtn')?.classList.toggle('tab-active', state.analyticsSubView === 'visuals');
-          $('#analyticsTableBtn')?.classList.toggle('text-slate-400', state.analyticsSubView !== 'table');
-          $('#analyticsVisualsBtn')?.classList.toggle('text-slate-400', state.analyticsSubView !== 'visuals');
+       if (state.currentView === 'analytics') {
+  $('#analytics-table')?.classList.toggle('hidden', state.analyticsSubView !== 'table');
+  $('#analytics-visuals')?.classList.toggle('hidden', state.analyticsSubView !== 'visuals');
+  $('#analytics-people')?.classList.toggle('hidden', state.analyticsSubView !== 'people');
 
-          if (state.analyticsSubView === 'table') {
-            renderStats();
-          } else {
-            renderCharts();
-          }
+  $('#analyticsTableBtn')?.classList.toggle('tab-active', state.analyticsSubView === 'table');
+  $('#analyticsVisualsBtn')?.classList.toggle('tab-active', state.analyticsSubView === 'visuals');
+  $('#analyticsPeopleBtn')?.classList.toggle('tab-active', state.analyticsSubView === 'people');
+
+  if (state.analyticsSubView === 'table') renderStats();
+  if (state.analyticsSubView === 'visuals') renderCharts();
+  if (state.analyticsSubView === 'people') renderPeopleAnalytics();
+         const top = Object.entries(stats)
+  .sort((a, b) => b[1].views - a[1].views)
+  .slice(0, 3);
+}
         }
 
         if (state.currentView === 'accounts') renderAccounts();
@@ -3429,6 +3434,10 @@ renderMetaOnly();
         if (!dayCell) return;
         openCreateModal(dayCell.dataset.date || '');
       });
+      $('#analyticsPeopleBtn').addEventListener('click', () => {
+  state.analyticsSubView = 'people';
+  renderAll();
+});
       $('#statsPrevBtn').addEventListener('click', () => { state.statsDate.setMonth(state.statsDate.getMonth() - 1); renderStats(); });
       $('#statsNextBtn').addEventListener('click', () => { state.statsDate.setMonth(state.statsDate.getMonth() + 1); renderStats(); });
       $('#statsPlatformFilter').addEventListener('change', renderStats);
