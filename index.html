@@ -1821,8 +1821,8 @@
         const picker = ChatUI.renderEmojiPicker(message.id);
         const isTaskMessage = ChatUI.isTaskTokenMessage(message.message || '');
         const messageContent = isTaskMessage
-          ? ChatUI.renderTaskBubbleFromMessage(message.message || '')
-          : `${messageContent}`;
+  ? ChatUI.renderTaskBubbleFromMessage(message.message || '')
+  : `<div class="chat-text">${escapeHtml(message.message || '')}</div>`;
         return `
           ${divider}
           <div class="chat-row ${isMe ? 'me' : 'other'}">
