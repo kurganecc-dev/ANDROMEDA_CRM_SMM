@@ -707,22 +707,26 @@
   display: flex;
   flex-direction: column;
 }
-#view-focus,
+
 #view-chat {
   flex: 1;
-  display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
-/* скрытие */
 #view-chat.hidden {
-  display: none;
+  display: none !important;
+}
+
+#view-chat:not(.hidden) {
+  display: flex;
 }
 
 #view-chat > div {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
   </style>
 </head>
@@ -1069,7 +1073,7 @@
         <div><div class="text-[10px] font-black uppercase tracking-[0.22em]" style="color: var(--primary);">Быстрое создание</div><h2 id="createModalTitle" class="mt-1 font-black uppercase">Новая задача</h2><p id="createModalSubtitle" class="mt-2 text-sm font-medium" style="color: var(--muted);">Короткая форма без лишнего шума — только то, что нужно для старта.</p></div>
         <button data-close-modal="createModal" class="text-4xl text-slate-400">&times;</button>
       </div>
-      <form id="ideaForm" class="space-y-6 overflow-y-auto p-8"><div class="grid grid-cols-1 gap-3 md:grid-cols-3"><div class="soft-pill rounded-2xl p-4"><div class="text-[10px] font-black uppercase" style="color: var(--muted);">Дата</div><div id="createPreviewDate" class="mt-1 text-sm font-black">Не выбрана</div></div><div class="soft-pill rounded-2xl p-4"><div class="text-[10px] font-black uppercase" style="color: var(--muted);">Сценарий</div><div class="mt-1 text-sm font-black">Календарь или кнопка</div></div><div class="soft-pill rounded-2xl p-4"><div class="text-[10px] font-black uppercase" style="color: var(--muted);">Подсказка</div><div class="mt-1 text-sm font-black">Сначала тема, потом площадки</div></div></div>
+      <form id="ideaForm" class="space-y-6 overflow-y-auto p-8">
         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div class="space-y-4">
             <label class="block text-[11px] font-black uppercase text-slate-400">Основная информация</label>
@@ -2448,7 +2452,7 @@
         const listLike = state.currentView === 'list' || state.currentView === 'kanban';
         const heroBlock = $('#heroBlock');
         if (controls) controls.classList.toggle('hidden', !listLike);
-        if (heroBlock) heroBlock.classList.toggle('hidden', ['chat','analytics','calendar','accounts'].includes(state.currentView));
+        if (heroBlock) heroBlock.classList.toggle('hidden', ['chat','analytics','calendar'].includes(state.currentView));
         if (rightSidebar) rightSidebar.classList.toggle('hidden', state.currentView === 'kanban');
 
         if (middle) {
