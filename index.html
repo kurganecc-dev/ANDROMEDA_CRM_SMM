@@ -2650,12 +2650,21 @@
     }
 
     function getSocialIcon(platform) {
-      const icons = {
-        YouTube: '🔴', TikTok: '⚫', Instagram: '📸', VK: '🔵', Telegram: '✈️',
-        'Этажи SMM': '📢', NewsRoom: '📰', Echat: '💬', Max: '👔', ОК: '🟠'
-      };
-      return icons[platform] || '🔗';
-    }
+  const icons = {
+    YouTube: '<img src="https://cdn.simpleicons.org/youtube" alt="YouTube" class="inline-block h-5 w-5 align-middle" />',
+    TikTok: '<img src="https://cdn.simpleicons.org/tiktok" alt="TikTok" class="inline-block h-5 w-5 align-middle" />',
+    Instagram: '<img src="https://cdn.simpleicons.org/instagram" alt="Instagram" class="inline-block h-5 w-5 align-middle" />',
+    VK: '<img src="https://cdn.simpleicons.org/vk" alt="VK" class="inline-block h-5 w-5 align-middle" />',
+    Telegram: '<img src="https://cdn.simpleicons.org/telegram" alt="Telegram" class="inline-block h-5 w-5 align-middle" />',
+    'Этажи SMM': '<img src="https://cdn.simpleicons.org/telegram" alt="Этажи SMM" class="inline-block h-5 w-5 align-middle" />',
+    NewsRoom: '<img src="https://cdn.simpleicons.org/telegram" alt="NewsRoom" class="inline-block h-5 w-5 align-middle" />',
+    Echat: '<img src="https://cdn.simpleicons.org/telegram" alt="Echat" class="inline-block h-5 w-5 align-middle" />',
+    Max: '<span class="inline-flex h-5 w-5 items-center justify-center rounded bg-slate-900 text-[9px] font-black text-white align-middle">MAX</span>',
+    ОК: '<img src="https://cdn.simpleicons.org/odnoklassniki" alt="ОК" class="inline-block h-5 w-5 align-middle" />'
+  };
+
+  return icons[platform] || '<span class="inline-block h-5 w-5 align-middle">🔗</span>';
+}
 
     function setVisible(el, isVisible, display = 'block') {
       if (!el) return;
