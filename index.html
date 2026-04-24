@@ -862,80 +862,54 @@
         </div>
 
         <div id="view-accounts" class="hidden grid grid-cols-1 gap-6 md:grid-cols-2"></div>
-       <div id="view-chat" class="hidden">
-  <div id="view-chat" class="hidden">
-  <div class="grid grid-cols-1 gap-6 xl:grid-cols-12">
-
-    <!-- ЧАТ -->
-    <div class="xl:col-span-8">
-      <div class="app-surface overflow-hidden rounded-[2rem]">
-
-        <div class="border-b p-6" style="border-color: var(--border);">
-          <div class="flex items-center justify-between gap-4">
-            <div>
-              <h2 class="text-2xl font-black uppercase flex items-center gap-2">
-                Командный чат
-                <span class="text-[10px] px-2 py-1 rounded-full" style="background: rgba(59,130,246,.15); color: var(--primary);">
-                  LIVE
-                </span>
-              </h2>
-              <p class="mt-2 text-sm font-medium" style="color: var(--muted);">
-                Обсуждение задач и быстрые рабочие статусы
-              </p>
-            </div>
-
-            <div class="chat-presence rounded-2xl px-4 py-3" style="background:#0f172a;">
-              <span class="chat-presence-dot"></span>
-              <span>Команда на связи</span>
-            </div>
-          </div>
+      <div id="view-chat" class="hidden">
+  <div class="app-surface overflow-hidden rounded-[2rem]">
+    <div class="border-b p-6" style="border-color: var(--border);">
+      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 class="flex items-center gap-2 text-2xl font-black uppercase">
+            Командный чат
+            <span class="rounded-full px-2 py-1 text-[10px]" style="background: rgba(59,130,246,.15); color: var(--primary);">
+              LIVE
+            </span>
+          </h2>
+          <p class="mt-2 text-sm font-medium" style="color: var(--muted);">
+            Обсуждение задач и быстрые рабочие статусы.
+          </p>
         </div>
 
-        <!-- DROP ZONE -->
-        <div class="px-6 pt-5">
-          <div id="chatDropZone" class="chat-drop-zone">
-            Перетащи сюда задачу из блока «Фокус и мои задачи»
-          </div>
+        <div class="chat-presence rounded-2xl px-4 py-3" style="background:#0f172a;">
+          <span class="chat-presence-dot"></span>
+          <span>Команда на связи</span>
         </div>
-
-        <!-- СООБЩЕНИЯ -->
-        <div id="chatMessages" class="chat-feed px-6 pb-5" style="height: 580px; max-height: 62vh;"></div>
-
-        <!-- ВВОД -->
-        <div class="border-t p-5" style="border-color: var(--border);">
-          <div class="chat-composer">
-
-            <div class="chat-quick-actions">
-              <button type="button" class="chat-quick-btn" data-quick-message="Взял в работу">Взял в работу</button>
-              <button type="button" class="chat-quick-btn" data-quick-message="Нужен фидбек">Нужен фидбек</button>
-              <button type="button" class="chat-quick-btn" data-quick-message="Готово к проверке">Готово к проверке</button>
-            </div>
-
-            <div class="chat-input-row">
-              <div class="chat-input-wrap">
-                <textarea id="chatInput" class="chat-input" rows="1" placeholder="Напиши сообщение команде..."></textarea>
-              </div>
-              <button id="sendChatBtn" class="chat-send-btn" type="button">➤</button>
-            </div>
-
-          </div>
-        </div>
-
       </div>
     </div>
 
-    <!-- ПРАВЫЙ БЛОК (ФОКУС) -->
-    <aside class="xl:col-span-4">
-      <div class="rounded-[2rem] p-5 text-slate-100" style="background:#0f172a; box-shadow: var(--shadow);">
-        <h3 class="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">
-          Фокус и мои задачи
-        </h3>
-
-        <div id="focusSidebar" class="space-y-4"></div>
+    <div class="px-6 pt-5">
+      <div id="chatDropZone" class="chat-drop-zone">
+        Перетащи сюда задачу из блока «Фокус и мои задачи»
       </div>
-    </aside>
+    </div>
+
+    <div id="chatMessages" class="chat-feed px-6 pb-5" style="height: 620px; max-height: 66vh;"></div>
+
+    <div class="border-t p-5" style="border-color: var(--border);">
+      <div class="chat-composer">
+        <div class="chat-quick-actions">
+          <button type="button" class="chat-quick-btn" data-quick-message="Взял в работу">Взял в работу</button>
+          <button type="button" class="chat-quick-btn" data-quick-message="Нужен фидбек">Нужен фидбек</button>
+          <button type="button" class="chat-quick-btn" data-quick-message="Готово к проверке">Готово к проверке</button>
+        </div>
+
+        <div class="chat-input-row">
+          <div class="chat-input-wrap">
+            <textarea id="chatInput" class="chat-input" rows="1" placeholder="Напиши сообщение команде..."></textarea>
+          </div>
+          <button id="sendChatBtn" class="chat-send-btn" type="button">➤</button>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
 </div>
       </section>
 
