@@ -2448,7 +2448,7 @@
         const listLike = state.currentView === 'list' || state.currentView === 'kanban';
         const heroBlock = $('#heroBlock');
         if (controls) controls.classList.toggle('hidden', !listLike);
-        if (heroBlock) heroBlock.classList.toggle('hidden', ['chat','analytics','calendar'].includes(state.currentView));
+        if (heroBlock) heroBlock.classList.toggle('hidden', ['chat','analytics','calendar','accounts'].includes(state.currentView));
         if (rightSidebar) rightSidebar.classList.toggle('hidden', state.currentView === 'kanban');
 
         if (middle) {
