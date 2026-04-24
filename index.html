@@ -847,7 +847,6 @@
           </div>
 
           <div id="analytics-visuals" class="hidden">
-            <div id="analytics-people" class="hidden app-surface rounded-[2rem] p-6"></div>
             <div class="app-surface rounded-[2rem] p-8">
               <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <h3 id="chartTitle" class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Аналитика охватов</h3>
@@ -860,6 +859,7 @@
                 <canvas id="reachChart"></canvas>
               </div>
             </div>
+            <div id="analytics-people" class="hidden app-surface rounded-[2rem] p-6"></div>
           </div>
         </div>
 
@@ -2400,9 +2400,6 @@
   if (state.analyticsSubView === 'table') renderStats();
   if (state.analyticsSubView === 'visuals') renderCharts();
   if (state.analyticsSubView === 'people') renderPeopleAnalytics();
-         const top = Object.entries(stats)
-  .sort((a, b) => b[1].views - a[1].views)
-  .slice(0, 3);
 }
         }
 
@@ -2749,7 +2746,99 @@ renderMetaOnly();
     function renderCalendar() {CalendarUI.render();}
     function renderStats() {AnalyticsUI.renderStatsTable();}
     function renderCharts() {ChartUI.render();}
+function createEmptyPeopleStats() {
+  return {
+    views: 0,
+    tasks: 0,
+    published: 0
+  };
+}
 
+function calculatePeopleStats(tasks) {
+  const stats = {};
+
+  tasks.forEach(task => {
+    if (task.status !== 'published') return;
+
+    const views = Number(task.play_count || 0);
+    const responsible = task.responsible;
+    const executors = task.executors || [];
+
+    if (responsible) {
+      if (!stats[responsible]) stats[responsible] = createEmptyPeopleStats();
+      stats[responsible].views += views * 0.5;
+      stats[responsible].tasks += 1;
+      stats[responsible].published += 1;
+    }
+
+    const executorShare = executors.length ? (views * 0.5) / executors.length : 0;
+
+    executors.forEach(name => {
+      if (!stats[name]) stats[name] = createEmptyPeopleStats();
+      stats[name].views += executorShare;
+      stats[name].tasks += 1;
+      stats[name].published += 1;
+    });
+  });
+
+  return stats;
+}
+
+function renderPeopleAnalytics() {
+  const container = $('#analytics-people');
+  if (!container) return;
+
+  const stats = calculatePeopleStats(state.tasks);
+
+  const rows = Object.entries(stats)
+    .sort((a, b) => b[1].views - a[1].views)
+    .map(([name, data], index) => {
+      const avg = data.published ? data.views / data.published : 0;
+      const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+
+      return `
+        <tr class="border-b" style="border-color: var(--border);">
+          <td class="p-4 font-black uppercase">${medal} ${escapeHtml(name)}</td>
+          <td class="p-4 font-black text-emerald-600">${Math.round(data.views).toLocaleString('ru-RU')}</td>
+          <td class="p-4">${data.tasks}</td>
+          <td class="p-4">${data.published}</td>
+          <td class="p-4">${Math.round(avg).toLocaleString('ru-RU')}</td>
+        </tr>
+      `;
+    }).join('');
+
+  container.innerHTML = `
+    <div class="mb-6">
+      <h3 class="text-lg font-black uppercase">👥 Аналитика по команде</h3>
+      <p class="mt-2 text-sm font-medium" style="color: var(--muted);">
+        Охват распределяется: 50% ответственному, 50% между исполнителями.
+      </p>
+    </div>
+
+    <div class="overflow-x-auto rounded-[1.5rem] border" style="border-color: var(--border);">
+      <table class="w-full text-left text-[11px] font-bold">
+        <thead style="background: var(--surface-2); color: var(--muted);">
+          <tr>
+            <th class="p-4">Человек</th>
+            <th class="p-4">Охват</th>
+            <th class="p-4">Задачи</th>
+            <th class="p-4">Опубликовано</th>
+            <th class="p-4">Средний охват</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows || `
+            <tr>
+              <td colspan="5" class="p-10 text-center text-[11px] font-black uppercase text-slate-400">
+                Пока нет опубликованных задач
+              </td>
+            </tr>
+          `}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
     function renderAccounts() {
       $('#view-accounts').innerHTML = WORK_ACCOUNTS.map(acc => `
         <a class="app-surface flex items-center justify-between rounded-[2rem] p-6 transition hover:-translate-y-1" target="_blank" rel="noopener noreferrer" href="${escapeHtml(acc.url)}">
