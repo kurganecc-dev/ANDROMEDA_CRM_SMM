@@ -887,7 +887,7 @@
 
         <div class="px-6 pt-5">
   <div id="chatDropZone" class="chat-drop-zone">
-    Перетащи сюда карточку задачи, чтобы отправить её в чат
+    Перетащи сюда задачу из блока «Фокус и мои задачи»
   </div>
 </div>
 
@@ -2068,7 +2068,7 @@
       renderMyTasks(data) {
         const myTasksHtml = data.mine.length
           ? data.mine.slice(0, 5).map(task => `
-              <button class="open-task w-full rounded-2xl bg-slate-800 p-4 text-left transition hover:bg-slate-700" data-task-id="${escapeHtml(task.id)}">
+              <button   class="open-task focus-task-draggable w-full rounded-2xl bg-slate-800 p-4 text-left transition hover:bg-slate-700"   data-task-id="${escapeHtml(task.id)}"   draggable="true" >
                 <div class="mb-1 flex items-center justify-between gap-2">
                   <span class="text-[8px] font-black uppercase text-blue-400">${escapeHtml(task.work_type || 'Пост')}</span>
                   <span class="text-[8px] font-black uppercase text-slate-500">${escapeHtml(STATUS_MAP[task.status] || 'Идея')}</span>
@@ -3622,12 +3622,12 @@ if (viewTab) {
       });
 
             document.addEventListener('dragstart', event => {
-        const card = event.target.closest('.kanban-card, .task-card');
-        if (!card) return;
+  const card = event.target.closest('.focus-task-draggable');
+  if (!card) return;
 
-        event.dataTransfer.setData('text/plain', card.dataset.taskId);
-        event.dataTransfer.setData('application/x-andromeda-task-id', card.dataset.taskId);
-      });
+  event.dataTransfer.setData('text/plain', card.dataset.taskId);
+  event.dataTransfer.setData('application/x-andromeda-task-id', card.dataset.taskId);
+});
       const chatDropZone = $('#chatDropZone');
 
       if (chatDropZone) {
