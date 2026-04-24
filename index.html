@@ -284,7 +284,58 @@
   background: #22c55e;
   box-shadow: 0 0 0 6px rgba(34,197,94,.12);
 }
+.chat-drop-zone {
+  border: 1px dashed rgba(59,130,246,.32);
+  background: rgba(59,130,246,.08);
+  border-radius: 22px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-align: center;
+  transition: .18s ease;
+}
 
+.chat-drop-zone.drag-over {
+  background: rgba(59,130,246,.18);
+  border-color: rgba(59,130,246,.65);
+  transform: scale(1.01);
+}
+
+.chat-task-bubble {
+  display: block;
+  width: 100%;
+  border: 1px solid rgba(59,130,246,.28);
+  background: rgba(59,130,246,.12);
+  color: inherit;
+  border-radius: 16px;
+  padding: 12px;
+  margin-top: 4px;
+  text-align: left;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.chat-task-bubble:hover {
+  transform: translateY(-1px);
+  background: rgba(59,130,246,.18);
+}
+
+.chat-task-bubble-title {
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.chat-task-bubble-meta {
+  margin-top: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  opacity: .75;
+}
+    
 .chat-feed {
   height: 360px;
   max-height: 50vh;
@@ -834,7 +885,13 @@
           </div>
         </div>
 
-        <div id="chatMessages" class="chat-feed px-6 py-5" style="height: 610px; max-height: 64vh;"></div>
+        <div class="px-6 pt-5">
+  <div id="chatDropZone" class="chat-drop-zone">
+    Перетащи сюда карточку задачи, чтобы отправить её в чат
+  </div>
+</div>
+
+<div id="chatMessages" class="chat-feed px-6 pb-5" style="height: 560px; max-height: 60vh;"></div>
 
         <div class="border-t p-5" style="border-color: var(--border);">
           <div class="chat-composer">
@@ -1661,7 +1718,51 @@
     
     const ChatUI = {
       commonEmojis: ['👍', '❤️', '🔥', '✅', '🚀'],
+      taskTokenRegex: /\[\[task:(.+?)\]\]/g,
 
+      getTaskToken(taskId) {
+        return `[[task:${taskId}]]`;
+      },
+
+      isTaskTokenMessage(messageText = '') {
+        return ChatUI.taskTokenRegex.test(String(messageText || ''));
+      },
+
+      getTaskFromToken(messageText = '') {
+        ChatUI.taskTokenRegex.lastIndex = 0;
+        const match = ChatUI.taskTokenRegex.exec(String(messageText || ''));
+        if (!match) return null;
+
+        const taskId = match[1];
+        return state.tasks.find(task => String(task.id) === String(taskId))
+          || state.trash.find(task => String(task.id) === String(taskId))
+          || null;
+      },
+
+      renderTaskBubbleFromMessage(messageText = '') {
+        const task = ChatUI.getTaskFromToken(messageText);
+
+        if (!task) {
+          return `
+            <div class="chat-task-bubble">
+              <div class="chat-task-bubble-title">Задача не найдена</div>
+              <div class="chat-task-bubble-meta">Возможно, она удалена или недоступна</div>
+            </div>
+          `;
+        }
+
+        const deadline = getDeadlineMeta(task.date, task.status);
+        const channels = (task.channels || []).slice(0, 3).join(', ') || 'без площадок';
+
+        return `
+          <button type="button" class="chat-task-bubble open-chat-task" data-task-id="${escapeHtml(task.id)}">
+            <div class="chat-task-bubble-title">📌 ${escapeHtml(task.title || 'Без названия')}</div>
+            <div class="chat-task-bubble-meta">
+              ${escapeHtml(STATUS_MAP[task.status] || 'Идея')} · ${escapeHtml(deadline.shortLabel)} · ${escapeHtml(channels)}
+            </div>
+          </button>
+        `;
+      },
       renderEmptyState() {
         return `
           <div class="chat-empty">
@@ -1718,7 +1819,10 @@
         const divider = context.showDivider ? `<div class="chat-day-divider">${escapeHtml(dayLabel)}</div>` : '';
         const reactionsHtml = ChatUI.renderReactionButtonsSafe(message.id, reactions, myUid);
         const picker = ChatUI.renderEmojiPicker(message.id);
-
+        const isTaskMessage = ChatUI.isTaskTokenMessage(message.message || '');
+        const messageContent = isTaskMessage
+          ? ChatUI.renderTaskBubbleFromMessage(message.message || '')
+          : `${messageContent}`;
         return `
           ${divider}
           <div class="chat-row ${isMe ? 'me' : 'other'}">
@@ -1729,7 +1833,7 @@
 
             <div class="chat-bubble ${isMe ? 'me' : 'other'}">
               <div class="chat-emoji-bar">${picker}</div>
-              <div class="chat-text">${escapeHtml(message.message || '')}</div>
+              ${messageContent}
 
               ${reactionsHtml ? `<div class="chat-actions">${reactionsHtml}</div>` : ''}
 
@@ -3265,6 +3369,20 @@ renderMetaOnly();
     btn.textContent = 'Обновить';
   }
 }
+        async function sendTaskToChat(taskId) {
+      const task = state.tasks.find(item => String(item.id) === String(taskId));
+      if (!task) return notify('Задача не найдена', 'warning', 'Не получилось');
+
+      const { error } = await ChatService.sendMessage({
+        sender_name: state.currentUser,
+        sender_uid: sessionStorage.getItem('e_uid'),
+        message: ChatUI.getTaskToken(task.id)
+      });
+
+      if (error) return notify('Не удалось отправить задачу в чат', 'error', 'Ошибка');
+
+      notify(`Задача «${task.title || 'Без названия'}» отправлена в чат`, 'success', 'Готово');
+    }
         async function sendChatMessage() {
       const input = $('#chatInput');
       const sendBtn = $('#sendChatBtn');
@@ -3468,7 +3586,11 @@ if (viewTab) {
           renderCalendar();
           return;
         }
-
+        const chatTaskBubble = event.target.closest('.open-chat-task');
+        if (chatTaskBubble) {
+          openEditModal(chatTaskBubble.dataset.taskId);
+          return;
+        }
         const reactionBtn = event.target.closest('.toggle-reaction');
         if (reactionBtn) return toggleReaction(reactionBtn.dataset.messageId, reactionBtn.dataset.emoji);
 
@@ -3499,12 +3621,43 @@ if (viewTab) {
         }
       });
 
-      document.addEventListener('dragstart', event => {
-        const card = event.target.closest('.kanban-card');
+            document.addEventListener('dragstart', event => {
+        const card = event.target.closest('.kanban-card, .task-card');
         if (!card) return;
-        event.dataTransfer.setData('text/plain', card.dataset.taskId);
-      });
 
+        event.dataTransfer.setData('text/plain', card.dataset.taskId);
+        event.dataTransfer.setData('application/x-andromeda-task-id', card.dataset.taskId);
+      });
+      const chatDropZone = $('#chatDropZone');
+
+      if (chatDropZone) {
+        chatDropZone.addEventListener('dragover', event => {
+          event.preventDefault();
+          chatDropZone.classList.add('drag-over');
+        });
+
+        chatDropZone.addEventListener('dragleave', () => {
+          chatDropZone.classList.remove('drag-over');
+        });
+
+        chatDropZone.addEventListener('drop', async event => {
+          event.preventDefault();
+          chatDropZone.classList.remove('drag-over');
+
+          const taskId =
+            event.dataTransfer.getData('application/x-andromeda-task-id') ||
+            event.dataTransfer.getData('text/plain');
+
+          if (!taskId) return;
+
+          await sendTaskToChat(taskId);
+
+          if (state.currentView !== 'chat') {
+            state.currentView = 'chat';
+            renderAll();
+          }
+        });
+      }
       $$('.kanban-col').forEach(col => {
         col.addEventListener('dragover', event => {
           event.preventDefault();
