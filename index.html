@@ -707,13 +707,16 @@
   display: flex;
   flex-direction: column;
 }
-
+#view-focus,
 #view-chat {
   flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
-#view-chat:not(.hidden) {
-  display: flex;
+/* скрытие */
+#view-chat.hidden {
+  display: none;
 }
 
 #view-chat > div {
