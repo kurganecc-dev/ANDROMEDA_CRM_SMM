@@ -1810,6 +1810,8 @@
     const AppState = {
       tasks: [],
       trash: [],
+      stats: [],
+      statsHistory: [],
       currentView: 'list',
       quickFilter: 'ALL',
       analyticsSubView: 'table',
@@ -1945,6 +1947,8 @@
         tasks: 'tasks',
         profiles: 'profiles',
         config: 'config',
+        stats: 'stats',
+        statsHistory: 'stats_history',
         activityLogs: 'activity_logs',
         teamChat: 'team_chat'
       }
@@ -2092,10 +2096,12 @@
         const index = TaskState.findTaskIndex(id);
         if (index === -1) return null;
 
-        state.tasks[index] = {
+        const mergedTask = {
           ...state.tasks[index],
           ...patch
         };
+
+        state.tasks[index] = StatsDataService.enrichTasksWithStats([mergedTask])[0];
 
         return state.tasks[index];
       },
@@ -2110,7 +2116,7 @@
 
       addTask(task) {
         if (!task) return;
-        state.tasks.unshift(task);
+        state.tasks.unshift(StatsDataService.enrichTasksWithStats([task])[0]);
       },
 
       addToTrash(task) {
@@ -2338,7 +2344,12 @@
 
     const StatsFunctionService = {
       normalizeMetric(payload = {}, platform = '') {
-        const item = Array.isArray(payload) ? payload[0] : (payload.item || payload.data || payload.result || payload);
+        // Edge Function returns: { ok: true, stat: {...}, saved: {...} }
+        // Old CRM expected raw metric fields directly. This adapter supports both shapes.
+        const item = Array.isArray(payload)
+          ? payload[0]
+          : (payload.stat || payload.item || payload.data || payload.result || payload);
+
         const raw = item || {};
         const value =
           raw.views ??
@@ -2355,22 +2366,152 @@
         return {
           platform,
           views: Number(value || 0),
-          likes: Number(raw.likesCount || raw.likes || 0),
-          comments: Number(raw.commentsCount || raw.comments || 0),
+          likes: Number(raw.likesCount ?? raw.likes ?? 0),
+          comments: Number(raw.commentsCount ?? raw.comments ?? 0),
+          shares: Number(raw.sharesCount ?? raw.shares ?? 0),
+          saves: Number(raw.savesCount ?? raw.saves ?? 0),
           type: raw.type || raw.mediaType || raw.productType || '',
-          posted_at: raw.timestamp || raw.takenAt || raw.createdAt || raw.date || null,
-          raw
+          posted_at: raw.posted_at || raw.timestamp || raw.takenAt || raw.createdAt || raw.date || null,
+          raw: payload
         };
       },
 
-      async fetchViaEdgeFunction(url, platform) {
+      async fetchViaEdgeFunction(url, platform, taskId = null) {
         const functionName = state.apiConfig?.statsFunctionName || 'update-social-stat';
-        const { data, error } = await db.functions.invoke(functionName, {
-          body: { url, platform }
-        });
+        const body = { url, platform };
+        if (taskId !== null && taskId !== undefined) body.task_id = taskId;
+
+        const { data, error } = await db.functions.invoke(functionName, { body });
 
         if (error) throw error;
+        if (data && data.ok === false) throw new Error(data.error || 'Edge Function вернула ошибку');
         return StatsFunctionService.normalizeMetric(data, platform);
+      }
+    };
+
+
+    const StatsDataService = {
+      async getAllStats() {
+        return db
+          .from(Services.tables.stats)
+          .select('*')
+          .order('updated_at', { ascending: false });
+      },
+
+      async getHistory(limit = 2000) {
+        return db
+          .from(Services.tables.statsHistory)
+          .select('*')
+          .order('recorded_at', { ascending: false })
+          .limit(limit);
+      },
+
+      normalizeUrl(value = '') {
+        return String(value || '')
+          .trim()
+          .replace(/^http:\/\//i, 'https://')
+          .replace(/\?.*$/, '')
+          .replace(/#.*$/, '')
+          .replace(/\/+$/, '')
+          .toLowerCase();
+      },
+
+      getTaskStatMap(task = {}) {
+        const links = task.links || {};
+        const map = {};
+
+        Object.entries(links).forEach(([platform, url]) => {
+          const normalizedLink = StatsDataService.normalizeUrl(url);
+          if (!normalizedLink) return;
+
+          const row = (state.stats || []).find(stat =>
+            StatsDataService.normalizeUrl(stat.url) === normalizedLink
+          );
+
+          if (!row) return;
+
+          const normalizedPlatform = String(row.platform || platform || '').toLowerCase();
+          const platformName = normalizedPlatform === 'instagram' ? 'Instagram' : platform;
+
+          map[platformName] = {
+            ...row,
+            platform: platformName,
+            views: Number(row.views || 0),
+            likes: Number(row.likes || 0),
+            comments: Number(row.comments || 0),
+            shares: Number(row.shares || 0),
+            saves: Number(row.saves || 0),
+            engagement: Number(row.engagement || 0)
+          };
+        });
+
+        return map;
+      },
+
+      getPlayCountsTotal(playCounts = {}) {
+        return Object.values(playCounts || {}).reduce((sum, value) => {
+          const numeric = Number(value || 0);
+          return sum + (Number.isFinite(numeric) ? numeric : 0);
+        }, 0);
+      },
+
+      enrichTasksWithStats(tasks = []) {
+        return (tasks || []).map(task => {
+          const statMap = StatsDataService.getTaskStatMap(task);
+          const patchedPlayCounts = { ...(task.play_counts || {}) };
+
+          // Stats is the source of truth only for platforms that exist in stats.
+          // Other platforms, for example YouTube, VK, Telegram, must remain in play_counts.
+          Object.entries(statMap).forEach(([platform, stat]) => {
+            patchedPlayCounts[platform] = Number(stat.views || 0);
+          });
+
+          const statTotal = Object.values(statMap).reduce((sum, stat) => sum + Number(stat.views || 0), 0);
+          const playCountsTotal = StatsDataService.getPlayCountsTotal(patchedPlayCounts);
+          const fallbackTotal = Number(task.play_count || 0);
+          const mergedTotal = playCountsTotal || fallbackTotal;
+
+          return {
+            ...task,
+            play_counts: patchedPlayCounts,
+            play_count: mergedTotal,
+            stat_rows: statMap,
+            stat_total: statTotal
+          };
+        });
+      },
+
+      getTaskMetric(task = {}, platform = 'ALL') {
+        const statRows = task.stat_rows || {};
+
+        if (platform === 'ALL') {
+          return Number(task.play_count || 0) || StatsDataService.getPlayCountsTotal(task.play_counts || {});
+        }
+
+        if (platform === 'Telegram') {
+          return TG_LIST.reduce((sum, tg) => sum + Number(task.play_counts?.[tg] || 0), 0);
+        }
+
+        return Number(statRows?.[platform]?.views ?? task.play_counts?.[platform] ?? 0);
+      },
+
+      getTaskEngagement(task = {}, platform = 'ALL') {
+        const statRows = task.stat_rows || {};
+        const rows = platform === 'ALL'
+          ? Object.values(statRows)
+          : (statRows[platform] ? [statRows[platform]] : []);
+
+        return rows.reduce((sum, row) => sum + Number(row.engagement || row.likes || 0) + Number(row.comments || 0), 0);
+      },
+
+      getTaskStatBadges(task = {}) {
+        const statRows = task.stat_rows || {};
+        return Object.entries(statRows).map(([platform, row]) => ({
+          platform,
+          views: Number(row.views || 0),
+          engagement: Number(row.engagement || 0),
+          updated_at: row.updated_at || null
+        }));
       }
     };
 
@@ -2855,16 +2996,23 @@
 
       getTaskViews(task) {
         const filter = $('#statsPlatformFilter')?.value || 'ALL';
+        return StatsDataService.getTaskMetric(task, filter);
+      },
 
-        if (filter === 'ALL') {
-          return Number(task.play_count || 0);
-        }
+      getTaskEngagement(task) {
+        const filter = $('#statsPlatformFilter')?.value || 'ALL';
+        return StatsDataService.getTaskEngagement(task, filter);
+      },
 
-        if (filter === 'Telegram') {
-          return TG_LIST.reduce((sum, tg) => sum + Number(task.play_counts?.[tg] || 0), 0);
-        }
+      renderStatBadges(task) {
+        const badges = StatsDataService.getTaskStatBadges(task);
+        if (!badges.length) return '<span class="text-[10px] font-bold text-slate-400">нет данных stats</span>';
 
-        return Number(task.play_counts?.[filter] || 0);
+        return badges.map(item => `
+          <span class="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-black uppercase soft-pill">
+            ${getSocialIcon(item.platform)} ${escapeHtml(item.platform)} · ${Number(item.views || 0).toLocaleString('ru-RU')}
+          </span>
+        `).join(' ');
       },
 
       renderTaskLinks(task) {
@@ -2897,7 +3045,7 @@
         if (!tasks.length) {
           return `
             <tr>
-              <td colspan="4" class="p-10 text-center text-[11px] font-black uppercase text-slate-400">
+              <td colspan="6" class="p-10 text-center text-[11px] font-black uppercase text-slate-400">
                 Нет опубликованных задач за выбранный период
               </td>
             </tr>
@@ -2906,13 +3054,17 @@
 
         return tasks.map(task => {
           const views = AnalyticsUI.getTaskViews(task);
+          const engagement = AnalyticsUI.getTaskEngagement(task);
           const linksHtml = AnalyticsUI.renderTaskLinks(task);
+          const statsHtml = AnalyticsUI.renderStatBadges(task);
 
           return `
             <tr class="border-b" style="border-color: var(--border);">
               <td class="p-4 text-[10px] text-slate-400">${formatShortDate(task.date)}</td>
               <td class="p-4 font-black uppercase">${escapeHtml(task.title || 'Без названия')}</td>
               <td class="p-4 font-black text-emerald-600">${views.toLocaleString('ru-RU')}</td>
+              <td class="p-4 font-black text-blue-600">${engagement.toLocaleString('ru-RU')}</td>
+              <td class="p-4">${statsHtml}</td>
               <td class="p-4 text-center">${linksHtml}</td>
             </tr>
           `;
@@ -2927,6 +3079,8 @@
                 <th class="p-4">Дата</th>
                 <th class="p-4">Тема</th>
                 <th class="p-4">Охват</th>
+                <th class="p-4">Вовлеченность</th>
+                <th class="p-4">Данные из stats</th>
                 <th class="p-4 text-center">Линки</th>
               </tr>
             </thead>
@@ -2977,11 +3131,7 @@
       },
 
       getPlatformViews(task, platform) {
-        if (platform === 'Telegram') {
-          return TG_LIST.reduce((sum, tg) => sum + Number(task.play_counts?.[tg] || 0), 0);
-        }
-
-        return Number(task.play_counts?.[platform] || 0);
+        return StatsDataService.getTaskMetric(task, platform);
       },
 
       getPublishedTasks() {
@@ -4382,22 +4532,32 @@ function renderPeopleAnalytics() {
         async function loadAllData() {
       setLoadingTasks(true);
       try {
-        const [tasksRes, trashRes, configRes] = await Promise.all([
+        const [tasksRes, trashRes, configRes, statsRes, statsHistoryRes] = await Promise.all([
           TaskService.getAllActive(),
           TaskService.getAllTrash(),
-         ConfigService.getAll()
+          ConfigService.getAll(),
+          StatsDataService.getAllStats(),
+          StatsDataService.getHistory()
         ]);
 
         if (tasksRes.error || trashRes.error) {
           console.error(tasksRes.error || trashRes.error);
-          notify('Не удалось загрузить данные', 'error', 'Ошибка');
+          notify('Не удалось загрузить задачи', 'error', 'Ошибка');
           return;
         }
 
-                TaskState.setTasks(tasksRes.data || []);
-        TaskState.setTrash(trashRes.data || []);
+        if (statsRes.error) {
+          console.warn('Stats load error', statsRes.error);
+          notify('Таблица stats не доступна для чтения. Проверь RLS/SELECT policy.', 'warning', 'Аналитика stats');
+        }
 
-                if (configRes.data) {
+        state.stats = statsRes.data || [];
+        state.statsHistory = statsHistoryRes.data || [];
+
+        TaskState.setTasks(StatsDataService.enrichTasksWithStats(tasksRes.data || []));
+        TaskState.setTrash(StatsDataService.enrichTasksWithStats(trashRes.data || []));
+
+        if (configRes.data) {
           ConfigService.apply(configRes.data);
         }
       } finally {
@@ -4707,17 +4867,17 @@ renderMetaOnly();
     }
 
     async function fetchSingleStat(url, platform) {
-      const metric = await fetchSingleStatMetric(url, platform);
+      const metric = await fetchSingleStatMetric(url, platform, task.id);
       return Number(metric.views || 0);
     }
 
-    async function fetchSingleStatMetric(url, platform) {
+    async function fetchSingleStatMetric(url, platform, taskId = null) {
       if (!url || url.length < 10) return { platform, views: 0 };
       const ytKey = state.apiConfig?.ytKey || '';
 
       try {
         if (platform === 'Instagram') {
-          return await StatsFunctionService.fetchViaEdgeFunction(url, platform);
+          return await StatsFunctionService.fetchViaEdgeFunction(url, platform, taskId);
         }
 
         if (TG_LIST.includes(platform) || url.includes('t.me/')) {
@@ -4743,7 +4903,7 @@ renderMetaOnly();
         }
 
         if (platform === 'VK' || platform === 'TikTok') {
-          return await StatsFunctionService.fetchViaEdgeFunction(url, platform);
+          return await StatsFunctionService.fetchViaEdgeFunction(url, platform, taskId);
         }
       } catch (error) {
         console.error('Stat fetch error', error);
@@ -4789,7 +4949,7 @@ renderMetaOnly();
 
           for (const [platform, url] of links) {
             if (!url) continue;
-            const metric = await fetchSingleStatMetric(url, platform);
+            const metric = await fetchSingleStatMetric(url, platform, task.id);
             playCounts[platform] = Number(metric.views || 0);
             statMeta[platform] = {
               likes: Number(metric.likes || 0),
