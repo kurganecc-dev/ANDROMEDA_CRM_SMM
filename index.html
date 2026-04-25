@@ -2586,26 +2586,24 @@
             state.calendarChannel === 'ALL' ||
             (task.channels || []).includes(state.calendarChannel);
 
-          return channelMatch && (task.start_date === dateStr || task.date === dateStr);
+          // В календаре показываем только дедлайн / день публикации.
+          // start_date остается в задаче и карточках, но не засоряет календарь.
+          return channelMatch && task.date === dateStr;
         });
       },
 
-      renderTaskItem(task, dateStr) {
-        const isStart = task.start_date === dateStr;
-        const cls = isStart
-          ? 'border border-dashed opacity-70 text-slate-600'
-          : `status-${escapeHtml(task.status || 'idea')}`;
+      renderTaskItem(task) {
+        const cls = `status-${escapeHtml(task.status || 'idea' )}`;
 
         return `
           <button class="calendar-item ${cls} w-full text-left" data-task-id="${escapeHtml(task.id)}">
-            ${isStart ? '🚀' : '🏁'} ${escapeHtml(task.title || 'Без названия')}
+            🏁 ${escapeHtml(task.title || 'Без названия')}
           </button>
         `;
       },
-
       renderDay(dateStr, day) {
         const items = CalendarUI.getTasksForDate(dateStr);
-        const itemsHtml = items.map(task => CalendarUI.renderTaskItem(task, dateStr)).join('');
+        const itemsHtml = items.map(task => CalendarUI.renderTaskItem(task)).join('');
 
         return `
           <div class="calendar-day cursor-pointer ${dateStr === state.createPrefillDate ? 'create-target' : ''}" data-date="${dateStr}">
