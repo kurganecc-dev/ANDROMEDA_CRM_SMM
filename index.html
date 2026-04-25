@@ -141,6 +141,37 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+
+    .social-logo {
+      display: inline-block;
+      width: 1.2em;
+      height: 1.2em;
+      object-fit: contain;
+      vertical-align: -0.18em;
+      flex: 0 0 auto;
+    }
+
+    .social-logo-fallback {
+      display: inline-grid;
+      place-items: center;
+      width: 1.35em;
+      height: 1.35em;
+      border-radius: 0.42em;
+      background: var(--primary);
+      color: #fff;
+      font-size: 0.72em;
+      font-weight: 950;
+      line-height: 1;
+      vertical-align: -0.18em;
+      text-transform: uppercase;
+    }
+
+    .channel-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
     .kanban-col.drag-over {
       outline: 2px dashed var(--primary);
       background: rgba(37, 99, 235, 0.08);
@@ -2024,7 +2055,7 @@
       renderChannels(channels = [], limit = null) {
         const list = limit ? channels.slice(0, limit) : channels;
         return list.map(ch => `
-          <span class="rounded bg-slate-900 px-2 py-0.5 text-[8px] font-black uppercase text-white">${escapeHtml(ch)}</span>
+          <span class="channel-pill rounded bg-slate-900 px-2 py-0.5 text-[8px] font-black uppercase text-white">${getSocialIcon(ch)}${escapeHtml(ch)}</span>
         `).join('');
       },
 
@@ -3130,11 +3161,75 @@
     }
 
     function getSocialIcon(platform) {
-      const icons = {
-        YouTube: '🔴', TikTok: '⚫', Instagram: '📸', VK: '🔵', Telegram: '✈️',
-        'Этажи SMM': '📢', NewsRoom: '📰', Echat: '💬', Max: '👔', ОК: '🟠'
+      const logos = {
+        YouTube: {
+          src: 'https://cdn.simpleicons.org/youtube/FF0000',
+          alt: 'YouTube',
+          fallback: 'YT'
+        },
+        TikTok: {
+          src: 'https://cdn.simpleicons.org/tiktok/000000',
+          alt: 'TikTok',
+          fallback: 'TT'
+        },
+        Instagram: {
+          src: 'https://cdn.simpleicons.org/instagram/E4405F',
+          alt: 'Instagram',
+          fallback: 'IG'
+        },
+        VK: {
+          src: 'https://cdn.simpleicons.org/vk/0077FF',
+          alt: 'VK',
+          fallback: 'VK'
+        },
+        Telegram: {
+          src: 'https://cdn.simpleicons.org/telegram/26A5E4',
+          alt: 'Telegram',
+          fallback: 'TG'
+        },
+        'Этажи SMM': {
+          src: 'https://cdn.simpleicons.org/telegram/26A5E4',
+          alt: 'Telegram',
+          fallback: 'TG'
+        },
+        NewsRoom: {
+          src: 'https://cdn.simpleicons.org/telegram/26A5E4',
+          alt: 'Telegram',
+          fallback: 'TG'
+        },
+        Echat: {
+          src: 'https://cdn.simpleicons.org/telegram/26A5E4',
+          alt: 'Telegram',
+          fallback: 'TG'
+        },
+        Max: {
+          src: 'https://cdn.simpleicons.org/telegram/26A5E4',
+          alt: 'Max',
+          fallback: 'MX'
+        },
+        ОК: {
+          src: 'https://cdn.simpleicons.org/odnoklassniki/EE8208',
+          alt: 'Одноклассники',
+          fallback: 'ОК'
+        }
       };
-      return icons[platform] || '🔗';
+
+      const logo = logos[platform];
+
+      if (!logo) {
+        return '<span class="social-logo-fallback">↗</span>';
+      }
+
+      return `
+        <img
+          class="social-logo"
+          src="${logo.src}"
+          alt="${escapeHtml(logo.alt)}"
+          title="${escapeHtml(platform)}"
+          loading="lazy"
+          onerror="this.outerHTML='<span class=&quot;social-logo-fallback&quot;>${escapeHtml(logo.fallback)}</span>'"
+        />
+      `;
     }
 
     function setVisible(el, isVisible, display = 'block') {
@@ -3919,6 +4014,29 @@ function renderPeopleAnalytics() {
       renderTrash();
     }
 
+    function renderEditLinkFields(channels = [], links = {}) {
+      const linkContainer = $('#multiLinkContainer');
+      if (!linkContainer) return;
+
+      linkContainer.innerHTML = channels.map(channel => {
+        const value = links?.[channel] || '';
+        return `
+          <div>
+            <label class="mb-1 flex items-center gap-2 text-[9px] font-black uppercase text-slate-500">${getSocialIcon(channel)} ${escapeHtml(channel)}</label>
+            <input type="url" class="multi-link-input w-full rounded-xl border p-2 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);" data-platform="${escapeHtml(channel)}" value="${escapeHtml(value)}" />
+          </div>
+        `;
+      }).join('');
+    }
+
+    function collectCurrentEditLinks(baseLinks = {}) {
+      const links = { ...(baseLinks || {}) };
+      $$('.multi-link-input').forEach(input => {
+        links[input.dataset.platform] = input.value.trim();
+      });
+      return links;
+    }
+
     function fillTaskForm(task) {
       $('#edit_id').value = task.id;
       $('#edit_title').value = task.title || '';
@@ -3933,16 +4051,7 @@ function renderPeopleAnalytics() {
       $$('input[name="edit_chan"]').forEach(cb => cb.checked = (task.channels || []).includes(cb.value));
       $$('input[name="edit_exec"]').forEach(cb => cb.checked = (task.executors || []).includes(cb.value));
 
-      const linkContainer = $('#multiLinkContainer');
-      linkContainer.innerHTML = (task.channels || []).map(channel => {
-        const value = task.links?.[channel] || '';
-        return `
-          <div>
-            <label class="mb-1 flex items-center gap-2 text-[9px] font-black uppercase text-slate-500">${getSocialIcon(channel)} ${escapeHtml(channel)}</label>
-            <input type="url" class="multi-link-input w-full rounded-xl border p-2 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);" data-platform="${escapeHtml(channel)}" value="${escapeHtml(value)}" />
-          </div>
-        `;
-      }).join('');
+      renderEditLinkFields(task.channels || [], task.links || {});
     }
 
     function openEditModal(id) {
@@ -4522,12 +4631,9 @@ if (viewTab) {
         }
         if (event.target.name === 'edit_chan') {
           const channels = $$('input[name="edit_chan"]:checked').map(cb => cb.value);
-          $('#multiLinkContainer').innerHTML = channels.map(channel => `
-            <div>
-              <label class="mb-1 flex items-center gap-2 text-[9px] font-black uppercase text-slate-500">${getSocialIcon(channel)} ${escapeHtml(channel)}</label>
-              <input type="url" class="multi-link-input w-full rounded-xl border p-2 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);" data-platform="${escapeHtml(channel)}" />
-            </div>
-          `).join('');
+          const task = state.tasks.find(item => String(item.id) === String($('#edit_id')?.value || ''));
+          const links = collectCurrentEditLinks(task?.links || {});
+          renderEditLinkFields(channels, links);
         }
       });
 
