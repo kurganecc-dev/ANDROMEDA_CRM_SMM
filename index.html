@@ -230,6 +230,25 @@
     .soft-pill { background: var(--surface-2); border: 1px solid var(--border); }
     .calendar-day:hover { background: color-mix(in srgb, var(--surface) 82%, var(--primary) 18%); }
     .calendar-day.create-target { outline: 2px solid var(--primary); outline-offset: -2px; }
+    .calendar-day.calendar-drag-over {
+      outline: 2px dashed var(--primary);
+      outline-offset: -4px;
+      background: color-mix(in srgb, var(--surface) 74%, var(--primary) 26%);
+    }
+    .calendar-item[draggable="true"] { cursor: grab; }
+    .calendar-item.dragging { opacity: .55; cursor: grabbing; }
+    .calendar-drop-hint {
+      display: none;
+      margin-top: auto;
+      border-radius: 10px;
+      border: 1px dashed color-mix(in srgb, var(--primary) 55%, var(--border));
+      padding: 7px 6px;
+      color: var(--primary);
+      font-size: 9px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+    .calendar-day.calendar-drag-over .calendar-drop-hint { display: block; }
     .empty-state { border: 1px dashed var(--border); background: color-mix(in srgb, var(--surface-2) 75%, transparent); }
     .toast-wrap {
       position: fixed; right: 20px; bottom: 20px; z-index: 999;
@@ -2782,7 +2801,7 @@
         const cls = `status-${escapeHtml(task.status || 'idea' )}`;
 
         return `
-          <button class="calendar-item ${cls} w-full text-left" data-task-id="${escapeHtml(task.id)}">
+          <button class="calendar-item ${cls} w-full text-left" draggable="true" data-task-id="${escapeHtml(task.id)}" title="Перетащи на другой день, чтобы изменить дату публикации">
             🏁 ${escapeHtml(task.title || 'Без названия')}
           </button>
         `;
@@ -2795,6 +2814,7 @@
           <div class="calendar-day cursor-pointer ${dateStr === state.createPrefillDate ? 'create-target' : ''}" data-date="${dateStr}">
             <div class="mb-1 text-[10px] font-black text-slate-400">${day}</div>
             ${itemsHtml}
+            <div class="calendar-drop-hint">Отпустить здесь</div>
           </div>
         `;
       },
@@ -4391,6 +4411,37 @@ function renderPeopleAnalytics() {
     refreshChat();
   });
 }
+
+    async function moveTaskPublicationDate(taskId, newDate) {
+      const task = state.tasks.find(item => String(item.id) === String(taskId));
+      if (!task || !newDate || task.date === newDate) return;
+
+      const oldDate = task.date;
+      TaskState.patchTask(taskId, { date: newDate });
+      renderCalendar();
+      renderMetaOnly();
+
+      const loadingToast = notify(
+        `Переношу «${task.title || 'задачу'}» на ${formatShortDate(newDate)}…`,
+        'loading',
+        'Календарь',
+        { closable: false }
+      );
+
+      const { error } = await TaskService.update(taskId, { date: newDate });
+
+      if (error) {
+        TaskState.patchTask(taskId, { date: oldDate });
+        renderCalendar();
+        renderMetaOnly();
+        updateToast(loadingToast, 'Не удалось перенести дату публикации. Вернул старую дату.', 'error', 'Ошибка');
+        return;
+      }
+
+      updateToast(loadingToast, `Дата публикации изменена: ${formatShortDate(oldDate)} -> ${formatShortDate(newDate)}.`, 'success', 'Перенесено');
+      await logAction('date_change', task.title, `Календарь: ${formatShortDate(oldDate)} -> ${formatShortDate(newDate)}`);
+    }
+
     function setupTasksRealtime() {
       if (state.tasksChannel) return;
 
@@ -5193,6 +5244,40 @@ function getChatTaskSearchMatches(query = '') {
         if (!dayCell) return;
         openCreateModal(dayCell.dataset.date || '');
       });
+      $('#calendarGrid').addEventListener('dragover', event => {
+        const dayCell = event.target.closest('.calendar-day[data-date]');
+        if (!dayCell) return;
+
+        // В некоторых браузерах getData() в dragover возвращает пустую строку.
+        // Поэтому разрешаем drop на любой день календаря, а taskId читаем уже в drop.
+        event.preventDefault();
+        if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+
+        $$('.calendar-day.calendar-drag-over').forEach(day => {
+          if (day !== dayCell) day.classList.remove('calendar-drag-over');
+        });
+        dayCell.classList.add('calendar-drag-over');
+      });
+      $('#calendarGrid').addEventListener('dragleave', event => {
+        const dayCell = event.target.closest('.calendar-day[data-date]');
+        if (dayCell && !dayCell.contains(event.relatedTarget)) dayCell.classList.remove('calendar-drag-over');
+      });
+      $('#calendarGrid').addEventListener('drop', async event => {
+        const dayCell = event.target.closest('.calendar-day[data-date]');
+        if (!dayCell) return;
+        event.preventDefault();
+        event.stopPropagation();
+
+        $$('.calendar-day.calendar-drag-over').forEach(day => day.classList.remove('calendar-drag-over'));
+
+        const taskId = event.dataTransfer?.getData('application/x-andromeda-task-id') || event.dataTransfer?.getData('text/plain') || state.draggedTaskId;
+        if (!taskId) {
+          notify('Не понял, какую задачу переносить. Попробуй перетащить карточку еще раз.', 'warning', 'Календарь');
+          return;
+        }
+
+        await moveTaskPublicationDate(taskId, dayCell.dataset.date || '');
+      });
       $('#analyticsPeopleBtn').addEventListener('click', () => {
   state.analyticsSubView = 'people';
   renderAll();
@@ -5377,13 +5462,21 @@ if (viewTab) {
       });
 
             document.addEventListener('dragstart', event => {
-  const card = event.target.closest('.kanban-card, .focus-task-draggable');
+  const card = event.target.closest('.kanban-card, .focus-task-draggable, .calendar-item');
   if (!card) return;
 
+  state.draggedTaskId = card.dataset.taskId;
   event.dataTransfer.setData('text/plain', card.dataset.taskId);
   event.dataTransfer.setData('application/x-andromeda-task-id', card.dataset.taskId);
   event.dataTransfer.effectAllowed = 'move';
+  card.classList.add('dragging');
 });
+
+      document.addEventListener('dragend', event => {
+        event.target.closest?.('.calendar-item, .kanban-card, .focus-task-draggable')?.classList.remove('dragging');
+        state.draggedTaskId = null;
+        $$('.calendar-day.calendar-drag-over').forEach(day => day.classList.remove('calendar-drag-over'));
+      });
       const chatDropZone = $('#chatDropZone');
 
       if (chatDropZone) {
