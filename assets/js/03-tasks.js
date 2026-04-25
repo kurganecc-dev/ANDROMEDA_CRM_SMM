@@ -390,33 +390,33 @@
   },
 
   async login(email, password) {
-    const authRes = await db.auth.signInWithPassword({
+    const { data: authData, error: authError } = await db.auth.signInWithPassword({
       email: String(email || '').trim(),
       password
     });
 
-    if (authRes.error || !authRes.data?.user) {
-      return { data: null, error: authRes.error || new Error('INVALID') };
+    if (authError || !authData?.user) {
+      return { data: null, error: authError || new Error('INVALID_LOGIN') };
     }
 
-    const user = authRes.data.user;
+    const user = authData.user;
 
-    const profileRes = await db
+    const { data: profile, error: profileError } = await db
       .from(Services.tables.profiles)
-      .select('id, display_name, role, email')
+      .select('id, email, display_name, role')
       .eq('id', user.id)
       .single();
 
-    if (profileRes.error) {
-      return { data: null, error: profileRes.error };
+    if (profileError || !profile) {
+      return { data: null, error: profileError || new Error('PROFILE_NOT_FOUND') };
     }
 
     return {
       data: {
         id: user.id,
         email: user.email,
-        display_name: profileRes.data.display_name || user.email,
-        role: profileRes.data.role || 'user'
+        display_name: profile.display_name || user.email,
+        role: profile.role || 'user'
       },
       error: null
     };
@@ -426,12 +426,16 @@
     sessionStorage.setItem(this.sessionKeys.active, 'true');
     sessionStorage.setItem(this.sessionKeys.uid, profile.id);
     sessionStorage.setItem(this.sessionKeys.email, profile.email || '');
-    sessionStorage.setItem(this.sessionKeys.name, profile.display_name);
+    sessionStorage.setItem(this.sessionKeys.name, profile.display_name || profile.email);
     sessionStorage.setItem(this.sessionKeys.role, profile.role || 'user');
   },
 
   clearSession() {
-    sessionStorage.clear();
+    sessionStorage.removeItem(this.sessionKeys.active);
+    sessionStorage.removeItem(this.sessionKeys.uid);
+    sessionStorage.removeItem(this.sessionKeys.email);
+    sessionStorage.removeItem(this.sessionKeys.name);
+    sessionStorage.removeItem(this.sessionKeys.role);
   },
 
   isActive() {
