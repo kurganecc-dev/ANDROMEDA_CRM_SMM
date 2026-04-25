@@ -4532,11 +4532,12 @@ if (viewTab) {
       });
 
             document.addEventListener('dragstart', event => {
-  const card = event.target.closest('.focus-task-draggable');
+  const card = event.target.closest('.kanban-card, .focus-task-draggable');
   if (!card) return;
 
   event.dataTransfer.setData('text/plain', card.dataset.taskId);
   event.dataTransfer.setData('application/x-andromeda-task-id', card.dataset.taskId);
+  event.dataTransfer.effectAllowed = 'move';
 });
       const chatDropZone = $('#chatDropZone');
 
