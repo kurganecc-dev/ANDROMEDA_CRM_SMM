@@ -4,10 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ANDROMEDA | CRM SMM</title>
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="stylesheet" href="assets/dist/styles.min.css" />
 </head>
 <body class="min-h-screen">
   <div id="loginOverlay" class="fixed inset-0 z-[1000] flex items-center justify-center p-4" style="background: radial-gradient(circle at center, #1e293b 0%, #000 100%);">
@@ -15,8 +19,8 @@
       <h1 class="text-3xl font-black tracking-tight">ANDROMEDA</h1>
       <p class="mt-1 text-[10px] font-black uppercase tracking-[0.3em]" style="color: var(--primary);">CRM SMM SYSTEM</p>
       <div class="mt-8 space-y-4">
-        <select id="loginUser" class="w-full rounded-2xl border p-3 text-center font-bold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></select>
-        <input id="loginPass" type="password" placeholder="Пароль" class="w-full rounded-2xl border p-3 text-center font-bold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" />
+        <input id="loginUser" type="email" placeholder="Email" autocomplete="email" class="w-full rounded-2xl border p-3 text-center font-bold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" />
+        <input id="loginPass" type="password" placeholder="Пароль" autocomplete="current-password" class="w-full rounded-2xl border p-3 text-center font-bold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" />
         <button id="loginBtn" class="w-full rounded-2xl px-4 py-4 text-xs font-black uppercase tracking-[0.2em] text-white" style="background: var(--text);">Войти</button>
         <p id="loginError" class="hidden text-xs font-bold text-rose-500">Ошибка входа</p>
       </div>
@@ -418,7 +422,26 @@
           </span>
           <span id="trashBadge" class="flex h-6 min-w-6 items-center justify-center rounded-full bg-slate-900 px-2 text-[10px] font-black text-white">0</span>
         </button>
+<div class="rounded-2xl border p-4" style="border-color: var(--border); background: var(--surface-2);">
+  <label class="mb-2 block text-[10px] font-black uppercase" style="color: var(--muted);">
+    Смена пароля
+  </label>
 
+  <input id="newPassword" type="password" placeholder="Новый пароль"
+    class="mb-2 w-full rounded-xl border p-3 text-sm font-semibold outline-none"
+    style="background: var(--surface); border-color: var(--border); color: var(--text);" />
+
+  <input id="confirmPassword" type="password" placeholder="Повторите пароль"
+    class="mb-3 w-full rounded-xl border p-3 text-sm font-semibold outline-none"
+    style="background: var(--surface); border-color: var(--border); color: var(--text);" />
+
+  <button id="changePasswordBtn"
+    class="w-full rounded-xl bg-slate-900 px-4 py-3 text-[10px] font-black uppercase text-white">
+    Сменить пароль
+  </button>
+
+  <p id="changePasswordMessage" class="mt-2 hidden text-xs font-bold"></p>
+</div>
         <button id="logoutBtn" class="flex w-full items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 text-[11px] font-black uppercase text-rose-600">
           Выйти из аккаунта
         </button>
@@ -446,18 +469,17 @@
 
   <div id="toastContainer" class="toast-wrap"></div>
 
-  <script src="assets/js/01-config.js"></script>
-  <script src="assets/js/02-state-utils-services.js"></script>
-  <script src="assets/js/03-tasks.js"></script>
-  <script src="assets/js/04-chat.js"></script>
-  <script src="assets/js/05-calendar.js"></script>
-  <script src="assets/js/06-sidebar.js"></script>
-  <script src="assets/js/07-analytics.js"></script>
-  <script src="assets/js/08-view-render.js"></script>
-  <script src="assets/js/09-realtime-profile-theme.js"></script>
-  <script src="assets/js/10-forms-stats-search.js"></script>
-  <script src="assets/js/11-events-init.js"></script>
-  <script src="assets/js/12-mobile-enhancements.js"></script>
+  <script src="assets/dist/app.bundle.min.js"></script>
 
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () =>
+    navigator.serviceWorker.register('sw.js').catch(() => {})
+  );
+}
+</script>
+
+<script src="assets/js/auth-supabase-patch.js"></script>
+</script>
 </body>
 </html>
