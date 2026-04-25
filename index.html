@@ -1489,19 +1489,37 @@
             <div id="statsTableContainer" class="app-surface overflow-x-auto rounded-[2rem]"></div>
           </div>
 
-          <div id="analytics-visuals" class="hidden">
+          <div id="analytics-visuals" class="hidden space-y-6">
+            <div id="chartKpiGrid" class="grid grid-cols-1 gap-4 md:grid-cols-4"></div>
+
             <div class="app-surface rounded-[2rem] p-8">
-              <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <h3 id="chartTitle" class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Аналитика охватов</h3>
-                <div class="flex gap-1 rounded-xl p-1 surface-muted text-[10px] font-black uppercase">
-                  <button id="chartMonthsBtn" class="tab-active rounded-lg px-3 py-1.5">6 месяцев</button>
-                  <button id="chartDaysBtn" class="rounded-lg px-3 py-1.5 text-slate-400">По дням</button>
+              <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <div class="text-[10px] font-black uppercase tracking-[0.24em]" style="color: var(--primary);">Визуальная аналитика</div>
+                  <h3 id="chartTitle" class="mt-2 text-xl font-black uppercase">Аналитика охватов</h3>
+                  <p id="chartSubtitle" class="mt-2 max-w-2xl text-sm font-medium" style="color: var(--muted);">Смотри динамику, вклад площадок и лучшие публикации без ручной разбивки.</p>
+                </div>
+                <div class="flex flex-wrap gap-1 rounded-xl p-1 surface-muted text-[10px] font-black uppercase">
+                  <button id="chartMonthsBtn" class="tab-active rounded-lg px-3 py-2">6 месяцев</button>
+                  <button id="chartDaysBtn" class="rounded-lg px-3 py-2 text-slate-400">По дням</button>
+                  <button id="chartPlatformsBtn" class="rounded-lg px-3 py-2 text-slate-400">Площадки</button>
+                  <button id="chartTopBtn" class="rounded-lg px-3 py-2 text-slate-400">Топ постов</button>
                 </div>
               </div>
-              <div class="relative h-[420px]">
-                <canvas id="reachChart"></canvas>
+
+              <div class="grid grid-cols-1 gap-6 xl:grid-cols-12">
+                <div class="xl:col-span-8">
+                  <div class="relative h-[440px] rounded-[1.5rem] border p-4" style="border-color: var(--border); background: var(--surface-2);">
+                    <canvas id="reachChart"></canvas>
+                  </div>
+                </div>
+                <div class="xl:col-span-4">
+                  <div id="chartInsightPanel" class="h-full rounded-[1.5rem] border p-5" style="border-color: var(--border); background: var(--surface-2);"></div>
+                </div>
               </div>
             </div>
+
+            <div id="chartBreakdownGrid" class="grid grid-cols-1 gap-4 xl:grid-cols-2"></div>
           </div>
 
           <div id="analytics-people" class="hidden app-surface rounded-[2rem] p-6"></div>
@@ -2909,6 +2927,10 @@
         Telegram: '#229ED9'
       },
 
+      formatNumber(value = 0) {
+        return Number(value || 0).toLocaleString('ru-RU');
+      },
+
       getPlatformViews(task, platform) {
         if (platform === 'Telegram') {
           return TG_LIST.reduce((sum, tg) => sum + Number(task.play_counts?.[tg] || 0), 0);
@@ -2921,6 +2943,18 @@
         return state.tasks.filter(task => task.status === 'published');
       },
 
+      getTaskTotalViews(task) {
+        return ChartUI.platforms.reduce((sum, platform) => sum + ChartUI.getPlatformViews(task, platform), 0) || Number(task.play_count || 0);
+      },
+
+      getPlatformTotals(tasks = ChartUI.getPublishedTasks()) {
+        return ChartUI.platforms.map(platform => ({
+          platform,
+          views: tasks.reduce((sum, task) => sum + ChartUI.getPlatformViews(task, platform), 0),
+          posts: tasks.filter(task => ChartUI.getPlatformViews(task, platform) > 0).length
+        })).sort((a, b) => b.views - a.views);
+      },
+
       buildMonthlyPeriods() {
         const now = new Date();
         const periods = [];
@@ -2930,7 +2964,8 @@
           periods.push({
             month: d.getMonth(),
             year: d.getFullYear(),
-            label: d.toLocaleString('ru-RU', { month: 'short' })
+            label: d.toLocaleString('ru-RU', { month: 'short' }),
+            fullLabel: d.toLocaleString('ru-RU', { month: 'long', year: 'numeric' })
           });
         }
 
@@ -2940,14 +2975,13 @@
       buildMonthlyData(platform, periods) {
         const published = ChartUI.getPublishedTasks();
 
-        return periods.map(period => {
-          return published
-            .filter(task => {
-              const date = parseLocalDate(task.date);
-              return date && date.getMonth() === period.month && date.getFullYear() === period.year;
-            })
-            .reduce((sum, task) => sum + ChartUI.getPlatformViews(task, platform), 0);
-        });
+        return periods.map(period => published
+          .filter(task => {
+            const date = parseLocalDate(task.date);
+            return date && date.getMonth() === period.month && date.getFullYear() === period.year;
+          })
+          .reduce((sum, task) => sum + ChartUI.getPlatformViews(task, platform), 0)
+        );
       },
 
       buildDailyLabels() {
@@ -2975,45 +3009,276 @@
         });
       },
 
-      buildDataset(platform, data) {
+      getTopTasks(limit = 8) {
+        return ChartUI.getPublishedTasks()
+          .map(task => ({ ...task, totalViews: ChartUI.getTaskTotalViews(task) }))
+          .filter(task => task.totalViews > 0)
+          .sort((a, b) => b.totalViews - a.totalViews)
+          .slice(0, limit);
+      },
+
+      buildDataset(platform, data, extra = {}) {
         const color = ChartUI.platformColors[platform];
 
         return {
           label: platform,
           data,
           borderColor: color,
-          backgroundColor: `${color}22`,
-          fill: true,
-          tension: 0.3
+          backgroundColor: `${color}33`,
+          fill: state.chartMode !== 'top',
+          tension: 0.32,
+          pointRadius: state.chartMode === 'days' ? 2 : 3,
+          borderWidth: 2,
+          ...extra
         };
       },
 
       buildChartData() {
-        if (state.chartMode === 'months') {
-          $('#chartTitle').textContent = 'Аналитика охватов (6 мес)';
-
-          const periods = ChartUI.buildMonthlyPeriods();
-          const labels = periods.map(period => period.label);
-          const datasets = ChartUI.platforms.map(platform =>
-            ChartUI.buildDataset(platform, ChartUI.buildMonthlyData(platform, periods))
-          );
-
-          return { labels, datasets };
+        if (state.chartMode === 'platforms') {
+          const totals = ChartUI.getPlatformTotals().filter(item => item.views > 0);
+          return {
+            type: 'doughnut',
+            labels: totals.map(item => item.platform),
+            datasets: [{
+              label: 'Охват',
+              data: totals.map(item => item.views),
+              backgroundColor: totals.map(item => `${ChartUI.platformColors[item.platform]}cc`),
+              borderColor: totals.map(item => ChartUI.platformColors[item.platform]),
+              borderWidth: 2
+            }]
+          };
         }
 
-        $('#chartTitle').textContent = `Аналитика по дням (${new Date().toLocaleString('ru-RU', { month: 'long' })})`;
+        if (state.chartMode === 'top') {
+          const topTasks = ChartUI.getTopTasks(10).reverse();
+          return {
+            type: 'bar',
+            labels: topTasks.map(task => String(task.title || 'Без названия').slice(0, 28)),
+            datasets: [{
+              label: 'Охват',
+              data: topTasks.map(task => task.totalViews),
+              backgroundColor: 'rgba(16,185,129,.38)',
+              borderColor: '#10b981',
+              borderWidth: 2,
+              borderRadius: 10
+            }]
+          };
+        }
+
+        if (state.chartMode === 'months') {
+          const periods = ChartUI.buildMonthlyPeriods();
+          return {
+            type: 'line',
+            labels: periods.map(period => period.label),
+            datasets: ChartUI.platforms.map(platform =>
+              ChartUI.buildDataset(platform, ChartUI.buildMonthlyData(platform, periods))
+            )
+          };
+        }
 
         const labels = ChartUI.buildDailyLabels();
-        const datasets = ChartUI.platforms.map(platform =>
-          ChartUI.buildDataset(platform, ChartUI.buildDailyData(platform, labels))
-        );
+        return {
+          type: 'bar',
+          labels,
+          datasets: ChartUI.platforms.map(platform =>
+            ChartUI.buildDataset(platform, ChartUI.buildDailyData(platform, labels), {
+              stack: 'views',
+              borderWidth: 1,
+              borderRadius: 4
+            })
+          )
+        };
+      },
 
-        return { labels, datasets };
+      getTotalsMeta() {
+        const published = ChartUI.getPublishedTasks();
+        const totalViews = published.reduce((sum, task) => sum + ChartUI.getTaskTotalViews(task), 0);
+        const platformTotals = ChartUI.getPlatformTotals(published);
+        const topPlatform = platformTotals[0] || { platform: '—', views: 0 };
+        const topTask = ChartUI.getTopTasks(1)[0];
+        const avg = published.length ? Math.round(totalViews / published.length) : 0;
+
+        return { published, totalViews, platformTotals, topPlatform, topTask, avg };
+      },
+
+      renderKpis() {
+        const root = $('#chartKpiGrid');
+        if (!root) return;
+        const meta = ChartUI.getTotalsMeta();
+        const topTitle = meta.topTask?.title || 'Пока нет данных';
+
+        root.innerHTML = [
+          { label: 'Публикаций', value: meta.published.length, hint: 'со статусом опубликовано' },
+          { label: 'Общий охват', value: ChartUI.formatNumber(meta.totalViews), hint: 'по всем площадкам' },
+          { label: 'Средний охват', value: ChartUI.formatNumber(meta.avg), hint: 'на одну публикацию' },
+          { label: 'Топ площадка', value: meta.topPlatform.platform, hint: `${ChartUI.formatNumber(meta.topPlatform.views)} охвата` }
+        ].map(item => `
+          <div class="app-surface rounded-[1.5rem] p-5">
+            <div class="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">${escapeHtml(item.label)}</div>
+            <div class="mt-2 truncate text-2xl font-black">${escapeHtml(item.value)}</div>
+            <div class="mt-2 text-xs font-semibold" style="color: var(--muted);">${escapeHtml(item.hint)}</div>
+          </div>
+        `).join('') + `
+          <div class="app-surface rounded-[1.5rem] p-5 md:col-span-4">
+            <div class="text-[10px] font-black uppercase tracking-[0.18em]" style="color: var(--primary);">Лучший материал</div>
+            <div class="mt-2 text-lg font-black">${escapeHtml(topTitle)}</div>
+            <div class="mt-1 text-sm font-semibold" style="color: var(--muted);">${meta.topTask ? `${ChartUI.formatNumber(meta.topTask.totalViews)} охвата` : 'обнови статистику или добавь опубликованные задачи'}</div>
+          </div>
+        `;
+      },
+
+      renderInsights() {
+        const root = $('#chartInsightPanel');
+        if (!root) return;
+        const meta = ChartUI.getTotalsMeta();
+        const totals = meta.platformTotals.filter(item => item.views > 0);
+        const totalViews = meta.totalViews || 1;
+        const topTasks = ChartUI.getTopTasks(4);
+        const weakest = totals.length ? totals[totals.length - 1] : null;
+
+        root.innerHTML = `
+          <div class="mb-4 text-[10px] font-black uppercase tracking-[0.22em]" style="color: var(--primary);">Инсайты</div>
+          <div class="space-y-3">
+            <div class="rounded-2xl border p-4" style="border-color: var(--border); background: var(--surface);">
+              <div class="text-xs font-black uppercase">🏆 Лидер площадок</div>
+              <div class="mt-2 text-sm font-semibold" style="color: var(--muted);">
+                ${escapeHtml(meta.topPlatform.platform)} дает ${Math.round((meta.topPlatform.views / totalViews) * 100)}% всего охвата.
+              </div>
+            </div>
+            <div class="rounded-2xl border p-4" style="border-color: var(--border); background: var(--surface);">
+              <div class="text-xs font-black uppercase">📌 Что повторять</div>
+              <div class="mt-2 text-sm font-semibold" style="color: var(--muted);">
+                ${topTasks[0] ? `Лучший формат сейчас: «${escapeHtml(topTasks[0].title || 'Без названия')}».` : 'Пока нет опубликованных задач с охватами.'}
+              </div>
+            </div>
+            <div class="rounded-2xl border p-4" style="border-color: var(--border); background: var(--surface);">
+              <div class="text-xs font-black uppercase">⚠️ Зона роста</div>
+              <div class="mt-2 text-sm font-semibold" style="color: var(--muted);">
+                ${weakest ? `${escapeHtml(weakest.platform)} пока дает меньше всего: ${ChartUI.formatNumber(weakest.views)}.` : 'Данных по площадкам пока недостаточно.'}
+              </div>
+            </div>
+          </div>
+        `;
+      },
+
+      renderBreakdowns() {
+        const root = $('#chartBreakdownGrid');
+        if (!root) return;
+        const meta = ChartUI.getTotalsMeta();
+        const totalViews = meta.totalViews || 1;
+        const platformRows = meta.platformTotals.map(item => {
+          const share = Math.round((item.views / totalViews) * 100);
+          return `
+            <div class="rounded-2xl border p-4" style="border-color: var(--border); background: var(--surface);">
+              <div class="mb-2 flex items-center justify-between gap-3">
+                <div class="text-sm font-black uppercase">${escapeHtml(item.platform)}</div>
+                <div class="text-sm font-black text-emerald-600">${ChartUI.formatNumber(item.views)}</div>
+              </div>
+              <div class="progress-track"><div class="progress-fill" style="width:${share}%; background:${ChartUI.platformColors[item.platform]};"></div></div>
+              <div class="mt-2 text-xs font-semibold" style="color: var(--muted);">${share}% общего охвата · публикаций: ${item.posts}</div>
+            </div>
+          `;
+        }).join('');
+
+        const topRows = ChartUI.getTopTasks(6).map((task, index) => `
+          <div class="flex items-center justify-between gap-4 border-b py-3 last:border-b-0" style="border-color: var(--border);">
+            <div class="min-w-0">
+              <div class="text-[10px] font-black uppercase" style="color: var(--primary);">#${index + 1} · ${escapeHtml(formatShortDate(task.date))}</div>
+              <div class="mt-1 truncate text-sm font-black">${escapeHtml(task.title || 'Без названия')}</div>
+            </div>
+            <div class="shrink-0 rounded-xl px-3 py-2 text-xs font-black text-emerald-600" style="background: rgba(16,185,129,.10);">${ChartUI.formatNumber(task.totalViews)}</div>
+          </div>
+        `).join('');
+
+        root.innerHTML = `
+          <div class="app-surface rounded-[2rem] p-6">
+            <h3 class="mb-4 text-sm font-black uppercase">Вклад площадок</h3>
+            <div class="space-y-3">${platformRows || '<div class="text-sm font-semibold text-slate-400">Нет данных по площадкам</div>'}</div>
+          </div>
+          <div class="app-surface rounded-[2rem] p-6">
+            <h3 class="mb-4 text-sm font-black uppercase">Топ публикаций</h3>
+            <div>${topRows || '<div class="text-sm font-semibold text-slate-400">Нет публикаций с охватом</div>'}</div>
+          </div>
+        `;
+      },
+
+      syncModeButtons() {
+        const buttons = {
+          months: $('#chartMonthsBtn'),
+          days: $('#chartDaysBtn'),
+          platforms: $('#chartPlatformsBtn'),
+          top: $('#chartTopBtn')
+        };
+
+        Object.entries(buttons).forEach(([mode, btn]) => {
+          if (!btn) return;
+          const active = state.chartMode === mode;
+          btn.classList.toggle('tab-active', active);
+          btn.classList.toggle('text-slate-400', !active);
+        });
+      },
+
+      updateTitle() {
+        const titles = {
+          months: ['Динамика по месяцам', 'Сравнение площадок за последние 6 месяцев.'],
+          days: ['Охваты по дням', `Стековая разбивка по дням за ${new Date().toLocaleString('ru-RU', { month: 'long' })}.`],
+          platforms: ['Доля площадок', 'Какие каналы дают основной вклад в общий охват.'],
+          top: ['Топ публикаций', 'Материалы, которые дали максимум охвата.']
+        };
+        const [title, subtitle] = titles[state.chartMode] || titles.months;
+        if ($('#chartTitle')) $('#chartTitle').textContent = title;
+        if ($('#chartSubtitle')) $('#chartSubtitle').textContent = subtitle;
+      },
+
+      getChartOptions(type) {
+        const commonPlugins = {
+          legend: {
+            position: 'bottom',
+            labels: { font: { weight: 'bold', size: 10 }, usePointStyle: true }
+          },
+          tooltip: {
+            mode: type === 'doughnut' ? 'nearest' : 'index',
+            intersect: false,
+            callbacks: {
+              label(context) {
+                const label = context.dataset.label || context.label || '';
+                const value = context.parsed?.y ?? context.parsed ?? 0;
+                return `${label}: ${ChartUI.formatNumber(value)}`;
+              }
+            }
+          }
+        };
+
+        if (type === 'doughnut') {
+          return {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '62%',
+            plugins: commonPlugins
+          };
+        }
+
+        return {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: state.chartMode === 'top' ? 'y' : 'x',
+          plugins: commonPlugins,
+          scales: {
+            y: { beginAtZero: true, stacked: state.chartMode === 'days', ticks: { callback: value => ChartUI.formatNumber(value) } },
+            x: { stacked: state.chartMode === 'days', grid: { display: false } }
+          }
+        };
       },
 
       render() {
         const canvas = $('#reachChart');
         if (!canvas) return;
+
+        ChartUI.syncModeButtons();
+        ChartUI.updateTitle();
+        ChartUI.renderKpis();
+        ChartUI.renderInsights();
+        ChartUI.renderBreakdowns();
 
         const ctx = canvas.getContext('2d');
         const data = ChartUI.buildChartData();
@@ -3021,28 +3286,12 @@
         if (state.chart) state.chart.destroy();
 
         state.chart = new Chart(ctx, {
-          type: 'line',
-          data,
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: 'bottom',
-                labels: {
-                  font: { weight: 'bold', size: 10 }
-                }
-              },
-              tooltip: {
-                mode: 'index',
-                intersect: false
-              }
-            },
-            scales: {
-              y: { beginAtZero: true },
-              x: { grid: { display: false } }
-            }
-          }
+          type: data.type,
+          data: {
+            labels: data.labels,
+            datasets: data.datasets
+          },
+          options: ChartUI.getChartOptions(data.type)
         });
       }
     };
@@ -4684,8 +4933,10 @@ function getChatTaskSearchMatches(query = '') {
       $$('.quick-filter-btn').forEach(btn => btn.addEventListener('click', () => { state.quickFilter = btn.dataset.quickFilter || 'ALL'; renderAll(); }));
       $('#analyticsTableBtn').addEventListener('click', () => { state.analyticsSubView = 'table'; renderAll(); });
       $('#analyticsVisualsBtn').addEventListener('click', () => { state.analyticsSubView = 'visuals'; renderAll(); });
-      $('#chartMonthsBtn').addEventListener('click', () => { state.chartMode = 'months'; $('#chartMonthsBtn').classList.add('tab-active'); $('#chartDaysBtn').classList.remove('tab-active'); $('#chartDaysBtn').classList.add('text-slate-400'); $('#chartMonthsBtn').classList.remove('text-slate-400'); renderCharts(); });
-      $('#chartDaysBtn').addEventListener('click', () => { state.chartMode = 'days'; $('#chartDaysBtn').classList.add('tab-active'); $('#chartMonthsBtn').classList.remove('tab-active'); $('#chartMonthsBtn').classList.add('text-slate-400'); $('#chartDaysBtn').classList.remove('text-slate-400'); renderCharts(); });
+      $('#chartMonthsBtn').addEventListener('click', () => { state.chartMode = 'months'; renderCharts(); });
+      $('#chartDaysBtn').addEventListener('click', () => { state.chartMode = 'days'; renderCharts(); });
+      $('#chartPlatformsBtn')?.addEventListener('click', () => { state.chartMode = 'platforms'; renderCharts(); });
+      $('#chartTopBtn')?.addEventListener('click', () => { state.chartMode = 'top'; renderCharts(); });
       $('#calendarPrevBtn').addEventListener('click', () => { state.viewDate.setMonth(state.viewDate.getMonth() - 1); renderCalendar(); });
       $('#calendarNextBtn').addEventListener('click', () => { state.viewDate.setMonth(state.viewDate.getMonth() + 1); renderCalendar(); });
       $('#calendarGrid').addEventListener('click', event => {
