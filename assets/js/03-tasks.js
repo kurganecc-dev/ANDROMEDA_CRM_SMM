@@ -380,43 +380,75 @@
       }
     };
 
-    const AuthService = {
-      sessionKeys: {
-        active: 'e_active',
-        uid: 'e_uid',
-        name: 'e_name',
-        role: 'e_role'
-      },
+   const AuthService = {
+  sessionKeys: {
+    active: 'e_active',
+    uid: 'e_uid',
+    name: 'e_name',
+    role: 'e_role',
+    email: 'e_email'
+  },
 
-      async login(username, password) {
-        return db
-          .from(Services.tables.profiles)
-          .select('*')
-          .eq('username', username)
-          .eq('password', password)
-          .single();
-      },
+  async login(email, password) {
+    const authRes = await db.auth.signInWithPassword({
+      email: String(email || '').trim(),
+      password
+    });
 
-      saveSession(profile) {
-        sessionStorage.setItem(AuthService.sessionKeys.active, 'true');
-        sessionStorage.setItem(AuthService.sessionKeys.uid, profile.username);
-        sessionStorage.setItem(AuthService.sessionKeys.name, profile.display_name);
-        sessionStorage.setItem(AuthService.sessionKeys.role, profile.role);
-      },
+    if (authRes.error || !authRes.data?.user) {
+      return { data: null, error: authRes.error || new Error('INVALID') };
+    }
 
-      clearSession() {
-        sessionStorage.clear();
-      },
+    const user = authRes.data.user;
 
-      isActive() {
-        return sessionStorage.getItem(AuthService.sessionKeys.active) === 'true';
-      },
+    const profileRes = await db
+      .from(Services.tables.profiles)
+      .select('id, display_name, role, email')
+      .eq('id', user.id)
+      .single();
 
-      getCurrentUser() {
-        return {
-          uid: sessionStorage.getItem(AuthService.sessionKeys.uid),
-          name: sessionStorage.getItem(AuthService.sessionKeys.name),
-          role: sessionStorage.getItem(AuthService.sessionKeys.role)
-        };
-      }
+    if (profileRes.error) {
+      return { data: null, error: profileRes.error };
+    }
+
+    return {
+      data: {
+        id: user.id,
+        email: user.email,
+        display_name: profileRes.data.display_name || user.email,
+        role: profileRes.data.role || 'user'
+      },
+      error: null
     };
+  },
+
+  saveSession(profile) {
+    sessionStorage.setItem(this.sessionKeys.active, 'true');
+    sessionStorage.setItem(this.sessionKeys.uid, profile.id);
+    sessionStorage.setItem(this.sessionKeys.email, profile.email || '');
+    sessionStorage.setItem(this.sessionKeys.name, profile.display_name);
+    sessionStorage.setItem(this.sessionKeys.role, profile.role || 'user');
+  },
+
+  clearSession() {
+    sessionStorage.clear();
+  },
+
+  isActive() {
+    return sessionStorage.getItem(this.sessionKeys.active) === 'true';
+  },
+
+  getCurrentUser() {
+    return {
+      uid: sessionStorage.getItem(this.sessionKeys.uid),
+      email: sessionStorage.getItem(this.sessionKeys.email),
+      name: sessionStorage.getItem(this.sessionKeys.name),
+      role: sessionStorage.getItem(this.sessionKeys.role)
+    };
+  },
+
+  async logout() {
+    await db.auth.signOut();
+    this.clearSession();
+  }
+};
