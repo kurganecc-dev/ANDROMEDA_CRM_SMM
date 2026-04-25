@@ -3556,25 +3556,60 @@ function createEmptyPeopleStats() {
   return {
     views: 0,
     tasks: 0,
-    published: 0
+    published: 0,
+    responsibleCount: 0,
+    executorCount: 0,
+    bestTask: null,
+    platforms: {},
+    activeTasks: 0
   };
+}
+
+function getAnalyticsPeriodTasks(tasks) {
+  return tasks.filter(task => {
+    const date = parseLocalDate(task.date);
+    return date && isSameMonthYear(date, state.statsDate);
+  });
+}
+
+function getTaskMainPlatforms(task) {
+  const playCounts = task.play_counts || {};
+  const links = task.links || {};
+  const platforms = Object.keys({ ...links, ...playCounts }).filter(platform => links[platform] || Number(playCounts[platform] || 0) > 0);
+  return platforms.length ? platforms : (task.channels || []);
 }
 
 function calculatePeopleStats(tasks) {
   const stats = {};
 
   tasks.forEach(task => {
-    if (task.status !== 'published') return;
-
-    const views = Number(task.play_count || 0);
     const responsible = task.responsible;
     const executors = task.executors || [];
+
+    if (task.status !== 'published') {
+      [...new Set([responsible, ...executors].filter(Boolean))].forEach(name => {
+        if (!stats[name]) stats[name] = createEmptyPeopleStats();
+        stats[name].tasks += 1;
+        stats[name].activeTasks += 1;
+      });
+      return;
+    }
+
+    const views = Number(task.play_count || 0);
+    const platforms = getTaskMainPlatforms(task);
 
     if (responsible) {
       if (!stats[responsible]) stats[responsible] = createEmptyPeopleStats();
       stats[responsible].views += views * 0.5;
       stats[responsible].tasks += 1;
       stats[responsible].published += 1;
+      stats[responsible].responsibleCount += 1;
+      platforms.forEach(platform => {
+        stats[responsible].platforms[platform] = (stats[responsible].platforms[platform] || 0) + views * 0.5;
+      });
+      if (!stats[responsible].bestTask || views > stats[responsible].bestTask.views) {
+        stats[responsible].bestTask = { title: task.title || 'Без названия', views, date: task.date };
+      }
     }
 
     const executorShare = executors.length ? (views * 0.5) / executors.length : 0;
@@ -3584,64 +3619,217 @@ function calculatePeopleStats(tasks) {
       stats[name].views += executorShare;
       stats[name].tasks += 1;
       stats[name].published += 1;
+      stats[name].executorCount += 1;
+      platforms.forEach(platform => {
+        stats[name].platforms[platform] = (stats[name].platforms[platform] || 0) + executorShare;
+      });
+      if (!stats[name].bestTask || views > stats[name].bestTask.views) {
+        stats[name].bestTask = { title: task.title || 'Без названия', views, date: task.date };
+      }
     });
   });
 
   return stats;
 }
 
-function renderPeopleAnalytics() {
-  const container = $('#analytics-people');
-  if (!container) return;
-
-  const stats = calculatePeopleStats(state.tasks);
-
-  const rows = Object.entries(stats)
-    .sort((a, b) => b[1].views - a[1].views)
-    .map(([name, data], index) => {
+function getPeopleAnalyticsRows(stats) {
+  return Object.entries(stats)
+    .map(([name, data]) => {
       const avg = data.published ? data.views / data.published : 0;
-      const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+      const efficiency = data.tasks ? data.views / data.tasks : 0;
+      const topPlatform = Object.entries(data.platforms).sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
+      return { name, ...data, avg, efficiency, topPlatform };
+    })
+    .sort((a, b) => b.views - a.views);
+}
 
-      return `
-        <tr class="border-b" style="border-color: var(--border);">
-          <td class="p-4 font-black uppercase">${medal} ${escapeHtml(name)}</td>
-          <td class="p-4 font-black text-emerald-600">${Math.round(data.views).toLocaleString('ru-RU')}</td>
-          <td class="p-4">${data.tasks}</td>
-          <td class="p-4">${data.published}</td>
-          <td class="p-4">${Math.round(avg).toLocaleString('ru-RU')}</td>
-        </tr>
-      `;
-    }).join('');
-
-  container.innerHTML = `
-    <div class="mb-6">
-      <h3 class="text-lg font-black uppercase">👥 Аналитика по команде</h3>
-      <p class="mt-2 text-sm font-medium" style="color: var(--muted);">
-        Охват распределяется: 50% ответственному, 50% между исполнителями.
-      </p>
+function renderPeopleKpiCard(label, value, hint, icon = '•') {
+  return `
+    <div class="rounded-[1.5rem] border p-5" style="border-color: var(--border); background: var(--surface-2);">
+      <div class="flex items-center justify-between gap-3">
+        <div class="text-[10px] font-black uppercase" style="color: var(--muted);">${escapeHtml(label)}</div>
+        <div class="grid h-10 w-10 place-items-center rounded-2xl text-lg" style="background: var(--surface);">${icon}</div>
+      </div>
+      <div class="mt-3 text-3xl font-black">${value}</div>
+      <div class="mt-2 text-[11px] font-semibold" style="color: var(--muted);">${escapeHtml(hint)}</div>
     </div>
+  `;
+}
 
+function renderPeopleLeaderboard(rows, totalViews) {
+  if (!rows.length) {
+    return `
+      <div class="rounded-[1.5rem] border p-8 text-center" style="border-color: var(--border); background: var(--surface-2);">
+        <div class="text-3xl">📭</div>
+        <div class="mt-3 text-sm font-black uppercase">Пока нет данных по команде</div>
+        <div class="mt-2 text-sm font-medium" style="color: var(--muted);">Опубликуй задачи и обнови статистику, чтобы появился рейтинг.</div>
+      </div>
+    `;
+  }
+
+  return rows.slice(0, 5).map((person, index) => {
+    const share = totalViews ? Math.round((person.views / totalViews) * 100) : 0;
+    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+    return `
+      <div class="rounded-[1.5rem] border p-4" style="border-color: var(--border); background: var(--surface);">
+        <div class="flex items-start justify-between gap-4">
+          <div class="min-w-0">
+            <div class="text-[10px] font-black uppercase" style="color: var(--primary);">${medal} ${escapeHtml(person.topPlatform)}</div>
+            <div class="mt-1 truncate text-sm font-black uppercase">${escapeHtml(person.name)}</div>
+            <div class="mt-1 text-[11px] font-semibold" style="color: var(--muted);">Лучшее: ${escapeHtml(person.bestTask?.title || '—')}</div>
+          </div>
+          <div class="text-right">
+            <div class="text-lg font-black text-emerald-600">${Math.round(person.views).toLocaleString('ru-RU')}</div>
+            <div class="text-[9px] font-black uppercase" style="color: var(--muted);">${share}% вклада</div>
+          </div>
+        </div>
+        <div class="mt-4 progress-track">
+          <div class="progress-fill" style="width:${Math.min(share, 100)}%"></div>
+        </div>
+        <div class="mt-3 grid grid-cols-3 gap-2 text-center text-[10px] font-black uppercase">
+          <div class="rounded-xl p-2" style="background: var(--surface-2);"><div>${person.published}</div><div style="color: var(--muted);">публ.</div></div>
+          <div class="rounded-xl p-2" style="background: var(--surface-2);"><div>${Math.round(person.avg).toLocaleString('ru-RU')}</div><div style="color: var(--muted);">средн.</div></div>
+          <div class="rounded-xl p-2" style="background: var(--surface-2);"><div>${Math.round(person.efficiency).toLocaleString('ru-RU')}</div><div style="color: var(--muted);">эффект.</div></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderPeopleAnalyticsTable(rows, totalViews) {
+  const tableRows = rows.map((person, index) => {
+    const avg = person.published ? person.views / person.published : 0;
+    const share = totalViews ? Math.round((person.views / totalViews) * 100) : 0;
+    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+
+    return `
+      <tr class="border-b" style="border-color: var(--border);">
+        <td class="p-4 font-black uppercase">${medal} ${escapeHtml(person.name)}</td>
+        <td class="p-4 font-black text-emerald-600">${Math.round(person.views).toLocaleString('ru-RU')}</td>
+        <td class="p-4">
+          <div class="flex items-center gap-3">
+            <div class="progress-track min-w-[90px]"><div class="progress-fill" style="width:${Math.min(share, 100)}%"></div></div>
+            <span class="font-black">${share}%</span>
+          </div>
+        </td>
+        <td class="p-4">${person.published}</td>
+        <td class="p-4">${person.activeTasks}</td>
+        <td class="p-4">${Math.round(avg).toLocaleString('ru-RU')}</td>
+        <td class="p-4">${Math.round(person.efficiency).toLocaleString('ru-RU')}</td>
+        <td class="p-4">${escapeHtml(person.topPlatform)}</td>
+        <td class="p-4 max-w-[260px] truncate" title="${escapeHtml(person.bestTask?.title || '')}">${escapeHtml(person.bestTask?.title || '—')}</td>
+      </tr>
+    `;
+  }).join('');
+
+  return `
     <div class="overflow-x-auto rounded-[1.5rem] border" style="border-color: var(--border);">
-      <table class="w-full text-left text-[11px] font-bold">
+      <table class="w-full min-w-[980px] text-left text-[11px] font-bold">
         <thead style="background: var(--surface-2); color: var(--muted);">
           <tr>
             <th class="p-4">Человек</th>
             <th class="p-4">Охват</th>
-            <th class="p-4">Задачи</th>
+            <th class="p-4">Доля</th>
             <th class="p-4">Опубликовано</th>
-            <th class="p-4">Средний охват</th>
+            <th class="p-4">Активно</th>
+            <th class="p-4">Средний</th>
+            <th class="p-4">Эффективность</th>
+            <th class="p-4">Топ-площадка</th>
+            <th class="p-4">Лучший материал</th>
           </tr>
         </thead>
         <tbody>
-          ${rows || `
+          ${tableRows || `
             <tr>
-              <td colspan="5" class="p-10 text-center text-[11px] font-black uppercase text-slate-400">
+              <td colspan="9" class="p-10 text-center text-[11px] font-black uppercase text-slate-400">
                 Пока нет опубликованных задач
               </td>
             </tr>
           `}
         </tbody>
       </table>
+    </div>
+  `;
+}
+
+function renderPeopleInsights(rows, periodTasks) {
+  const leader = rows[0];
+  const mostEfficient = rows.slice().sort((a, b) => b.efficiency - a.efficiency)[0];
+  const activeLoad = rows.slice().sort((a, b) => b.activeTasks - a.activeTasks)[0];
+  const published = periodTasks.filter(task => task.status === 'published');
+  const bestTask = published.slice().sort((a, b) => Number(b.play_count || 0) - Number(a.play_count || 0))[0];
+
+  const insights = [
+    leader ? `Лидер по охвату: ${leader.name} — ${Math.round(leader.views).toLocaleString('ru-RU')}.` : 'Пока нет лидера по охвату.',
+    mostEfficient ? `Самая высокая эффективность: ${mostEfficient.name} — ${Math.round(mostEfficient.efficiency).toLocaleString('ru-RU')} охвата на задачу.` : 'Эффективность появится после публикаций.',
+    activeLoad?.activeTasks ? `Больше всего активных задач сейчас у ${activeLoad.name}: ${activeLoad.activeTasks}.` : 'Активной нагрузки по команде сейчас не видно.',
+    bestTask ? `Лучший материал периода: «${bestTask.title || 'Без названия'}» — ${Number(bestTask.play_count || 0).toLocaleString('ru-RU')}.` : 'Лучший материал появится после обновления статистики.'
+  ];
+
+  return `
+    <div class="rounded-[1.5rem] border p-5" style="border-color: var(--border); background: var(--surface-2);">
+      <div class="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <div class="text-sm font-black uppercase">💡 Инсайты по команде</div>
+          <div class="mt-1 text-[11px] font-semibold" style="color: var(--muted);">Автоматические выводы за выбранный месяц.</div>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+        ${insights.map(item => `
+          <div class="rounded-2xl border p-4 text-sm font-bold" style="border-color: var(--border); background: var(--surface);">
+            ${escapeHtml(item)}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderPeopleAnalytics() {
+  const container = $('#analytics-people');
+  if (!container) return;
+
+  const periodTasks = getAnalyticsPeriodTasks(state.tasks);
+  const stats = calculatePeopleStats(periodTasks);
+  const rows = getPeopleAnalyticsRows(stats);
+  const totalViews = rows.reduce((sum, person) => sum + person.views, 0);
+  const totalPublished = periodTasks.filter(task => task.status === 'published').length;
+  const activeTasks = periodTasks.filter(task => task.status !== 'published').length;
+  const avgPerPost = totalPublished ? totalViews / totalPublished : 0;
+  const leader = rows[0];
+
+  container.innerHTML = `
+    <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div>
+        <h3 class="text-lg font-black uppercase">👥 Аналитика по команде</h3>
+        <p class="mt-2 max-w-3xl text-sm font-medium" style="color: var(--muted);">
+          Вклад считается за выбранный месяц: 50% охвата ответственному и 50% между исполнителями. Активные задачи показывают текущую нагрузку команды.
+        </p>
+      </div>
+      <div class="rounded-2xl border px-4 py-3 text-[10px] font-black uppercase" style="border-color: var(--border); background: var(--surface-2); color: var(--muted);">
+        ${escapeHtml(state.statsDate.toLocaleString('ru-RU', { month: 'long', year: 'numeric' }))}
+      </div>
+    </div>
+
+    <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+      ${renderPeopleKpiCard('Командный охват', Math.round(totalViews).toLocaleString('ru-RU'), 'распределенный вклад команды', '👁️')}
+      ${renderPeopleKpiCard('Публикации', totalPublished.toLocaleString('ru-RU'), 'материалы со статусом опубликовано', '🚀')}
+      ${renderPeopleKpiCard('Средний охват', Math.round(avgPerPost).toLocaleString('ru-RU'), 'на одну публикацию периода', '📈')}
+      ${renderPeopleKpiCard('Лидер месяца', leader ? escapeHtml(leader.name.split(' ')[0]) : '—', leader ? `${Math.round(leader.views).toLocaleString('ru-RU')} охвата` : 'данных пока нет', '🏆')}
+    </div>
+
+    <div class="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-5">
+      <div class="xl:col-span-2 space-y-4">
+        <div class="flex items-center justify-between gap-3">
+          <h4 class="text-sm font-black uppercase">🏆 Топ команды</h4>
+          <span class="text-[10px] font-black uppercase" style="color: var(--muted);">${activeTasks} активных задач</span>
+        </div>
+        ${renderPeopleLeaderboard(rows, totalViews)}
+      </div>
+      <div class="xl:col-span-3 space-y-6">
+        ${renderPeopleInsights(rows, periodTasks)}
+        ${renderPeopleAnalyticsTable(rows, totalViews)}
+      </div>
     </div>
   `;
 }
