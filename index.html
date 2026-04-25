@@ -1238,6 +1238,85 @@
       .theme-dropdown-menu { position: fixed; left: 16px; right: 16px; top: auto; bottom: calc(24px + var(--mobile-safe-bottom)); }
     }
 
+
+    /* Theme cleanup: contrast-safe modal/actions/controls across all themes */
+    :root {
+      --action-bg: var(--text);
+      --action-text: var(--surface);
+      --action-border: transparent;
+    }
+
+    body.theme-dark {
+      --action-bg: #f8fafc;
+      --action-text: #0f172a;
+      --action-border: rgba(255,255,255,.12);
+    }
+
+    body.theme-pink {
+      --action-bg: #881337;
+      --action-text: #ffffff;
+      --action-border: rgba(136,19,55,.18);
+    }
+
+    #createModal button[style*="background: var(--text)"],
+    #editModal button[style*="background: var(--text)"],
+    #trashModal button[style*="background: var(--text)"],
+    #profileModal button[style*="background: var(--text)"],
+    .toast button[style*="background: var(--text)"],
+    #resetFiltersBtn,
+    .inline-edit-actions .primary {
+      background: var(--action-bg) !important;
+      color: var(--action-text) !important;
+      border-color: var(--action-border) !important;
+    }
+
+    #createModal button[style*="background: var(--text)"]:hover,
+    #editModal button[style*="background: var(--text)"]:hover,
+    #trashModal button[style*="background: var(--text)"]:hover,
+    #profileModal button[style*="background: var(--text)"]:hover,
+    .toast button[style*="background: var(--text)"]:hover,
+    #resetFiltersBtn:hover,
+    .inline-edit-actions .primary:hover {
+      filter: brightness(.96);
+      transform: translateY(-1px);
+    }
+
+    #createModal input,
+    #createModal select,
+    #createModal textarea,
+    #editModal input,
+    #editModal select,
+    #editModal textarea,
+    #profileModal input,
+    #profileModal select,
+    #profileModal textarea {
+      background: var(--surface-2) !important;
+      color: var(--text) !important;
+      border-color: var(--border) !important;
+      caret-color: var(--primary);
+    }
+
+    #createModal input::placeholder,
+    #createModal textarea::placeholder,
+    #editModal input::placeholder,
+    #editModal textarea::placeholder,
+    #profileModal input::placeholder,
+    #profileModal textarea::placeholder {
+      color: var(--muted) !important;
+      opacity: .78;
+    }
+
+    #createModal label,
+    #editModal label,
+    #profileModal label,
+    #trashModal label {
+      color: var(--muted) !important;
+    }
+
+    body.theme-dark #createModal .hover\:bg-white\/70:hover,
+    body.theme-dark #editModal .hover\:bg-white\/70:hover {
+      background-color: rgba(255,255,255,.06) !important;
+    }
   </style>
 </head>
 <body class="min-h-screen">
