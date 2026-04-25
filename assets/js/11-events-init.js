@@ -1,4 +1,5 @@
     function bindEvents() {
+      $('#loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin();});
       $('#loginBtn').addEventListener('click', handleLogin);
       $('#loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
       $('#profileBtn').addEventListener('click', () => openModal('profileModal'));
@@ -279,7 +280,6 @@ if (viewTab) {
     }
 
     function initStaticUI() {
-      populateSelect($('#loginUser'), USERS);
       populateSelect($('#work_type'), WORK_TYPES);
       populateSelect($('#edit_work_type'), WORK_TYPES);
       populateSelect($('#tag'), TAGS, x => x.toUpperCase());
