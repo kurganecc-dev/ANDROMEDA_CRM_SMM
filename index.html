@@ -335,6 +335,144 @@
   font-weight: 800;
   opacity: .75;
 }
+
+.chat-task-search-box {
+  position: relative;
+  margin-bottom: 14px;
+}
+
+.chat-task-search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(59,130,246,.24);
+  background: color-mix(in srgb, var(--surface-2) 88%, transparent);
+  border-radius: 22px;
+  padding: 10px 12px;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.chat-task-search-row:focus-within {
+  border-color: rgba(59,130,246,.62);
+  box-shadow: 0 0 0 4px rgba(59,130,246,.10);
+  background: var(--surface);
+}
+
+.chat-task-search-icon {
+  flex: 0 0 auto;
+  font-size: 15px;
+}
+
+#chatTaskSearchInput {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+#chatTaskSearchInput::placeholder {
+  color: var(--muted);
+}
+
+#chatTaskSearchClear {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.chat-task-search-results {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  padding: 8px;
+}
+
+.chat-task-search-empty,
+.chat-task-search-hint {
+  padding: 14px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.chat-task-search-item {
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  border-radius: 16px;
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.chat-task-search-item:hover {
+  border-color: rgba(59,130,246,.22);
+  background: rgba(59,130,246,.08);
+}
+
+.chat-task-search-title {
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1.25;
+}
+
+.chat-task-search-meta {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.chat-task-search-send {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 9px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+@media (max-width: 767px) {
+  .chat-task-search-results {
+    max-height: 260px;
+  }
+
+  #chatTaskSearchInput {
+    font-size: 12px;
+  }
+}
     
 .chat-feed {
   height: 360px;
@@ -764,6 +902,23 @@
     }
     .quick-filter-btn:hover { border-color: color-mix(in srgb, var(--primary) 42%, var(--border)); color: var(--text); }
     .quick-filter-btn.is-active { background: var(--text); color: #fff; border-color: transparent; }
+    .quick-filter-btn { gap: 8px; }
+    .quick-filter-count {
+      min-width: 24px;
+      height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: color-mix(in srgb, var(--surface-2) 76%, var(--primary));
+      color: var(--text);
+      border: 1px solid var(--border);
+      font-size: 10px;
+      line-height: 1;
+    }
+    .quick-filter-btn.is-active .quick-filter-count { background: rgba(255,255,255,.18); color: #fff; border-color: rgba(255,255,255,.22); }
+
     #quickFilters { display: flex; gap: 6px; flex-wrap: wrap; }
     #view-list { gap: 18px !important; }
     #createModal input, #createModal select, #createModal textarea, #editModal input, #editModal select, #editModal textarea { border-width: 1px !important; }
@@ -771,6 +926,192 @@
       #quickFilters { width: 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 2px; }
       .quick-filter-btn { flex: 0 0 auto; }
       #view-list { gap: 14px !important; }
+    }
+
+
+
+    /* Mobile optimization layer v6: thumb-first layout, iOS-safe viewport, compact density */
+    :root {
+      --mobile-safe-bottom: env(safe-area-inset-bottom, 0px);
+      --mobile-safe-top: env(safe-area-inset-top, 0px);
+      --tap-size: 44px;
+    }
+
+    input, select, textarea, button { font-size: 16px; }
+    button, a, select, input[type="checkbox"], input[type="radio"] { touch-action: manipulation; }
+
+    @media (max-width: 1023px) {
+      body { overflow-x: hidden; -webkit-text-size-adjust: 100%; }
+      #appContent { min-height: 100dvh; }
+      header.sticky { top: 0; padding: calc(10px + var(--mobile-safe-top)) 12px 10px !important; backdrop-filter: blur(18px); }
+      header.sticky > div { display: grid !important; grid-template-columns: 1fr; gap: 10px !important; }
+      header.sticky > div > .flex:first-child { min-width: 0; width: 100%; display: grid !important; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px !important; }
+      header h1 { font-size: 18px !important; }
+      header p { font-size: 9px !important; }
+      #mainTabs { display: flex !important; width: 100%; max-width: 100%; overflow-x: auto; flex-wrap: nowrap !important; justify-content: flex-start; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+      #mainTabs::-webkit-scrollbar, #quickFilters::-webkit-scrollbar, #calendarTabs::-webkit-scrollbar { display: none; }
+      .view-tab { flex: 0 0 auto !important; min-width: max-content; min-height: var(--tap-size) !important; padding: 0 14px !important; scroll-snap-align: start; }
+      header.sticky > div > .flex:last-child { width: 100%; display: flex !important; justify-content: flex-end; gap: 8px !important; }
+      #profileBtn, #themeSelect, #logsBtn, #trashBtn, #logoutBtn { min-height: var(--tap-size) !important; }
+      #profileBtn { max-width: 100%; }
+      main.mx-auto { grid-template-columns: 1fr !important; gap: 14px !important; padding: 14px 12px calc(86px + var(--mobile-safe-bottom)) !important; }
+      #middlePanel, #rightSidebar { grid-column: 1 / -1 !important; min-width: 0; }
+      #rightSidebar { order: -1; }
+      #rightSidebar.hidden { display: none !important; }
+      .sidebar-panel { border-radius: 22px !important; padding: 14px !important; }
+      #focusSidebar { display: grid; gap: 10px; }
+      #focusSidebar > .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .sidebar-insight { padding: 12px !important; }
+      #heroBlock { border-radius: 22px !important; padding: 16px !important; }
+      #heroBlock h2 { font-size: 20px !important; line-height: 1.15 !important; }
+      #heroBlock p { font-size: 13px !important; }
+      #heroBlock .grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
+      .kpi-card { border-radius: 16px !important; padding: 12px !important; }
+      #listControls { position: sticky; top: 118px; z-index: 35; margin: 0 -12px; padding: 10px 12px; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); }
+      #openCreateBtn, #taskSearch, #tagFilter { width: 100%; min-height: var(--tap-size) !important; padding-top: 12px !important; padding-bottom: 12px !important; }
+      #quickFilters { display: flex !important; overflow-x: auto; flex-wrap: nowrap !important; gap: 6px !important; padding-bottom: 2px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+      .quick-filter-btn { flex: 0 0 auto !important; min-height: var(--tap-size) !important; }
+      #view-list { grid-template-columns: 1fr !important; gap: 12px !important; }
+      .task-card { border-radius: 22px !important; padding: 16px !important; }
+      .task-card:hover { transform: none !important; }
+      .task-card .flex.max-w-\[80\%\] { max-width: calc(100% - 84px) !important; }
+      .task-card h3 { font-size: 15px !important; }
+      .task-card .grid.grid-cols-2 { grid-template-columns: 1fr !important; }
+      .inline-edit-shell { margin: 12px -4px 0; padding: 12px; }
+      .inline-edit-actions { flex-direction: column; }
+      .inline-edit-actions button { width: 100%; min-height: var(--tap-size); }
+      #view-kanban { margin: 0 -12px; padding: 0 12px 12px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+      #view-kanban > .flex { min-width: 0 !important; width: max-content; gap: 12px !important; }
+      #view-kanban > .flex > div { flex: 0 0 82vw !important; min-width: 280px !important; max-width: 360px; scroll-snap-align: start; }
+      .kanban-col { min-height: 55vh !important; max-height: 65vh; overflow-y: auto; }
+      .calendar-grid { display: flex !important; overflow-x: auto; gap: 8px; background: transparent !important; border: 0 !important; border-radius: 0 !important; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+      .calendar-day { flex: 0 0 76px; min-height: 118px !important; border: 1px solid var(--border); border-radius: 18px; scroll-snap-align: start; }
+      #view-calendar .app-surface { padding: 14px !important; border-radius: 22px !important; }
+      #calendarTabs { overflow-x: auto; flex-wrap: nowrap !important; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
+      .calendar-filter { flex: 0 0 auto; }
+      #view-analytics .mx-auto.flex.w-fit, #analytics-visuals .flex.gap-1, #calendarTabs { width: 100% !important; }
+      #view-analytics .mx-auto.flex.w-fit button, #analytics-visuals .flex.gap-1 button { flex: 1 1 0; }
+      #analytics-table .app-surface, #analytics-visuals .app-surface, #analytics-people { border-radius: 22px !important; padding: 14px !important; }
+      #statsTableContainer, #analytics-people .overflow-x-auto { margin: 0 -14px; border-radius: 0 !important; }
+      #statsTableContainer table, #analytics-people table { min-width: 620px; }
+      #analytics-visuals .relative.h-\[420px\] { height: 320px !important; }
+      #view-accounts { grid-template-columns: 1fr !important; gap: 12px !important; }
+      #view-accounts > a { border-radius: 22px !important; padding: 16px !important; }
+      #view-chat .app-surface { border-radius: 22px !important; height: calc(100dvh - 190px - var(--mobile-safe-bottom)); }
+      #chatMessages { height: auto !important; min-height: 0 !important; flex: 1 1 auto; padding-left: 12px !important; padding-right: 12px !important; }
+      .chat-feed { max-height: none !important; }
+      .chat-bubble { max-width: 94% !important; }
+      .chat-row:hover .chat-emoji-bar { display: none; }
+      .chat-composer { border-radius: 16px !important; }
+      .chat-input-row { gap: 8px !important; }
+      .chat-send-btn { min-width: var(--tap-size) !important; height: var(--tap-size) !important; }
+      #createModal, #editModal, #trashModal, #profileModal { align-items: flex-end !important; padding: 0 !important; }
+      #createModal > div, #editModal > div, #trashModal > div, #profileModal > div { width: 100% !important; max-width: none !important; max-height: calc(96dvh - var(--mobile-safe-top)) !important; border-radius: 26px 26px 0 0 !important; padding-bottom: var(--mobile-safe-bottom); }
+      #ideaForm, #editForm { padding: 16px !important; }
+      #createModal .grid, #editModal .grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+      #channelList { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+      .multi-select-box { max-height: 220px; }
+      #logsPanel { width: min(92vw, 360px) !important; }
+      .toast-wrap { left: 12px; right: 12px; bottom: calc(12px + var(--mobile-safe-bottom)); max-width: none; }
+      .toast { border-radius: 16px !important; }
+    }
+
+    @media (max-width: 420px) {
+      #profileBtn { width: 100%; justify-content: flex-start; }
+      #heroBlock .grid, #focusSidebar > .grid { grid-template-columns: 1fr !important; }
+      .task-card .mb-2.flex.items-center.gap-2 { flex-wrap: wrap; }
+      #view-kanban > .flex > div { flex-basis: 88vw !important; }
+      .calendar-day { flex-basis: 72px; }
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      .task-card:hover, .chat-send-btn:hover, .quick-filter-btn:hover, .chat-task-bubble:hover, #view-accounts > a:hover { transform: none !important; }
+    }
+
+
+
+    /* Mobile-only header order: profile in top-right, navigation below */
+    @media (max-width: 767px) {
+      header.sticky > div {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        grid-template-areas:
+          "brand profile"
+          "tabs tabs" !important;
+        align-items: center !important;
+        gap: 10px 12px !important;
+      }
+
+      header.sticky > div > .flex:first-child {
+        display: contents !important;
+      }
+
+      header.sticky > div > .flex:first-child > div:first-child {
+        grid-area: brand !important;
+        min-width: 0 !important;
+      }
+
+      header.sticky > div > .flex:last-child {
+        grid-area: profile !important;
+        width: auto !important;
+        min-width: 0 !important;
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+      }
+
+      #profileBtn {
+        width: auto !important;
+        min-width: var(--tap-size) !important;
+        max-width: 50vw !important;
+        justify-content: flex-end !important;
+        padding: 6px !important;
+        border-radius: 16px !important;
+      }
+
+      #profileInitials {
+        width: 38px !important;
+        height: 38px !important;
+        border-radius: 14px !important;
+      }
+
+      #profileBtn > span:nth-child(2) {
+        display: none !important;
+      }
+
+      #mainTabs {
+        grid-area: tabs !important;
+        order: initial !important;
+        width: 100% !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        justify-content: flex-start !important;
+        gap: 6px !important;
+        padding: 4px !important;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+
+      #mainTabs::-webkit-scrollbar {
+        display: none;
+      }
+
+      .view-tab {
+        flex: 0 0 auto !important;
+        min-width: max-content !important;
+        scroll-snap-align: start;
+      }
+    }
+
+    /* Focus cleanup: hero/sidebar removed, list gets full width */
+    #heroBlock, #rightSidebar { display: none !important; }
+    #middlePanel { grid-column: 1 / -1 !important; }
+    #listControls { align-items: stretch; }
+    @media (min-width: 768px) {
+      #quickFilters { flex: 1 1 auto; }
+      .quick-filter-btn { flex: 0 0 auto; }
     }
 
   </style>
@@ -800,53 +1141,29 @@
           <div id="mainTabs" class="flex flex-wrap gap-1 rounded-2xl p-1 surface-muted text-[10px] font-black uppercase"></div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-3">
-          <select id="themeSelect" class="rounded-xl border px-3 py-2 text-[10px] font-black uppercase outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);">
-            <option value="light">☀️ Светлая</option>
-            <option value="dark">🌙 Тёмная</option>
-            <option value="pink">🌸 Розовая</option>
-          </select>
-
-          <button id="logsBtn" class="relative rounded-xl border p-2" style="background: var(--surface-2); border-color: var(--border);">🔔
-            <span id="logBadge" class="hidden absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[8px] font-black text-white">!</span>
+        <div class="flex flex-wrap items-center justify-end gap-3">
+          <button id="profileBtn" class="relative inline-flex items-center gap-3 rounded-2xl border px-3 py-2 text-left transition hover:-translate-y-0.5" style="background: var(--surface-2); border-color: var(--border); color: var(--text);">
+            <span id="profileInitials" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[11px] font-black uppercase text-white" style="background: var(--primary);">👤</span>
+            <span class="min-w-0">
+              <span id="profileNameCompact" class="block max-w-[180px] truncate text-[11px] font-black uppercase">Профиль</span>
+              <span class="block text-[9px] font-black uppercase" style="color: var(--muted);">Настройки</span>
+            </span>
+            <span id="profileAlertDot" class="hidden absolute -right-1 -top-1 h-3 w-3 rounded-full bg-blue-600 ring-2" style="--tw-ring-color: var(--surface);"></span>
           </button>
-
-          <button id="trashBtn" class="relative rounded-xl border p-2" style="background: var(--surface-2); border-color: var(--border);">🗑️
-            <span id="trashBadge" class="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-slate-900 px-1 text-[8px] font-black text-white">0</span>
-          </button>
-
-          <div id="currentUserDisplay" class="border-l pl-4 text-[11px] font-black uppercase" style="border-color: var(--border);"></div>
-          <button id="logoutBtn" class="text-[10px] font-black uppercase text-rose-500">Выход</button>
         </div>
       </div>
     </header>
 
     <main class="mx-auto grid max-w-[1800px] grid-cols-1 gap-6 px-6 py-6 lg:grid-cols-12">
-      <section id="middlePanel" class="space-y-6 lg:col-span-9">
-       <div id="heroBlock" class="hero-shell app-surface rounded-[2rem] p-6">
-          <div class="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
-            <div>
-              <div class="mb-2 inline-flex rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em]" style="background: rgba(37,99,235,.10); color: var(--primary);">Приоритеты</div>
-              <h2 class="text-2xl font-black tracking-tight">Фокус на задачах, сроках и публикациях</h2>
-              <p class="mt-2 max-w-2xl text-sm font-medium" style="color: var(--muted);">Сначала срочное и личное, потом детали: список стал спокойнее, а быстрые фильтры помогают не теряться в потоке.</p>
-            </div>
-            <div class="grid grid-cols-2 gap-3 xl:min-w-[440px] xl:grid-cols-4">
-              <div class="kpi-card rounded-[1.5rem] p-4"><div class="text-[10px] font-black uppercase" style="color: var(--muted);">Активные</div><div id="kpiActive" class="mt-2 text-2xl font-black">0</div></div>
-              <div class="kpi-card rounded-[1.5rem] p-4"><div class="text-[10px] font-black uppercase" style="color: var(--muted);">В работе</div><div id="kpiWork" class="mt-2 text-2xl font-black">0</div></div>
-              <div class="kpi-card rounded-[1.5rem] p-4"><div class="text-[10px] font-black uppercase" style="color: var(--muted);">Дедлайны сегодня</div><div id="kpiToday" class="mt-2 text-2xl font-black">0</div></div>
-              <div class="kpi-card rounded-[1.5rem] p-4"><div class="text-[10px] font-black uppercase" style="color: var(--muted);">Опубликовано</div><div id="kpiPublished" class="mt-2 text-2xl font-black">0</div></div>
-            </div>
-          </div>
-        </div>
-
-        <div id="listControls" class="flex flex-col gap-4 md:flex-row">
+      <section id="middlePanel" class="space-y-6 lg:col-span-12">
+       <div id="listControls" class="flex flex-col gap-4 md:flex-row">
           <button id="openCreateBtn" class="rounded-2xl px-6 py-4 text-[11px] font-black uppercase text-white" style="background: var(--primary);">+ Создать задачу</button>
           <div id="quickFilters" aria-label="Быстрые фильтры задач">
-            <button type="button" class="quick-filter-btn is-active" data-quick-filter="ALL">Все</button>
-            <button type="button" class="quick-filter-btn" data-quick-filter="MINE">Мои</button>
-            <button type="button" class="quick-filter-btn" data-quick-filter="TODAY">Сегодня</button>
-            <button type="button" class="quick-filter-btn" data-quick-filter="OVERDUE">Просрочено</button>
-            <button type="button" class="quick-filter-btn" data-quick-filter="UNASSIGNED">Без исполнителя</button>
+            <button type="button" class="quick-filter-btn is-active" data-quick-filter="ALL"><span>Все</span><span class="quick-filter-count" data-filter-count="ALL">0</span></button>
+            <button type="button" class="quick-filter-btn" data-quick-filter="MINE"><span>Мои</span><span class="quick-filter-count" data-filter-count="MINE">0</span></button>
+            <button type="button" class="quick-filter-btn" data-quick-filter="TODAY"><span>Сегодня</span><span class="quick-filter-count" data-filter-count="TODAY">0</span></button>
+            <button type="button" class="quick-filter-btn" data-quick-filter="OVERDUE"><span>Просрочено</span><span class="quick-filter-count" data-filter-count="OVERDUE">0</span></button>
+            <button type="button" class="quick-filter-btn" data-quick-filter="UNASSIGNED"><span>Без исполнителя</span><span class="quick-filter-count" data-filter-count="UNASSIGNED">0</span></button>
           </div>
           <input id="taskSearch" type="text" placeholder="Поиск по названию" class="flex-1 rounded-2xl border px-4 py-4 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);" />
           <select id="tagFilter" class="rounded-2xl border px-4 py-4 text-[11px] font-black uppercase outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);">
@@ -1006,8 +1323,13 @@
      <div id="view-chat" class="hidden h-full">
   <div class="app-surface overflow-hidden rounded-[2rem]">
     <div class="px-6 pt-3">
-      <div id="chatDropZone" class="chat-drop-zone">
-        Перетащи сюда задачу из блока «Фокус и мои задачи»
+      <div id="chatTaskSearchBox" class="chat-task-search-box">
+        <div class="chat-task-search-row">
+          <span class="chat-task-search-icon">🔎</span>
+          <input id="chatTaskSearchInput" type="text" placeholder="Найти задачу и отправить в чат..." autocomplete="off" />
+          <button id="chatTaskSearchClear" type="button" aria-label="Очистить поиск">×</button>
+        </div>
+        <div id="chatTaskSearchResults" class="chat-task-search-results hidden"></div>
       </div>
     </div>
 
@@ -1033,13 +1355,7 @@
 </div>
       </section>
 
-     <aside id="rightSidebar" class="space-y-6 lg:col-span-3">
-  <div class="sidebar-panel rounded-[2rem] p-5 text-slate-100 overflow-hidden" style="background: #0f172a; box-shadow: var(--shadow);">
-    <h3 class="mb-4 border-b border-slate-800 pb-4 text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">Фокус и мои задачи</h3>
-    <div id="focusSidebar" class="space-y-4"></div>
-  </div>
-</aside>
-    </main>
+     </main>
   </div>
 
   <div id="editModal" class="hidden fixed inset-0 z-[200] items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
@@ -1142,6 +1458,54 @@
         </div>
         <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"><p class="text-xs font-medium" style="color: var(--muted);">После сохранения задача появится в списке и в календаре.</p><button class="rounded-2xl px-6 py-4 text-sm font-black uppercase text-white" style="background: var(--text);">Создать задачу</button></div>
       </form>
+    </div>
+  </div>
+
+
+  <div id="profileModal" class="hidden fixed inset-0 z-[230] items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+    <div class="app-surface flex max-h-[86vh] w-full max-w-md flex-col rounded-[2rem] p-6">
+      <div class="mb-5 flex items-start justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div id="profileInitialsModal" class="flex h-12 w-12 items-center justify-center rounded-2xl text-sm font-black uppercase text-white" style="background: var(--primary);">👤</div>
+          <div>
+            <div class="text-[10px] font-black uppercase tracking-[0.22em]" style="color: var(--primary);">Профиль</div>
+            <div id="currentUserDisplay" class="mt-1 text-sm font-black uppercase"></div>
+            <div id="profileRoleDisplay" class="mt-1 text-[10px] font-black uppercase" style="color: var(--muted);"></div>
+          </div>
+        </div>
+        <button data-close-modal="profileModal" class="text-3xl text-slate-400">&times;</button>
+      </div>
+
+      <div class="space-y-3 overflow-y-auto pr-1">
+        <div class="rounded-2xl border p-4" style="border-color: var(--border); background: var(--surface-2);">
+          <label class="mb-2 block text-[10px] font-black uppercase" style="color: var(--muted);">Тема интерфейса</label>
+          <select id="themeSelect" class="w-full rounded-xl border px-3 py-3 text-[11px] font-black uppercase outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);">
+            <option value="light">☀️ Светлая</option>
+            <option value="dark">🌙 Тёмная</option>
+            <option value="pink">🌸 Розовая</option>
+          </select>
+        </div>
+
+        <button id="logsBtn" class="relative flex w-full items-center justify-between rounded-2xl border p-4 text-left transition hover:-translate-y-0.5" style="border-color: var(--border); background: var(--surface-2); color: var(--text);">
+          <span>
+            <span class="block text-sm font-black uppercase">🔔 История действий</span>
+            <span class="mt-1 block text-[11px] font-semibold" style="color: var(--muted);">Логи создания, удаления и изменений задач</span>
+          </span>
+          <span id="logBadge" class="hidden flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-black text-white">!</span>
+        </button>
+
+        <button id="trashBtn" class="flex w-full items-center justify-between rounded-2xl border p-4 text-left transition hover:-translate-y-0.5" style="border-color: var(--border); background: var(--surface-2); color: var(--text);">
+          <span>
+            <span class="block text-sm font-black uppercase">🗑️ Корзина</span>
+            <span class="mt-1 block text-[11px] font-semibold" style="color: var(--muted);">Восстановление или окончательное удаление</span>
+          </span>
+          <span id="trashBadge" class="flex h-6 min-w-6 items-center justify-center rounded-full bg-slate-900 px-2 text-[10px] font-black text-white">0</span>
+        </button>
+
+        <button id="logoutBtn" class="flex w-full items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 text-[11px] font-black uppercase text-rose-600">
+          Выйти из аккаунта
+        </button>
+      </div>
     </div>
   </div>
 
@@ -2479,17 +2843,13 @@
     const ViewController = {
       applyLayout() {
         const controls = $('#listControls');
-        const rightSidebar = $('#rightSidebar');
         const middle = $('#middlePanel');
         const listLike = state.currentView === 'list' || state.currentView === 'kanban';
-        const heroBlock = $('#heroBlock');
         if (controls) controls.classList.toggle('hidden', !listLike);
-        if (heroBlock) heroBlock.classList.toggle('hidden', ['chat','analytics','calendar','accounts'].includes(state.currentView));
-        if (rightSidebar) rightSidebar.classList.toggle('hidden', state.currentView === 'kanban');
 
         if (middle) {
-          middle.classList.toggle('lg:col-span-12', state.currentView === 'kanban');
-          middle.classList.toggle('lg:col-span-9', state.currentView !== 'kanban');
+          middle.classList.add('lg:col-span-12');
+          middle.classList.remove('lg:col-span-9');
         }
 
         VIEWS.forEach(view => {
@@ -2533,6 +2893,9 @@
       renderMeta() {
         if ($('#trashBadge')) {
           $('#trashBadge').textContent = String(state.trash.length);
+        }
+        if ($('#profileAlertDot')) {
+          $('#profileAlertDot').classList.toggle('hidden', state.unreadChatCount <= 0);
         }
 
         renderSmartSidebar();
@@ -2650,21 +3013,12 @@
     }
 
     function getSocialIcon(platform) {
-  const icons = {
-    YouTube: '<img src="https://cdn.simpleicons.org/youtube" alt="YouTube" class="inline-block h-5 w-5 align-middle" />',
-    TikTok: '<img src="https://cdn.simpleicons.org/tiktok" alt="TikTok" class="inline-block h-5 w-5 align-middle" />',
-    Instagram: '<img src="https://cdn.simpleicons.org/instagram" alt="Instagram" class="inline-block h-5 w-5 align-middle" />',
-    VK: '<img src="https://cdn.simpleicons.org/vk" alt="VK" class="inline-block h-5 w-5 align-middle" />',
-    Telegram: '<img src="https://cdn.simpleicons.org/telegram" alt="Telegram" class="inline-block h-5 w-5 align-middle" />',
-    'Этажи SMM': '<img src="https://cdn.simpleicons.org/telegram" alt="Этажи SMM" class="inline-block h-5 w-5 align-middle" />',
-    NewsRoom: '<img src="https://cdn.simpleicons.org/telegram" alt="NewsRoom" class="inline-block h-5 w-5 align-middle" />',
-    Echat: '<img src="https://cdn.simpleicons.org/telegram" alt="Echat" class="inline-block h-5 w-5 align-middle" />',
-    Max: '<span class="inline-flex h-5 w-5 items-center justify-center rounded bg-slate-900 text-[9px] font-black text-white align-middle">MAX</span>',
-    ОК: '<img src="https://cdn.simpleicons.org/odnoklassniki" alt="ОК" class="inline-block h-5 w-5 align-middle" />'
-  };
-
-  return icons[platform] || '<span class="inline-block h-5 w-5 align-middle">🔗</span>';
-}
+      const icons = {
+        YouTube: '🔴', TikTok: '⚫', Instagram: '📸', VK: '🔵', Telegram: '✈️',
+        'Этажи SMM': '📢', NewsRoom: '📰', Echat: '💬', Max: '👔', ОК: '🟠'
+      };
+      return icons[platform] || '🔗';
+    }
 
     function setVisible(el, isVisible, display = 'block') {
       if (!el) return;
@@ -2778,18 +3132,47 @@ const unreadBadge = view === 'chat' && state.unreadChatCount > 0
 
 
     function renderDashboardSummary() {
+      renderQuickFilterCounts();
+    }
+
+    function getQuickFilterBaseTasks() {
+      const query = ($('#taskSearch')?.value || '').trim().toLowerCase();
+      const tag = $('#tagFilter')?.value || 'ALL';
+
+      return state.tasks.filter(task => {
+        const title = String(task.title || '').toLowerCase();
+        const matchesText = title.includes(query);
+        const matchesTag = tag === 'ALL' || task.tag === tag;
+        return matchesText && matchesTag;
+      });
+    }
+
+    function getQuickFilterCounts() {
       const today = new Date();
       const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-      const active = state.tasks.filter(task => task.status !== 'published').length;
-      const inWork = state.tasks.filter(task =>
-  ['script', 'production', 'editing', 'review', 'scheduled'].includes(task.status)
-).length;
-      const deadlinesToday = state.tasks.filter(task => task.date === todayStr && task.status !== 'published').length;
-      const published = state.tasks.filter(task => task.status === 'published').length;
-      if ($('#kpiActive')) $('#kpiActive').textContent = active;
-      if ($('#kpiWork')) $('#kpiWork').textContent = inWork;
-      if ($('#kpiToday')) $('#kpiToday').textContent = deadlinesToday;
-      if ($('#kpiPublished')) $('#kpiPublished').textContent = published;
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const me = state.currentUser;
+      const base = getQuickFilterBaseTasks();
+      const active = base.filter(task => task.status !== 'published');
+
+      return {
+        ALL: base.length,
+        MINE: active.filter(task => ((task.executors || []).includes(me)) || task.responsible === me).length,
+        TODAY: active.filter(task => task.date === todayStr).length,
+        OVERDUE: active.filter(task => {
+          const date = parseLocalDate(task.date);
+          return date && date < todayStart;
+        }).length,
+        UNASSIGNED: active.filter(task => !(task.executors || []).length).length
+      };
+    }
+
+    function renderQuickFilterCounts() {
+      const counts = getQuickFilterCounts();
+      Object.entries(counts).forEach(([key, value]) => {
+        const el = document.querySelector(`[data-filter-count="${key}"]`);
+        if (el) el.textContent = String(value);
+      });
     }
 
 
@@ -3006,7 +3389,7 @@ function renderPeopleAnalytics() {
       `).join('');
     }
 
-    function renderSmartSidebar() { SidebarUI.render();}
+    function renderSmartSidebar() { renderQuickFilterCounts(); }
     function renderTrash() {
       const list = $('#trashList');
       const isAdmin = state.currentRole === 'admin';
@@ -3150,6 +3533,24 @@ function renderPeopleAnalytics() {
       ViewController.renderMeta();
     }
     
+
+    function getProfileInitials(name = '') {
+      const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+      if (!parts.length) return '👤';
+      return parts.slice(0, 2).map(part => part[0]).join('').toUpperCase();
+    }
+
+    function updateProfileUI() {
+      const name = state.currentUser || 'Пользователь';
+      const role = state.currentRole === 'admin' ? 'Администратор' : 'Пользователь';
+      const initials = getProfileInitials(name);
+      if ($('#currentUserDisplay')) $('#currentUserDisplay').textContent = name;
+      if ($('#profileNameCompact')) $('#profileNameCompact').textContent = name;
+      if ($('#profileRoleDisplay')) $('#profileRoleDisplay').textContent = role;
+      if ($('#profileInitials')) $('#profileInitials').textContent = initials;
+      if ($('#profileInitialsModal')) $('#profileInitialsModal').textContent = initials;
+    }
+
     function applyTheme(theme) {
       document.body.classList.remove('theme-dark', 'theme-pink');
       if (theme === 'dark') document.body.classList.add('theme-dark');
@@ -3227,7 +3628,7 @@ function renderPeopleAnalytics() {
       state.currentUser = user.name;
       state.currentRole = user.role;
 
-      $('#currentUserDisplay').textContent = `👤 ${state.currentUser || ''}`;
+      updateProfileUI();
 
       if (state.currentRole === 'admin') {
         $('#adminPanel').classList.remove('hidden');
@@ -3576,7 +3977,97 @@ renderMetaOnly();
     btn.textContent = 'Обновить';
   }
 }
-        async function sendTaskToChat(taskId) {
+function getChatTaskSearchMatches(query = '') {
+      const normalized = String(query || '').trim().toLowerCase();
+      const source = state.tasks || [];
+
+      if (!normalized) {
+        return source
+          .filter(task => task.status !== 'published')
+          .slice()
+          .sort((a, b) => {
+            const da = parseLocalDate(a.date)?.getTime() || 0;
+            const db = parseLocalDate(b.date)?.getTime() || 0;
+            return da - db || Number(b.id || 0) - Number(a.id || 0);
+          })
+          .slice(0, 6);
+      }
+
+      return source
+        .filter(task => {
+          const haystack = [
+            task.title,
+            task.description,
+            task.responsible,
+            task.work_type,
+            task.tag,
+            STATUS_MAP[task.status],
+            ...(task.channels || []),
+            ...(task.executors || [])
+          ].join(' ').toLowerCase();
+
+          return haystack.includes(normalized);
+        })
+        .slice(0, 8);
+    }
+
+    function renderChatTaskSearchResults(forceOpen = false) {
+      const input = $('#chatTaskSearchInput');
+      const results = $('#chatTaskSearchResults');
+      if (!input || !results) return;
+
+      const query = input.value.trim();
+      const isFocused = document.activeElement === input;
+      if (!forceOpen && !isFocused && !query) {
+        results.classList.add('hidden');
+        results.innerHTML = '';
+        return;
+      }
+
+      const matches = getChatTaskSearchMatches(query);
+
+      if (!matches.length) {
+        results.innerHTML = '<div class="chat-task-search-empty">Задачи не найдены</div>';
+        results.classList.remove('hidden');
+        return;
+      }
+
+      const title = query
+        ? ''
+        : '<div class="chat-task-search-hint">Ближайшие активные задачи</div>';
+
+      results.innerHTML = title + matches.map(task => {
+        const deadline = getDeadlineMeta(task.date, task.status);
+        const channels = (task.channels || []).slice(0, 3).join(', ') || 'без площадок';
+        const executor = (task.executors || []).slice(0, 2).join(', ') || task.responsible || 'без исполнителя';
+
+        return `
+          <button type="button" class="chat-task-search-item send-chat-task-from-search" data-task-id="${escapeHtml(task.id)}">
+            <div class="chat-task-search-title">${escapeHtml(task.title || 'Без названия')}</div>
+            <div class="chat-task-search-meta">
+              <span>${escapeHtml(STATUS_MAP[task.status] || 'Идея')}</span>
+              <span>📅 ${escapeHtml(deadline.shortLabel)}</span>
+              <span>${escapeHtml(channels)}</span>
+              <span>👤 ${escapeHtml(executor)}</span>
+            </div>
+            <span class="chat-task-search-send">Отправить в чат</span>
+          </button>
+        `;
+      }).join('');
+      results.classList.remove('hidden');
+    }
+
+    function clearChatTaskSearch() {
+      const input = $('#chatTaskSearchInput');
+      const results = $('#chatTaskSearchResults');
+      if (input) input.value = '';
+      if (results) {
+        results.innerHTML = '';
+        results.classList.add('hidden');
+      }
+    }
+
+            async function sendTaskToChat(taskId) {
       const task = state.tasks.find(item => String(item.id) === String(taskId));
       if (!task) return notify('Задача не найдена', 'warning', 'Не получилось');
 
@@ -3588,6 +4079,8 @@ renderMetaOnly();
 
       if (error) return notify('Не удалось отправить задачу в чат', 'error', 'Ошибка');
 
+      clearChatTaskSearch();
+      await refreshChat();
       notify(`Задача «${task.title || 'Без названия'}» отправлена в чат`, 'success', 'Готово');
     }
         async function sendChatMessage() {
@@ -3650,11 +4143,12 @@ renderMetaOnly();
     function bindEvents() {
       $('#loginBtn').addEventListener('click', handleLogin);
       $('#loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+      $('#profileBtn').addEventListener('click', () => openModal('profileModal'));
       $('#logoutBtn').addEventListener('click', logout);
       $('#themeSelect').addEventListener('change', e => applyTheme(e.target.value));
       $('#openCreateBtn').addEventListener('click', openCreateModal);
-      $('#trashBtn').addEventListener('click', () => { renderTrash(); openModal('trashModal'); });
-      $('#logsBtn').addEventListener('click', () => toggleLogs());
+      $('#trashBtn').addEventListener('click', () => { closeModal('profileModal'); renderTrash(); openModal('trashModal'); });
+      $('#logsBtn').addEventListener('click', () => { closeModal('profileModal'); toggleLogs(); });
       $('#closeLogsBtn').addEventListener('click', () => toggleLogs(false));
       $('#taskSearch').addEventListener('input', renderAll);
       $('#tagFilter').addEventListener('change', renderAll);
@@ -3798,6 +4292,18 @@ if (viewTab) {
           renderCalendar();
           return;
         }
+        const chatTaskSearchItem = event.target.closest('.send-chat-task-from-search');
+        if (chatTaskSearchItem) {
+          await sendTaskToChat(chatTaskSearchItem.dataset.taskId);
+          return;
+        }
+
+        if (event.target.closest('#chatTaskSearchClear')) {
+          clearChatTaskSearch();
+          $('#chatTaskSearchInput')?.focus();
+          return;
+        }
+
         const chatTaskBubble = event.target.closest('.open-chat-task');
         if (chatTaskBubble) {
           openEditModal(chatTaskBubble.dataset.taskId);
@@ -3812,9 +4318,26 @@ if (viewTab) {
 
 
       document.addEventListener('input', event => {
+        if (event.target.closest('#chatTaskSearchInput')) {
+          renderChatTaskSearchResults(true);
+          return;
+        }
+
         const inlineField = event.target.closest('.inline-edit-input');
         if (!inlineField || !state.inlineDraft) return;
         state.inlineDraft[inlineField.dataset.inlineField] = inlineField.value;
+      });
+
+      document.addEventListener('focusin', event => {
+        if (event.target.closest('#chatTaskSearchInput')) {
+          renderChatTaskSearchResults(true);
+        }
+      });
+
+      document.addEventListener('click', event => {
+        if (!event.target.closest('#chatTaskSearchBox')) {
+          $('#chatTaskSearchResults')?.classList.add('hidden');
+        }
       });
 
       document.addEventListener('change', event => {
@@ -3917,5 +4440,35 @@ if (viewTab) {
     bindEvents();
     checkAuth();
   </script>
+
+  <script>
+    (function mobileEnhancements() {
+      const root = document.documentElement;
+      function setViewportHeight() { root.style.setProperty('--app-vh', (window.innerHeight * 0.01) + 'px'); }
+      function markMobile() { document.body.classList.toggle('is-mobile-layout', window.matchMedia('(max-width: 1023px)').matches); }
+      function scrollActiveTabIntoView() {
+        const active = document.querySelector('#mainTabs .tab-active');
+        if (active && window.matchMedia('(max-width: 1023px)').matches) active.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+      function attachHorizontalScroll(selector) {
+        const el = document.querySelector(selector);
+        if (!el || el.dataset.mobileScrollReady) return;
+        el.dataset.mobileScrollReady = 'true';
+        el.addEventListener('wheel', event => {
+          if (!window.matchMedia('(max-width: 1023px)').matches) return;
+          if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) { el.scrollLeft += event.deltaY; event.preventDefault(); }
+        }, { passive: false });
+      }
+      function enhance() {
+        setViewportHeight(); markMobile(); scrollActiveTabIntoView();
+        ['#mainTabs', '#quickFilters', '#calendarTabs', '#view-kanban', '.calendar-grid'].forEach(attachHorizontalScroll);
+      }
+      window.addEventListener('resize', enhance, { passive: true });
+      window.addEventListener('orientationchange', enhance, { passive: true });
+      document.addEventListener('click', event => { if (event.target.closest('.view-tab')) requestAnimationFrame(scrollActiveTabIntoView); });
+      enhance();
+    })();
+  </script>
+
 </body>
 </html>
