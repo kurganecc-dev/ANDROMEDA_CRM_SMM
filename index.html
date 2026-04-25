@@ -133,7 +133,7 @@
   color: var(--muted);
   border-color: var(--border);
 }
-    .tab-active { background: var(--text) !important; color: white !important; }
+    .tab-active { background: var(--primary) !important; color: #fff !important; border-color: transparent !important; }
 
     .view-animate { animation: slideUpFade .25s ease; }
     @keyframes slideUpFade {
@@ -901,7 +901,7 @@
       display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; transition: .18s ease;
     }
     .quick-filter-btn:hover { border-color: color-mix(in srgb, var(--primary) 42%, var(--border)); color: var(--text); }
-    .quick-filter-btn.is-active { background: var(--text); color: #fff; border-color: transparent; }
+    .quick-filter-btn.is-active { background: var(--primary); color: #fff; border-color: transparent; }
     .quick-filter-btn { gap: 8px; }
     .quick-filter-count {
       min-width: 24px;
@@ -1112,6 +1112,99 @@
     @media (min-width: 768px) {
       #quickFilters { flex: 1 1 auto; }
       .quick-filter-btn { flex: 0 0 auto; }
+    }
+
+
+    /* SaaS-style custom theme dropdown */
+    /* Theme-safe selector colors: fixes white selector + white text in dark mode */
+    select,
+    .theme-dropdown-btn,
+    .theme-dropdown-menu,
+    .theme-dropdown-option {
+      background-color: var(--surface) !important;
+      color: var(--text) !important;
+      border-color: var(--border) !important;
+      color-scheme: light;
+    }
+
+    select option {
+      background-color: var(--surface);
+      color: var(--text);
+    }
+
+    body.theme-dark select,
+    body.theme-dark select option,
+    body.theme-dark .theme-dropdown-btn,
+    body.theme-dark .theme-dropdown-menu,
+    body.theme-dark .theme-dropdown-option {
+      background-color: #1e293b !important;
+      color: #f8fafc !important;
+      border-color: #334155 !important;
+      color-scheme: dark;
+    }
+
+    body.theme-dark .theme-dropdown-icon,
+    body.theme-dark .theme-dropdown-option-icon,
+    body.theme-dark .theme-dropdown-chevron {
+      background-color: #172334 !important;
+      color: #f8fafc !important;
+      border-color: #334155 !important;
+    }
+
+    body.theme-dark .theme-dropdown-option:hover {
+      background-color: #172334 !important;
+      border-color: #475569 !important;
+    }
+
+    body.theme-dark .theme-dropdown-option[aria-selected="true"] {
+      background-color: rgba(59,130,246,.18) !important;
+      border-color: rgba(96,165,250,.38) !important;
+    }
+
+    body.theme-pink select,
+    body.theme-pink select option,
+    body.theme-pink .theme-dropdown-btn,
+    body.theme-pink .theme-dropdown-menu,
+    body.theme-pink .theme-dropdown-option {
+      background-color: #ffffff !important;
+      color: #881337 !important;
+      border-color: #fecdd3 !important;
+      color-scheme: light;
+    }
+    .theme-dropdown { position: relative; }
+    .theme-dropdown-btn {
+      width: 100%; min-height: 56px; border: 1px solid var(--border); border-radius: 18px;
+      background: var(--surface); color: var(--text); padding: 10px 12px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      cursor: pointer; text-align: left; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .theme-dropdown-btn:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--primary) 42%, var(--border)); box-shadow: 0 10px 22px rgba(15,23,42,.08); }
+    .theme-dropdown.open .theme-dropdown-btn { border-color: color-mix(in srgb, var(--primary) 58%, var(--border)); box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 13%, transparent); }
+    .theme-dropdown-current { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .theme-dropdown-icon, .theme-dropdown-option-icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 13px; background: var(--surface-2); border: 1px solid var(--border); flex: 0 0 auto; }
+    .theme-dropdown-label, .theme-dropdown-option-title { display: block; font-size: 12px; font-weight: 900; text-transform: uppercase; line-height: 1.1; }
+    .theme-dropdown-hint, .theme-dropdown-option-desc { display: block; margin-top: 4px; font-size: 10px; font-weight: 700; color: var(--muted); text-transform: none; }
+    .theme-dropdown-chevron { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 999px; background: var(--surface-2); color: var(--muted); font-size: 18px; line-height: 1; transition: transform .18s ease; }
+    .theme-dropdown.open .theme-dropdown-chevron { transform: rotate(180deg); }
+    .theme-dropdown-menu {
+      position: absolute; left: 0; right: 0; top: calc(100% + 8px); z-index: 300;
+      display: none; padding: 8px; border-radius: 22px; background: var(--surface); border: 1px solid var(--border);
+      box-shadow: 0 20px 45px rgba(15,23,42,.16); transform-origin: top; animation: themeMenuIn .16s ease;
+    }
+    .theme-dropdown.open .theme-dropdown-menu { display: grid; gap: 6px; }
+    @keyframes themeMenuIn { from { opacity: 0; transform: translateY(-4px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .theme-dropdown-option {
+      width: 100%; border: 1px solid transparent; border-radius: 16px; background: transparent; color: var(--text);
+      padding: 10px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px;
+      text-align: left; cursor: pointer; transition: background .18s ease, border-color .18s ease, transform .18s ease;
+    }
+    .theme-dropdown-option:hover { background: var(--surface-2); border-color: var(--border); transform: translateY(-1px); }
+    .theme-dropdown-option[aria-selected="true"] { background: color-mix(in srgb, var(--primary) 12%, var(--surface)); border-color: color-mix(in srgb, var(--primary) 32%, var(--border)); }
+    .theme-dropdown-check { opacity: 0; width: 24px; height: 24px; border-radius: 999px; display: grid; place-items: center; background: var(--primary); color: #fff; font-size: 12px; font-weight: 900; }
+    .theme-dropdown-option[aria-selected="true"] .theme-dropdown-check { opacity: 1; }
+    body.theme-dark .theme-dropdown-menu { box-shadow: 0 24px 52px rgba(0,0,0,.42); }
+    @media (max-width: 767px) {
+      .theme-dropdown-menu { position: fixed; left: 16px; right: 16px; top: auto; bottom: calc(24px + var(--mobile-safe-bottom)); }
     }
 
   </style>
@@ -1479,11 +1572,35 @@
       <div class="space-y-3 overflow-y-auto pr-1">
         <div class="rounded-2xl border p-4" style="border-color: var(--border); background: var(--surface-2);">
           <label class="mb-2 block text-[10px] font-black uppercase" style="color: var(--muted);">Тема интерфейса</label>
-          <select id="themeSelect" class="w-full rounded-xl border px-3 py-3 text-[11px] font-black uppercase outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);">
-            <option value="light">☀️ Светлая</option>
-            <option value="dark">🌙 Тёмная</option>
-            <option value="pink">🌸 Розовая</option>
-          </select>
+          <div id="themeDropdown" class="theme-dropdown" data-value="light">
+            <button id="themeDropdownBtn" type="button" class="theme-dropdown-btn" aria-haspopup="listbox" aria-expanded="false">
+              <span class="theme-dropdown-current">
+                <span id="themeDropdownIcon" class="theme-dropdown-icon">☀️</span>
+                <span>
+                  <span id="themeDropdownLabel" class="theme-dropdown-label">Светлая</span>
+                  <span class="theme-dropdown-hint">Цветовая схема интерфейса</span>
+                </span>
+              </span>
+              <span class="theme-dropdown-chevron">⌄</span>
+            </button>
+            <div id="themeDropdownMenu" class="theme-dropdown-menu" role="listbox" aria-label="Выбор темы интерфейса">
+              <button type="button" class="theme-dropdown-option" data-theme-option="light" role="option" aria-selected="true">
+                <span class="theme-dropdown-option-icon">☀️</span>
+                <span><span class="theme-dropdown-option-title">Светлая</span><span class="theme-dropdown-option-desc">Чистый дневной режим</span></span>
+                <span class="theme-dropdown-check">✓</span>
+              </button>
+              <button type="button" class="theme-dropdown-option" data-theme-option="dark" role="option" aria-selected="false">
+                <span class="theme-dropdown-option-icon">🌙</span>
+                <span><span class="theme-dropdown-option-title">Тёмная</span><span class="theme-dropdown-option-desc">Контрастно для вечера</span></span>
+                <span class="theme-dropdown-check">✓</span>
+              </button>
+              <button type="button" class="theme-dropdown-option" data-theme-option="pink" role="option" aria-selected="false">
+                <span class="theme-dropdown-option-icon">🌸</span>
+                <span><span class="theme-dropdown-option-title">Розовая</span><span class="theme-dropdown-option-desc">Мягкий брендовый акцент</span></span>
+                <span class="theme-dropdown-check">✓</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <button id="logsBtn" class="relative flex w-full items-center justify-between rounded-2xl border p-4 text-left transition hover:-translate-y-0.5" style="border-color: var(--border); background: var(--surface-2); color: var(--text);">
@@ -3551,17 +3668,75 @@ function renderPeopleAnalytics() {
       if ($('#profileInitialsModal')) $('#profileInitialsModal').textContent = initials;
     }
 
+    const ThemeDropdown = {
+      labels: {
+        light: { icon: '☀️', label: 'Светлая' },
+        dark: { icon: '🌙', label: 'Тёмная' },
+        pink: { icon: '🌸', label: 'Розовая' }
+      },
+
+      close() {
+        const root = $('#themeDropdown');
+        const btn = $('#themeDropdownBtn');
+        if (!root || !btn) return;
+        root.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+      },
+
+      toggle() {
+        const root = $('#themeDropdown');
+        const btn = $('#themeDropdownBtn');
+        if (!root || !btn) return;
+        const isOpen = root.classList.toggle('open');
+        btn.setAttribute('aria-expanded', String(isOpen));
+      },
+
+      sync(theme = 'light') {
+        const meta = ThemeDropdown.labels[theme] || ThemeDropdown.labels.light;
+        const root = $('#themeDropdown');
+        if (root) root.dataset.value = theme;
+        if ($('#themeDropdownIcon')) $('#themeDropdownIcon').textContent = meta.icon;
+        if ($('#themeDropdownLabel')) $('#themeDropdownLabel').textContent = meta.label;
+        $$('.theme-dropdown-option').forEach(option => {
+          option.setAttribute('aria-selected', String(option.dataset.themeOption === theme));
+        });
+      },
+
+      bind() {
+        $('#themeDropdownBtn')?.addEventListener('click', event => {
+          event.stopPropagation();
+          ThemeDropdown.toggle();
+        });
+
+        $$('.theme-dropdown-option').forEach(option => {
+          option.addEventListener('click', event => {
+            event.stopPropagation();
+            applyTheme(option.dataset.themeOption || 'light');
+            ThemeDropdown.close();
+          });
+        });
+
+        document.addEventListener('click', event => {
+          if (!event.target.closest?.('#themeDropdown')) ThemeDropdown.close();
+        });
+
+        document.addEventListener('keydown', event => {
+          if (event.key === 'Escape') ThemeDropdown.close();
+        });
+      }
+    };
+
     function applyTheme(theme) {
       document.body.classList.remove('theme-dark', 'theme-pink');
       if (theme === 'dark') document.body.classList.add('theme-dark');
       if (theme === 'pink') document.body.classList.add('theme-pink');
       localStorage.setItem('andromeda_theme', theme);
+      ThemeDropdown.sync(theme);
       if (state.currentView === 'analytics' && state.analyticsSubView === 'visuals') renderCharts();
     }
 
     function applySavedTheme() {
       const theme = localStorage.getItem('andromeda_theme') || 'light';
-      $('#themeSelect').value = theme;
       applyTheme(theme);
     }
 
@@ -4145,7 +4320,7 @@ function getChatTaskSearchMatches(query = '') {
       $('#loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
       $('#profileBtn').addEventListener('click', () => openModal('profileModal'));
       $('#logoutBtn').addEventListener('click', logout);
-      $('#themeSelect').addEventListener('change', e => applyTheme(e.target.value));
+      ThemeDropdown.bind();
       $('#openCreateBtn').addEventListener('click', openCreateModal);
       $('#trashBtn').addEventListener('click', () => { closeModal('profileModal'); renderTrash(); openModal('trashModal'); });
       $('#logsBtn').addEventListener('click', () => { closeModal('profileModal'); toggleLogs(); });
