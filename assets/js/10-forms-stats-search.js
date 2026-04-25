@@ -27,31 +27,10 @@
       }
     }
 
-        async function handleLogin() {
-      const btn = $('#loginBtn');
-      const errorBox = $('#loginError');
+        const email = $('#loginUser').value;
+const password = $('#loginPass').value;
 
-      errorBox.classList.add('hidden');
-      btn.disabled = true;
-      btn.textContent = '...';
-
-      const username = $('#loginUser').value;
-      const password = $('#loginPass').value;
-
-      try {
-        const { data, error } = await AuthService.login(username, password);
-        if (error || !data) throw new Error('INVALID');
-
-        AuthService.saveSession(data);
-        await checkAuth();
-      } catch (error) {
-        errorBox.textContent = 'Ошибка входа';
-        errorBox.classList.remove('hidden');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Войти';
-      }
-    }
+const { data, error } = await AuthService.login(email, password);
 
         async function checkAuth() {
       if (!AuthService.isActive()) return;
@@ -78,10 +57,10 @@
       setTimeout(() => $('#appContent').style.opacity = '1', 50);
     }
 
-        function logout() {
-      AuthService.clearSession();
-      location.reload();
-    }
+       async function logout() {
+  await AuthService.logout();
+  location.reload();
+}
 
              async function moveToTrash(id) {
       const task = state.tasks.find(item => String(item.id) === String(id));
