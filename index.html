@@ -4070,9 +4070,23 @@ function renderPeopleAnalytics() {
       $('#start_date_val').value = date;
       $('#date_val').value = date;
       $('#date_val').min = date;
+
+      const selectedCalendarChannel = state.calendarChannel !== 'ALL' ? state.calendarChannel : '';
+
+      if (selectedCalendarChannel) {
+        const channelCheckbox = $$('input[name="chan"]', $('#createModal'))
+          .find(cb => cb.value === selectedCalendarChannel);
+
+        if (channelCheckbox) channelCheckbox.checked = true;
+      }
+
       const formatted = parseLocalDate(date)?.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) || 'без даты';
       if ($('#createModalTitle')) $('#createModalTitle').textContent = prefillDate ? 'Новая задача' : 'Новая задача';
-      if ($('#createModalSubtitle')) $('#createModalSubtitle').textContent = prefillDate ? 'Заполни все важное .' : 'Заполни минимум для старта, детали можно добавить позже.';
+      if ($('#createModalSubtitle')) {
+        $('#createModalSubtitle').textContent = selectedCalendarChannel
+          ? `Создаём задачу на ${formatted}. Площадка «${selectedCalendarChannel}» уже выбрана.`
+          : (prefillDate ? 'Заполни все важное.' : 'Заполни минимум для старта, детали можно добавить позже.');
+      }
       if ($('#createPreviewDate')) $('#createPreviewDate').textContent = formatted;
       openModal('createModal');
       renderCalendar();
