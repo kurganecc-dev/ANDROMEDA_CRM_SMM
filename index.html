@@ -1470,7 +1470,8 @@
                 <option value="Telegram">Telegram (Все)</option>
               </select>
               <div class="flex gap-2">
-                <button id="btnUpdateAll" class="rounded-xl bg-emerald-500 px-4 py-3 text-[10px] font-black uppercase text-white">Обновить</button>
+                <button id="btnUpdateAll" class="rounded-xl bg-emerald-500 px-4 py-3 text-[10px] font-black uppercase text-white">Обновить всё</button>
+                <button id="btnUpdateInstagram" class="rounded-xl bg-pink-600 px-4 py-3 text-[10px] font-black uppercase text-white">Instagram</button>
                 <button id="exportStatsBtn" class="rounded-xl bg-slate-900 px-4 py-3 text-[10px] font-black uppercase text-white">CSV</button>
               </div>
             </div>
@@ -2317,6 +2318,11 @@
         return db.from(Services.tables.config).select('*');
       },
 
+      getValue(rows = [], key = '') {
+        const row = (rows || []).find(item => String(item.id || '') === key);
+        return String(row?.value || '');
+      },
+
       apply(rows = []) {
         const config = Object.fromEntries(
           (rows || []).map(row => [String(row.id || ''), String(row.value || '')])
@@ -2324,8 +2330,47 @@
 
         state.apiConfig = {
           ytKey: config.yt_key || '',
-          apifyToken: config.apify_token || ''
+          apifyToken: config.apify_token || '',
+          statsFunctionName: config.stats_function_name || 'update-social-stat'
         };
+      }
+    };
+
+    const StatsFunctionService = {
+      normalizeMetric(payload = {}, platform = '') {
+        const item = Array.isArray(payload) ? payload[0] : (payload.item || payload.data || payload.result || payload);
+        const raw = item || {};
+        const value =
+          raw.views ??
+          raw.viewCount ??
+          raw.viewsCount ??
+          raw.videoViewCount ??
+          raw.videoPlayCount ??
+          raw.playCount ??
+          raw.plays ??
+          raw.likesCount ??
+          raw.likes ??
+          0;
+
+        return {
+          platform,
+          views: Number(value || 0),
+          likes: Number(raw.likesCount || raw.likes || 0),
+          comments: Number(raw.commentsCount || raw.comments || 0),
+          type: raw.type || raw.mediaType || raw.productType || '',
+          posted_at: raw.timestamp || raw.takenAt || raw.createdAt || raw.date || null,
+          raw
+        };
+      },
+
+      async fetchViaEdgeFunction(url, platform) {
+        const functionName = state.apiConfig?.statsFunctionName || 'update-social-stat';
+        const { data, error } = await db.functions.invoke(functionName, {
+          body: { url, platform }
+        });
+
+        if (error) throw error;
+        return StatsFunctionService.normalizeMetric(data, platform);
       }
     };
 
@@ -4662,18 +4707,17 @@ renderMetaOnly();
     }
 
     async function fetchSingleStat(url, platform) {
-      if (!url || url.length < 10) return 0;
+      const metric = await fetchSingleStatMetric(url, platform);
+      return Number(metric.views || 0);
+    }
+
+    async function fetchSingleStatMetric(url, platform) {
+      if (!url || url.length < 10) return { platform, views: 0 };
       const ytKey = state.apiConfig?.ytKey || '';
-      const apifyToken = state.apiConfig?.apifyToken || '';
+
       try {
-        if (platform === 'VK' && apifyToken) {
-          const actor = 'apify/vkontakte-scraper';
-          const input = { startUrls: [{ url }], maxItems: 1 };
-          const res = await fetch(`https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${apifyToken}`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input)
-          });
-          const data = await res.json();
-          return Number(data?.[0]?.viewsCount || data?.[0]?.views?.count || 0);
+        if (platform === 'Instagram') {
+          return await StatsFunctionService.fetchViaEdgeFunction(url, platform);
         }
 
         if (TG_LIST.includes(platform) || url.includes('t.me/')) {
@@ -4683,9 +4727,9 @@ renderMetaOnly();
           const match = data.contents?.match(/class="tgme_widget_message_views">([\d.KM]+)/i);
           if (match) {
             const value = match[1].toUpperCase();
-            if (value.includes('K')) return parseFloat(value) * 1000;
-            if (value.includes('M')) return parseFloat(value) * 1000000;
-            return parseInt(value.replace(/\D/g, ''), 10) || 0;
+            if (value.includes('K')) return { platform, views: Math.round(parseFloat(value) * 1000) };
+            if (value.includes('M')) return { platform, views: Math.round(parseFloat(value) * 1000000) };
+            return { platform, views: parseInt(value.replace(/\D/g, ''), 10) || 0 };
           }
         }
 
@@ -4694,67 +4738,106 @@ renderMetaOnly();
           if (videoId) {
             const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoId}&key=${ytKey}`);
             const data = await res.json();
-            return Number(data.items?.[0]?.statistics?.viewCount || 0);
+            return { platform, views: Number(data.items?.[0]?.statistics?.viewCount || 0) };
           }
         }
 
-        if ((platform === 'TikTok' || platform === 'Instagram') && apifyToken) {
-          const actor = platform === 'TikTok' ? 'GdWCkxBtKWOsKjdch' : 'apify/instagram-post-scraper';
-          const input = platform === 'TikTok' ? { postURLs: [url] } : { directUrls: [url] };
-          const res = await fetch(`https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${apifyToken}`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input)
-          });
-          const data = await res.json();
-          return Number(data?.[0]?.playCount || data?.[0]?.videoViewCount || data?.[0]?.videoPlayCount || data?.[0]?.likesCount || 0);
+        if (platform === 'VK' || platform === 'TikTok') {
+          return await StatsFunctionService.fetchViaEdgeFunction(url, platform);
         }
       } catch (error) {
         console.error('Stat fetch error', error);
       }
-      return 0;
+
+      return { platform, views: 0 };
+    }
+
+    function getTasksForStatsUpdate(onlyPlatform = '') {
+      return state.tasks.filter(task => {
+        const date = parseLocalDate(task.date);
+        const links = task.links || {};
+        const hasLinks = onlyPlatform ? Boolean(links[onlyPlatform]) : Object.keys(links).length > 0;
+        return date && isSameMonthYear(date, state.statsDate) && hasLinks;
+      });
+    }
+
+    async function updateMonthStats(onlyPlatform = '') {
+      const btn = onlyPlatform === 'Instagram' ? $('#btnUpdateInstagram') : $('#btnUpdateAll');
+      const oldText = btn?.textContent || '';
+      const progressToast = notify(
+        onlyPlatform ? `Обновляю ${onlyPlatform} через Supabase Edge Function…` : 'Обновляю статистику по публикациям…',
+        'loading',
+        'Подожди',
+        { closable: false }
+      );
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '...';
+      }
+
+      try {
+        const tasks = getTasksForStatsUpdate(onlyPlatform);
+        let updated = 0;
+
+        for (const task of tasks) {
+          const playCounts = { ...(task.play_counts || {}) };
+          const statMeta = { ...(task.stat_meta || {}) };
+          const links = onlyPlatform
+            ? Object.entries(task.links || {}).filter(([platform]) => platform === onlyPlatform)
+            : Object.entries(task.links || {});
+
+          for (const [platform, url] of links) {
+            if (!url) continue;
+            const metric = await fetchSingleStatMetric(url, platform);
+            playCounts[platform] = Number(metric.views || 0);
+            statMeta[platform] = {
+              likes: Number(metric.likes || 0),
+              comments: Number(metric.comments || 0),
+              type: metric.type || '',
+              posted_at: metric.posted_at || null,
+              updated_at: new Date().toISOString()
+            };
+          }
+
+          const total = Object.values(playCounts).reduce((sum, value) => sum + Number(value || 0), 0);
+          const payload = {
+            play_counts: playCounts,
+            play_count: total
+          };
+
+          // Если в таблице tasks есть jsonb-колонка stat_meta, CRM сохранит лайки/комментарии/тип контента.
+          // Если колонки нет, повторяем update без неё, чтобы не ломать текущую базу.
+          let { error } = await db.from('tasks').update({ ...payload, stat_meta: statMeta }).eq('id', task.id);
+          if (error && String(error.message || '').includes('stat_meta')) {
+            const retry = await db.from('tasks').update(payload).eq('id', task.id);
+            error = retry.error;
+          }
+
+          if (error) console.error(error);
+          else updated += 1;
+        }
+
+        await loadAllData();
+        updateToast(progressToast, `Статистика обновлена. Задач: ${updated}.`, 'success', 'Готово');
+      } catch (e) {
+        console.error(e);
+        updateToast(progressToast, onlyPlatform ? `Не удалось обновить ${onlyPlatform}. Проверь Edge Function и APIFY_TOKEN.` : 'Не удалось обновить статистику.', 'error', 'Ошибка');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = oldText || (onlyPlatform ? onlyPlatform : 'Обновить всё');
+        }
+      }
     }
 
     async function updateAllMonthStats() {
-  const btn = $('#btnUpdateAll');
-  const progressToast = notify('Обновляю статистику по публикациям…', 'loading', 'Подожди', { closable: false });
-
-  btn.disabled = true;
-  btn.textContent = '...';
-
-  try {
-    const tasks = state.tasks.filter(task => {
-      const date = parseLocalDate(task.date);
-      return date && isSameMonthYear(date, state.statsDate) && task.links && Object.keys(task.links).length > 0;
-    });
-
-    for (const task of tasks) {
-      let total = 0;
-      const playCounts = { ...(task.play_counts || {}) };
-
-      for (const [platform, url] of Object.entries(task.links || {})) {
-        if (!url) continue;
-        const value = await fetchSingleStat(url, platform);
-        playCounts[platform] = value;
-        total += value;
-      }
-
-      const { error } = await db.from('tasks').update({
-        play_counts: playCounts,
-        play_count: total
-      }).eq('id', task.id);
-
-      if (error) console.error(error);
+      return updateMonthStats('');
     }
 
-    await loadAllData();
-    updateToast(progressToast, 'Статистика обновлена.', 'success', 'Готово');
-  } catch (e) {
-    console.error(e);
-    updateToast(progressToast, 'Не удалось обновить статистику.', 'error', 'Ошибка');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Обновить';
-  }
-}
+    async function updateInstagramMonthStats() {
+      return updateMonthStats('Instagram');
+    }
 function getChatTaskSearchMatches(query = '') {
       const normalized = String(query || '').trim().toLowerCase();
       const source = state.tasks || [];
@@ -4958,6 +5041,7 @@ function getChatTaskSearchMatches(query = '') {
       $('#statsNextBtn').addEventListener('click', () => { state.statsDate.setMonth(state.statsDate.getMonth() + 1); renderStats(); });
       $('#statsPlatformFilter').addEventListener('change', renderStats);
       $('#btnUpdateAll').addEventListener('click', updateAllMonthStats);
+      $('#btnUpdateInstagram')?.addEventListener('click', updateInstagramMonthStats);
       $('#exportStatsBtn').addEventListener('click', exportStatsToCSV);
       $('#ideaForm').addEventListener('submit', saveCreateForm);
       $('#editForm').addEventListener('submit', saveEditForm);
