@@ -2053,7 +2053,7 @@
         <button id="trashBtn" class="flex w-full items-center justify-between rounded-2xl border p-4 text-left transition hover:-translate-y-0.5" style="border-color: var(--border); background: var(--surface-2); color: var(--text);">
           <span>
             <span class="block text-sm font-black uppercase">🗑️ Корзина</span>
-            <span class="mt-1 block text-[11px] font-semibold" style="color: var(--muted);">Восстановление или окончательное удаление</span>
+            <span class="mt-1 block text-[11px] font-semibold" style="color: var(--muted);">Восстановление задач из корзины</span>
           </span>
           <span id="trashBadge" class="flex h-6 min-w-6 items-center justify-center rounded-full bg-slate-900 px-2 text-[10px] font-black text-white">0</span>
         </button>
@@ -4840,9 +4840,9 @@ function renderPeopleAnalytics() {
             <div class="mt-1 text-[9px] font-bold uppercase text-rose-500">Удалил: ${escapeHtml(task.deleted_by || '???')}</div>
           </div>
           <div class="flex gap-2">
+            <button class="restore-task rounded-lg bg-emerald-500 px-3 py-1.5 text-[9px] font-black uppercase text-white" data-task-id="${escapeHtml(task.id)}">Восстановить</button>
             ${isAdmin ? `
-              <button class="restore-task rounded-lg bg-emerald-500 px-3 py-1.5 text-[9px] font-black uppercase text-white" data-task-id="${escapeHtml(task.id)}">Restore</button>
-              <button class="delete-task-forever rounded-lg bg-rose-500 px-3 py-1.5 text-[9px] font-black uppercase text-white" data-task-id="${escapeHtml(task.id)}">Delete</button>
+              <button class="delete-task-forever rounded-lg bg-rose-500 px-3 py-1.5 text-[9px] font-black uppercase text-white" data-task-id="${escapeHtml(task.id)}">Удалить навсегда</button>
             ` : ''}
           </div>
         </div>
@@ -5509,6 +5509,11 @@ function renderPeopleAnalytics() {
     }
 
         async function finalDelete(id) {
+      if (state.currentRole !== 'admin') {
+        notify('Окончательное удаление доступно только администратору', 'warning', 'Недостаточно прав');
+        return;
+      }
+
       if (!confirm('Навсегда удалить задачу?')) return;
 
       const { error } = await TaskService.removeForever(id);
