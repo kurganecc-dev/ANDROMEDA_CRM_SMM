@@ -4793,10 +4793,33 @@ function renderPeopleAnalytics() {
       return result;
     }
 
+    function getMessengerDialogLastActivityAt(dialog = {}) {
+      const messages = getMessengerDialogMessages(dialog);
+      const last = messages[messages.length - 1] || null;
+      const timestamp = new Date(last?.created_at || 0).getTime();
+      return Number.isFinite(timestamp) ? timestamp : 0;
+    }
+
     function getMessengerDialogs() {
       const dialogs = [{ id: 'team', type: 'team', uid: '', name: 'Команда', subtitle: 'Общий чат команды' }];
       getChatUserOptions().forEach(user => dialogs.push({ id: 'direct:' + user.uid, type: 'direct', uid: user.uid, name: user.name, subtitle: 'Личный диалог' }));
-      return dialogs;
+
+      return dialogs
+        .map((dialog, index) => ({
+          ...dialog,
+          sortIndex: index,
+          lastActivityAt: getMessengerDialogLastActivityAt(dialog)
+        }))
+        .sort((a, b) => {
+          const activityDiff = Number(b.lastActivityAt || 0) - Number(a.lastActivityAt || 0);
+          if (activityDiff !== 0) return activityDiff;
+
+          if (a.type === 'team' && b.type !== 'team') return -1;
+          if (b.type === 'team' && a.type !== 'team') return 1;
+
+          return String(a.name || '').localeCompare(String(b.name || ''), 'ru');
+        })
+        .map(({ sortIndex, lastActivityAt, ...dialog }) => dialog);
     }
 
     function getMessengerDialogIdForMessage(message = {}) {
