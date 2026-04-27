@@ -52,7 +52,7 @@
     html { scroll-behavior: smooth; }
     body {
       margin: 0;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: var(--bg);
       color: var(--text);
       transition: background-color .25s ease, color .25s ease;
@@ -1439,6 +1439,166 @@
       color: var(--muted);
     }
     .task-tag-empty { display: none; }
+
+
+    /* Typography upgrade v5.3: larger Inter-based interface */
+    :root {
+      --font-ui: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --text-xxs: 11px;
+      --text-xs: 12px;
+      --text-sm: 14px;
+      --text-base: 16px;
+      --text-lg: 18px;
+      --text-xl: 22px;
+      --text-2xl: 28px;
+      --text-3xl: 36px;
+      --text-4xl: 44px;
+    }
+
+    html {
+      font-size: 16px;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body,
+    button,
+    input,
+    select,
+    textarea,
+    table,
+    .app-surface,
+    .surface-muted {
+      font-family: var(--font-ui) !important;
+    }
+
+    body {
+      font-size: var(--text-base) !important;
+      line-height: 1.55;
+      letter-spacing: -0.012em;
+    }
+
+    h1 { font-size: var(--text-2xl) !important; line-height: 1.05 !important; }
+    h2 { font-size: var(--text-xl) !important; line-height: 1.15 !important; }
+    h3 { font-size: var(--text-lg) !important; line-height: 1.2 !important; }
+    p { font-size: var(--text-sm); line-height: 1.55; }
+
+    /* Lift Tailwind micro-copy sizes across the CRM */
+    .text-\[8px\] { font-size: 10px !important; }
+    .text-\[9px\] { font-size: 11px !important; }
+    .text-\[10px\] { font-size: var(--text-xs) !important; }
+    .text-\[11px\] { font-size: 13px !important; }
+    .text-xs { font-size: var(--text-sm) !important; line-height: 1.45 !important; }
+    .text-sm { font-size: var(--text-base) !important; line-height: 1.5 !important; }
+    .text-lg { font-size: var(--text-xl) !important; line-height: 1.2 !important; }
+    .text-xl { font-size: 24px !important; line-height: 1.15 !important; }
+    .text-2xl { font-size: 30px !important; line-height: 1.1 !important; }
+    .text-3xl { font-size: 38px !important; line-height: 1.05 !important; }
+    .text-4xl { font-size: var(--text-4xl) !important; line-height: 1 !important; }
+
+    input,
+    select,
+    textarea,
+    button {
+      font-size: var(--text-sm) !important;
+    }
+
+    #mainTabs,
+    .view-tab,
+    .quick-filter-btn,
+    .calendar-filter,
+    .theme-dropdown-label,
+    .theme-dropdown-option-title,
+    .messenger-title,
+    .messenger-dialog-name,
+    .messenger-current-title,
+    .chat-task-bubble-title,
+    .task-card h3,
+    .kanban-card h4 {
+      letter-spacing: -0.02em !important;
+    }
+
+    #mainTabs,
+    .view-tab,
+    .quick-filter-btn,
+    .calendar-filter,
+    .chat-quick-btn,
+    .deadline-chip,
+    .soft-pill,
+    .channel-pill,
+    .tag-cloud-btn,
+    .theme-dropdown-label,
+    .theme-dropdown-option-title {
+      font-size: var(--text-xs) !important;
+    }
+
+    .task-card h3 {
+      font-size: 20px !important;
+      line-height: 1.25 !important;
+    }
+
+    .kanban-card h4,
+    .messenger-current-title {
+      font-size: 17px !important;
+      line-height: 1.25 !important;
+    }
+
+    .messenger-title {
+      font-size: 24px !important;
+    }
+
+    .messenger-subtitle,
+    .messenger-current-subtitle,
+    .messenger-dialog-last,
+    .chat-context-pill,
+    .chat-meta,
+    .chat-task-search-meta,
+    .chat-task-bubble-meta {
+      font-size: var(--text-xs) !important;
+      line-height: 1.35 !important;
+    }
+
+    .chat-text,
+    .chat-input,
+    #chatTaskSearchInput {
+      font-size: var(--text-base) !important;
+      line-height: 1.5 !important;
+    }
+
+    .calendar-day > div:first-child,
+    .calendar-item,
+    .calendar-drop-hint {
+      font-size: var(--text-xs) !important;
+      line-height: 1.25 !important;
+    }
+
+    #statsTableContainer table,
+    #analytics-people table {
+      font-size: var(--text-sm) !important;
+      line-height: 1.45 !important;
+    }
+
+    .toast strong { font-size: var(--text-sm) !important; }
+    .toast .text-sm { font-size: var(--text-base) !important; }
+
+    @media (max-width: 767px) {
+      :root {
+        --text-base: 15px;
+        --text-lg: 17px;
+        --text-xl: 21px;
+        --text-2xl: 26px;
+        --text-3xl: 32px;
+        --text-4xl: 38px;
+      }
+
+      header h1 { font-size: 22px !important; }
+      header p { font-size: 11px !important; }
+      #heroBlock h2 { font-size: 24px !important; }
+      .task-card h3 { font-size: 18px !important; }
+      .messenger-title { font-size: 21px !important; }
+      .messenger-dialog { min-width: 260px; }
+    }
 
   </style>
 </head>
