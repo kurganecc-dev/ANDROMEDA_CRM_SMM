@@ -1483,6 +1483,7 @@
               <select id="statsPlatformFilter" class="rounded-xl border px-3 py-2 text-xs font-bold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);">
                 <option value="ALL">Все площадки</option>
                 <option value="YouTube">YouTube</option>
+                <option value="Rutube">Rutube</option>
                 <option value="TikTok">TikTok</option>
                 <option value="Instagram">Instagram</option>
                 <option value="VK">VK</option>
@@ -1744,6 +1745,14 @@
           <span id="logBadge" class="hidden flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-black text-white">!</span>
         </button>
 
+        <button id="chatNotifyBtn" class="relative flex w-full items-center justify-between rounded-2xl border p-4 text-left transition hover:-translate-y-0.5" style="border-color: var(--border); background: var(--surface-2); color: var(--text);">
+          <span>
+            <span class="block text-sm font-black uppercase">🔔 Уведомления чата</span>
+            <span id="chatNotifyHint" class="mt-1 block text-[11px] font-semibold" style="color: var(--muted);">Включить пуши о новых сообщениях</span>
+          </span>
+          <span id="chatNotifyStatus" class="rounded-full px-2 py-1 text-[9px] font-black uppercase" style="background: rgba(148,163,184,.14); color: var(--muted);">off</span>
+        </button>
+
         <button id="trashBtn" class="flex w-full items-center justify-between rounded-2xl border p-4 text-left transition hover:-translate-y-0.5" style="border-color: var(--border); background: var(--surface-2); color: var(--text);">
           <span>
             <span class="block text-sm font-black uppercase">🗑️ Корзина</span>
@@ -1799,7 +1808,7 @@
         'Другие': ['Любовь Карелина', 'Олег Сытов']
       },
 
-      channels: ['YouTube', 'TikTok', 'Instagram', 'VK', 'Этажи SMM', 'NewsRoom', 'Echat', 'Max', 'ОК'],
+      channels: ['YouTube', 'Rutube', 'TikTok', 'Instagram', 'VK', 'Этажи SMM', 'NewsRoom', 'Echat', 'Max', 'ОК'],
       telegramChannels: ['Этажи SMM', 'NewsRoom', 'Echat', 'Max'],
       workTypes: ['Пост', 'Картинка', 'Короткое видео', 'Длинное видео'],
       tags: ['ФРК', 'УТП', 'прочее'],
@@ -1822,6 +1831,7 @@
         { name: 'Этажи SMM', platform: 'Telegram', url: 'https://t.me/+ZVAp3anMnm9lNmQy', handle: 'Direct Link' },
         { name: 'Одноклассники', platform: 'ОК', url: 'https://ok.ru/etagi.realty', handle: 'etagi.realty' },
         { name: 'YouTube', platform: 'YouTube', url: 'https://www.youtube.com/@etagi.realty', handle: '@etagi.realty' },
+        { name: 'Rutube', platform: 'Rutube', url: 'https://rutube.ru/channel/41042421/', handle: 'channel/41042421' },
         { name: 'Instagram', platform: 'Instagram', url: 'https://www.instagram.com/etagi_com', handle: '@etagi_com' }
       ]
     };
@@ -3136,10 +3146,11 @@
     };
 
     const ChartUI = {
-      platforms: ['YouTube', 'Instagram', 'TikTok', 'VK', 'Telegram'],
+      platforms: ['YouTube', 'Rutube', 'Instagram', 'TikTok', 'VK', 'Telegram'],
 
       platformColors: {
         YouTube: '#FF0000',
+        Rutube: '#111827',
         Instagram: '#E4405F',
         TikTok: '#000000',
         VK: '#0077FF',
@@ -3683,12 +3694,171 @@
       return toast;
     }
 
+
+    const ChatNotificationService = {
+      storageKey: 'andromeda_chat_notifications_enabled',
+      lastShownMessageId: null,
+
+      isSupported() {
+        return 'Notification' in window;
+      },
+
+      isEnabled() {
+        return localStorage.getItem(ChatNotificationService.storageKey) === 'true';
+      },
+
+      setEnabled(value) {
+        localStorage.setItem(ChatNotificationService.storageKey, value ? 'true' : 'false');
+        ChatNotificationService.syncUI();
+      },
+
+      getPermissionLabel() {
+        if (!ChatNotificationService.isSupported()) return 'Не поддерживается';
+        if (Notification.permission === 'granted' && ChatNotificationService.isEnabled()) return 'Включены';
+        if (Notification.permission === 'denied') return 'Запрещены';
+        return 'Выключены';
+      },
+
+      syncUI() {
+        const btn = $('#chatNotifyBtn');
+        const hint = $('#chatNotifyHint');
+        const status = $('#chatNotifyStatus');
+        if (!btn || !hint || !status) return;
+
+        const supported = ChatNotificationService.isSupported();
+        const enabled = ChatNotificationService.isEnabled();
+        const permission = supported ? Notification.permission : 'unsupported';
+
+        status.textContent = ChatNotificationService.getPermissionLabel();
+
+        if (!supported) {
+          hint.textContent = 'Этот браузер не поддерживает системные уведомления';
+          status.style.background = 'rgba(225,29,72,.12)';
+          status.style.color = '#e11d48';
+          return;
+        }
+
+        if (permission === 'denied') {
+          hint.textContent = 'Разреши уведомления для сайта в настройках браузера';
+          status.style.background = 'rgba(225,29,72,.12)';
+          status.style.color = '#e11d48';
+          return;
+        }
+
+        if (enabled && permission === 'granted') {
+          hint.textContent = 'Пуш появится при новом сообщении не от тебя';
+          status.style.background = 'rgba(16,185,129,.12)';
+          status.style.color = '#059669';
+          return;
+        }
+
+        hint.textContent = 'Включить пуши о новых сообщениях';
+        status.style.background = 'rgba(148,163,184,.14)';
+        status.style.color = 'var(--muted)';
+      },
+
+      async toggle() {
+        if (!ChatNotificationService.isSupported()) {
+          notify('Этот браузер не поддерживает системные push-уведомления.', 'warning', 'Уведомления');
+          ChatNotificationService.syncUI();
+          return;
+        }
+
+        if (Notification.permission === 'denied') {
+          notify('Браузер запретил уведомления. Разреши их вручную в настройках сайта.', 'warning', 'Уведомления');
+          ChatNotificationService.syncUI();
+          return;
+        }
+
+        if (ChatNotificationService.isEnabled() && Notification.permission === 'granted') {
+          ChatNotificationService.setEnabled(false);
+          notify('Уведомления чата выключены.', 'info', 'Уведомления');
+          return;
+        }
+
+        const permission = Notification.permission === 'granted'
+          ? 'granted'
+          : await Notification.requestPermission();
+
+        if (permission === 'granted') {
+          ChatNotificationService.setEnabled(true);
+          notify('Уведомления чата включены.', 'success', 'Готово');
+          ChatNotificationService.showSystemNotification({
+            sender_name: 'ANDROMEDA',
+            message: 'Пуш-уведомления работают. Новые сообщения будут появляться поверх окна браузера.'
+          }, { force: true, tag: 'andromeda-chat-test' });
+        } else {
+          ChatNotificationService.setEnabled(false);
+          notify('Без разрешения браузера могу показывать только внутренние уведомления в CRM.', 'warning', 'Уведомления');
+        }
+      },
+
+      getMessagePreview(message = '') {
+        const raw = String(message || '').trim();
+        if (ChatUI.isTaskTokenMessage(raw)) {
+          const task = ChatUI.getTaskFromToken(raw);
+          return task ? `Задача: ${task.title || 'Без названия'}` : 'Отправлена задача';
+        }
+        return raw.length > 120 ? `${raw.slice(0, 117)}...` : raw;
+      },
+
+      showSystemNotification(message, opts = {}) {
+        if (!ChatNotificationService.isSupported()) return false;
+        if (!opts.force && (!ChatNotificationService.isEnabled() || Notification.permission !== 'granted')) return false;
+
+        try {
+          const title = message.sender_name ? `Новое сообщение от ${message.sender_name}` : 'Новое сообщение в чате';
+          const notification = new Notification(title, {
+            body: ChatNotificationService.getMessagePreview(message.message || ''),
+            tag: opts.tag || `andromeda-chat-${message.id || Date.now()}`,
+            renotify: true,
+            silent: false
+          });
+
+          notification.onclick = () => {
+            window.focus();
+            state.currentView = 'chat';
+            state.unreadChatCount = 0;
+            renderAll();
+            notification.close();
+          };
+
+          setTimeout(() => notification.close(), 6500);
+          return true;
+        } catch (error) {
+          return false;
+        }
+      },
+
+      handleIncoming(message = {}) {
+        const myUid = sessionStorage.getItem('e_uid');
+        if (!message || message.sender_uid === myUid) return;
+        if (String(ChatNotificationService.lastShownMessageId || '') === String(message.id || '')) return;
+
+        ChatNotificationService.lastShownMessageId = message.id || Date.now();
+
+        const shouldNotify = state.currentView !== 'chat' || document.hidden;
+        if (!shouldNotify) return;
+
+        const shown = ChatNotificationService.showSystemNotification(message);
+        if (!shown) {
+          const sender = message.sender_name || 'Команда';
+          notify(ChatNotificationService.getMessagePreview(message.message || ''), 'info', `💬 ${sender}`, { duration: 5200 });
+        }
+      }
+    };
+
     function getSocialIcon(platform) {
       const logos = {
         YouTube: {
           src: 'https://cdn.simpleicons.org/youtube/FF0000',
           alt: 'YouTube',
           fallback: 'YT'
+        },
+        Rutube: {
+          src: 'https://rutube.ru/favicon.ico',
+          alt: 'Rutube',
+          fallback: 'RT'
         },
         TikTok: {
           src: 'https://cdn.simpleicons.org/tiktok/000000',
@@ -4406,6 +4576,8 @@ function renderPeopleAnalytics() {
         state.unreadChatCount += 1;
         buildMainTabs();
       }
+
+      ChatNotificationService.handleIncoming(message);
     }
 
     refreshChat();
@@ -4953,7 +5125,7 @@ renderMetaOnly();
           }
         }
 
-        if (platform === 'VK' || platform === 'TikTok') {
+        if (platform === 'VK' || platform === 'TikTok' || platform === 'Rutube') {
           return await StatsFunctionService.fetchViaEdgeFunction(url, platform, taskId);
         }
       } catch (error) {
@@ -5215,12 +5387,14 @@ function getChatTaskSearchMatches(query = '') {
     function bindEvents() {
       $('#loginBtn').addEventListener('click', handleLogin);
       $('#loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
-      $('#profileBtn').addEventListener('click', () => openModal('profileModal'));
+      $('#profileBtn').addEventListener('click', () => { ChatNotificationService.syncUI(); openModal('profileModal'); });
       $('#logoutBtn').addEventListener('click', logout);
       ThemeDropdown.bind();
       $('#openCreateBtn').addEventListener('click', openCreateModal);
       $('#trashBtn').addEventListener('click', () => { closeModal('profileModal'); renderTrash(); openModal('trashModal'); });
       $('#logsBtn').addEventListener('click', () => { closeModal('profileModal'); toggleLogs(); });
+      $('#chatNotifyBtn')?.addEventListener('click', ChatNotificationService.toggle);
+      ChatNotificationService.syncUI();
       $('#closeLogsBtn').addEventListener('click', () => toggleLogs(false));
       $('#taskSearch').addEventListener('input', renderAll);
       $('#tagFilter').addEventListener('change', renderAll);
