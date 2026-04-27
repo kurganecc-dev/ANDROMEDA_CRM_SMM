@@ -1395,6 +1395,50 @@
     body.theme-dark #editModal .hover\:bg-white\/70:hover {
       background-color: rgba(255,255,255,.06) !important;
     }
+
+    /* Optional task tags: cloud buttons instead of required select */
+    .tag-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      padding: 8px;
+    }
+    .tag-cloud-btn {
+      min-height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--muted);
+      padding: 0 12px;
+      font-size: 10px;
+      font-weight: 950;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: .18s ease;
+    }
+    .tag-cloud-btn:hover {
+      border-color: color-mix(in srgb, var(--primary) 42%, var(--border));
+      color: var(--text);
+      transform: translateY(-1px);
+    }
+    .tag-cloud-btn.is-active {
+      background: var(--primary);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(37,99,235,.16);
+    }
+    .tag-cloud-hint {
+      width: 100%;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: none;
+      color: var(--muted);
+    }
+    .task-tag-empty { display: none; }
+
   </style>
 </head>
 <body class="min-h-screen">
@@ -1448,7 +1492,7 @@
           </div>
           <input id="taskSearch" type="text" placeholder="Поиск по названию" class="flex-1 rounded-2xl border px-4 py-4 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);" />
           <select id="tagFilter" class="rounded-2xl border px-4 py-4 text-[11px] font-black uppercase outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);">
-            <option value="ALL">Все теги</option>
+            <option value="ALL">Все облачка</option>
             <option value="ФРК">ФРК</option>
             <option value="УТП">УТП</option>
             <option value="прочее">Прочее</option>
@@ -1685,7 +1729,7 @@
                 <select id="edit_work_type" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></select>
               </label>
               <label>Тег
-                <select id="edit_tag" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></select>
+                <div id="edit_tag" class="tag-cloud mt-1" data-selected="" aria-label="Опциональные теги задачи"></div>
               </label>
             </div>
             <label>Статус
@@ -1736,7 +1780,7 @@
             <input id="title" type="text" required placeholder="Тема поста" class="w-full rounded-xl border-2 p-3.5 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" /><div id="error_title" class="field-error hidden"></div>
             <div class="grid grid-cols-2 gap-2">
               <select id="work_type" class="w-full rounded-xl border-2 p-3 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);"></select>
-              <select id="tag" class="w-full rounded-xl border-2 p-3 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);"></select>
+              <div id="tag" class="tag-cloud" data-selected="" aria-label="Опциональные теги задачи"></div>
             </div>
             <textarea id="description" placeholder="Описание / ТЗ" class="h-32 w-full rounded-xl border-2 p-3 text-sm font-medium outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></textarea><div id="error_description" class="field-error hidden"></div><p class="text-xs font-medium" style="color: var(--muted);">Добавь короткий контекст: что делаем, для какой площадки и какой результат нужен.</p>
             <div class="grid grid-cols-2 gap-4">
@@ -2109,7 +2153,7 @@
           id: Date.now(),
           title: $('#title').value.trim(),
           work_type: $('#work_type').value,
-          tag: $('#tag').value,
+          tag: getSelectedTag('tag'),
           description: $('#description').value.trim(),
           channels: $$('input[name="chan"]:checked').map(cb => cb.value),
           executors: $$('input[name="exec"]:checked').map(cb => cb.value),
@@ -2133,7 +2177,7 @@
         return {
           title: $('#edit_title').value.trim(),
           work_type: $('#edit_work_type').value,
-          tag: $('#edit_tag').value,
+          tag: getSelectedTag('edit_tag'),
           description: $('#edit_description').value.trim(),
           status: $('#edit_status').value,
           start_date: $('#edit_start_date').value || null,
@@ -2331,7 +2375,7 @@
             </div>
 
             <div class="mb-2 flex items-center gap-2">
-              <span class="rounded-full px-2 py-0.5 text-[8px] font-black uppercase ${tagClass}">${escapeHtml(task.tag || 'прочее')}</span>
+              ${task.tag ? `<span class="rounded-full px-2 py-0.5 text-[8px] font-black uppercase ${tagClass}">${escapeHtml(task.tag)}</span>` : ''}
               <span class="text-[9px] font-black uppercase" style="color: var(--primary);">${escapeHtml(task.work_type || 'Пост')}</span>
               <span class="rounded-full px-2 py-0.5 text-[8px] font-black uppercase soft-pill">${escapeHtml(STATUS_MAP[task.status] || 'Идея')}</span>
             </div>
@@ -4053,6 +4097,32 @@
       select.innerHTML = items.map(item => `<option value="${escapeHtml(item)}">${escapeHtml(formatter(item))}</option>`).join('');
     }
 
+    function renderTagCloud(containerId, selected = '') {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.dataset.selected = selected || '';
+      container.innerHTML = `
+        <div class="tag-cloud-hint">Тег можно не выбирать. Нажми один раз, чтобы поставить облачко, повторно — чтобы снять.</div>
+        ${TAGS.map(tag => `
+          <button
+            type="button"
+            class="tag-cloud-btn ${String(selected) === String(tag) ? 'is-active' : ''}"
+            data-tag-value="${escapeHtml(tag)}"
+            aria-pressed="${String(selected) === String(tag) ? 'true' : 'false'}"
+          >${escapeHtml(tag)}</button>
+        `).join('')}
+      `;
+    }
+
+    function getSelectedTag(containerId) {
+      const container = document.getElementById(containerId);
+      return String(container?.dataset.selected || '').trim();
+    }
+
+    function setSelectedTag(containerId, value = '') {
+      renderTagCloud(containerId, value);
+    }
+
     function renderChecklist(containerId, name, items) {
       const container = document.getElementById(containerId);
       if (!container) return;
@@ -5283,7 +5353,7 @@ function renderPeopleAnalytics() {
       $('#edit_id').value = task.id;
       $('#edit_title').value = task.title || '';
       $('#edit_work_type').value = task.work_type || 'Пост';
-      $('#edit_tag').value = task.tag || 'прочее';
+      setSelectedTag('edit_tag', task.tag || '');
       $('#edit_description').value = task.description || '';
       $('#edit_status').value = task.status || 'idea';
       $('#edit_start_date').value = task.start_date || '';
@@ -5305,6 +5375,7 @@ function renderPeopleAnalytics() {
 
     function openCreateModal(prefillDate = '') {
       $('#ideaForm').reset();
+      setSelectedTag('tag', '');
       clearCreateFormErrors();
       $$('input[type="checkbox"]', $('#createModal')).forEach(cb => cb.checked = false);
       const date = prefillDate || new Date().toISOString().split('T')[0];
@@ -5385,6 +5456,7 @@ if (state.currentView === 'kanban') renderKanban();
 if (state.currentView === 'calendar') renderCalendar();
 renderMetaOnly();
       $('#ideaForm').reset();
+      setSelectedTag('tag', '');
       $$('input[type="checkbox"]', $('#createModal')).forEach(cb => cb.checked = false);
       closeModal('createModal');
       notify(`Задача «${task.title}» создана`, 'success', 'Готово');
@@ -5812,6 +5884,17 @@ function getChatTaskSearchMatches(query = '') {
       $('#editForm').addEventListener('submit', saveEditForm);
       $('#sendChatBtn').addEventListener('click', sendChatMessage);
       document.addEventListener('click', event => {
+        const tagBtn = event.target.closest('.tag-cloud-btn');
+        if (tagBtn) {
+          const cloud = tagBtn.closest('.tag-cloud');
+          if (cloud?.id) {
+            const value = tagBtn.dataset.tagValue || '';
+            const nextValue = getSelectedTag(cloud.id) === value ? '' : value;
+            setSelectedTag(cloud.id, nextValue);
+          }
+          return;
+        }
+
         const dialogBtn = event.target.closest('.messenger-dialog');
         if (!dialogBtn) return;
         state.activeDialogId = dialogBtn.dataset.dialogId || 'team';
@@ -6068,8 +6151,8 @@ if (viewTab) {
       syncChatAudienceUI();
       populateSelect($('#work_type'), WORK_TYPES);
       populateSelect($('#edit_work_type'), WORK_TYPES);
-      populateSelect($('#tag'), TAGS, x => x.toUpperCase());
-      populateSelect($('#edit_tag'), TAGS, x => x.toUpperCase());
+      renderTagCloud('tag');
+      renderTagCloud('edit_tag');
       populateSelect($('#edit_status'), Object.keys(STATUS_MAP), key => STATUS_MAP[key].toUpperCase());
       renderChecklist('channelList', 'chan', CHANNELS);
       renderChecklist('editChannelList', 'edit_chan', CHANNELS);
