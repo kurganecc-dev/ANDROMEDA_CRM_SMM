@@ -234,6 +234,7 @@
     body.theme-dark ::-webkit-scrollbar-thumb { background: #475569; }
 
     .hidden-safe { display: none !important; }
+    .is-hidden { display: none !important; }
 
     .hero-shell {
       background: radial-gradient(circle at top left, rgba(59,130,246,.10), transparent 38%), linear-gradient(180deg, rgba(255,255,255,.78), rgba(255,255,255,.92));
@@ -1084,8 +1085,6 @@
       #rightSidebar { order: -1; }
       #rightSidebar.hidden { display: none !important; }
       .sidebar-panel { border-radius: 22px !important; padding: 14px !important; }
-      #focusSidebar { display: grid; gap: 10px; }
-      #focusSidebar > .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .sidebar-insight { padding: 12px !important; }
       #heroBlock { border-radius: 22px !important; padding: 16px !important; }
       #heroBlock h2 { font-size: 20px !important; line-height: 1.15 !important; }
@@ -1143,7 +1142,7 @@
 
     @media (max-width: 420px) {
       #profileBtn { width: 100%; justify-content: flex-start; }
-      #heroBlock .grid, #focusSidebar > .grid { grid-template-columns: 1fr !important; }
+      #heroBlock .grid { grid-template-columns: 1fr !important; }
       .task-card .mb-2.flex.items-center.gap-2 { flex-wrap: wrap; }
       #view-kanban > .flex > div { flex-basis: 88vw !important; }
       .calendar-day { flex-basis: 72px; }
@@ -1230,7 +1229,7 @@
       }
     }
 
-    /* Focus cleanup: hero/sidebar removed, list gets full width */
+    /* Interface cleanup: hero/sidebar removed, list gets full width */
     #heroBlock, #rightSidebar { display: none !important; }
     #middlePanel { grid-column: 1 / -1 !important; }
     #listControls { align-items: stretch; }
@@ -1358,6 +1357,7 @@
     #profileModal button[style*="background: var(--text)"],
     .toast button[style*="background: var(--text)"],
     #resetFiltersBtn,
+    #resetFiltersBtnLegacy,
     .inline-edit-actions .primary {
       background: var(--action-bg) !important;
       color: var(--action-text) !important;
@@ -1370,6 +1370,7 @@
     #profileModal button[style*="background: var(--text)"]:hover,
     .toast button[style*="background: var(--text)"]:hover,
     #resetFiltersBtn:hover,
+    #resetFiltersBtnLegacy:hover,
     .inline-edit-actions .primary:hover {
       filter: brightness(.96);
       transform: translateY(-1px);
@@ -1631,6 +1632,588 @@
       display: none !important;
     }
 
+  
+
+    /* UX/UI full revision layer v7: task-first CRM, calm hierarchy, mobile bottom nav */
+    :root {
+      --ux-radius-xl: 28px;
+      --ux-radius-lg: 22px;
+      --ux-radius-md: 16px;
+      --ux-focus-ring: 0 0 0 4px color-mix(in srgb, var(--primary) 18%, transparent);
+      --ux-card-shadow: 0 12px 28px rgba(15,23,42,.07);
+      --ux-card-shadow-hover: 0 18px 34px rgba(15,23,42,.10);
+      --status-idea-color: #64748b;
+      --status-script-color: #8b5cf6;
+      --status-production-color: #2563eb;
+      --status-editing-color: #f59e0b;
+      --status-review-color: #ec4899;
+      --status-scheduled-color: #14b8a6;
+      --status-published-color: #10b981;
+    }
+
+    :focus-visible {
+      outline: 0 !important;
+      box-shadow: var(--ux-focus-ring) !important;
+    }
+
+    .view-tab[aria-current="page"],
+    .mobile-nav-btn[aria-current="page"] {
+      box-shadow: 0 10px 22px color-mix(in srgb, var(--primary) 20%, transparent);
+    }
+
+    .ux-section {
+      border-radius: var(--ux-radius-xl);
+      border: 1px solid var(--border);
+      background:
+        radial-gradient(circle at top left, color-mix(in srgb, var(--primary) 9%, transparent), transparent 34%),
+        var(--surface);
+      box-shadow: var(--ux-card-shadow);
+    }
+
+    .ux-section-title {
+      font-size: 26px !important;
+      line-height: 1.05 !important;
+      font-weight: 950;
+      letter-spacing: -0.04em;
+      text-transform: none !important;
+    }
+
+    .ux-section-kicker {
+      font-size: 11px !important;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      color: var(--primary);
+    }
+
+    .ux-hint {
+      color: var(--muted);
+      font-size: 13px !important;
+      font-weight: 650;
+      line-height: 1.45;
+    }
+
+    .quick-filter-btn[data-quick-filter="REVIEW"] {
+      border-color: color-mix(in srgb, var(--status-review-color) 32%, var(--border));
+    }
+
+    .task-card-v2 {
+      position: relative;
+      overflow: hidden;
+      border-left-width: 6px !important;
+      padding: 20px !important;
+      gap: 0;
+    }
+
+    .task-card-v2::before {
+      content: '';
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 3px;
+      background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 72%, transparent), transparent);
+      opacity: .45;
+      pointer-events: none;
+    }
+
+    .task-card-v2 h3 {
+      text-transform: none !important;
+      font-size: 21px !important;
+      line-height: 1.22 !important;
+      letter-spacing: -0.04em !important;
+    }
+
+    .task-primary-row,
+    .task-title-row,
+    .task-card-actions,
+    .task-next-step,
+    .kanban-card-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .task-primary-row,
+    .task-title-row {
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .task-platforms {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 6px 10px;
+      font-size: 11px !important;
+      font-weight: 900;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .status-chip[data-status="idea"] { color: var(--status-idea-color); }
+    .status-chip[data-status="script"] { color: var(--status-script-color); }
+    .status-chip[data-status="production"] { color: var(--status-production-color); }
+    .status-chip[data-status="editing"] { color: var(--status-editing-color); }
+    .status-chip[data-status="review"] { color: var(--status-review-color); }
+    .status-chip[data-status="scheduled"] { color: var(--status-scheduled-color); }
+    .status-chip[data-status="published"] { color: var(--status-published-color); }
+
+    .task-description-preview {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 14px !important;
+      font-weight: 600;
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .task-next-step {
+      margin-top: 14px;
+      align-items: flex-start;
+      border-radius: 16px;
+      border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--border));
+      background: color-mix(in srgb, var(--primary) 7%, var(--surface));
+      padding: 12px;
+    }
+
+    .task-next-step span {
+      flex: 0 0 auto;
+      font-size: 11px !important;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--primary);
+    }
+
+    .task-next-step strong {
+      color: var(--text);
+      font-size: 13px !important;
+      line-height: 1.35;
+      font-weight: 800;
+    }
+
+    .task-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .task-meta-item {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      padding: 10px;
+      min-width: 0;
+    }
+
+    .task-meta-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px !important;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .task-meta-item strong {
+      display: block;
+      margin-top: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px !important;
+      font-weight: 850;
+      color: var(--text);
+    }
+
+    .task-card-actions {
+      flex-wrap: wrap;
+      border-top: 1px solid var(--border);
+      margin-top: 16px;
+      padding-top: 14px;
+    }
+
+    .task-action-btn,
+    .kanban-action-btn,
+    .ux-action-btn {
+      min-height: 38px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 0 12px;
+      font-size: 11px !important;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: .18s ease;
+    }
+
+    .task-action-btn:hover,
+    .kanban-action-btn:hover,
+    .ux-action-btn:hover {
+      transform: translateY(-1px);
+      border-color: color-mix(in srgb, var(--primary) 38%, var(--border));
+      color: var(--primary);
+    }
+
+    .task-action-btn.primary,
+    .kanban-action-btn.primary,
+    .ux-action-btn.primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .task-action-btn.primary:hover,
+    .kanban-action-btn.primary:hover,
+    .ux-action-btn.primary:hover { color: #fff; }
+
+    .task-action-btn:disabled,
+    .kanban-action-btn:disabled { opacity: .48; cursor: not-allowed; transform: none; }
+
+    .kanban-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding: 12px;
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      box-shadow: var(--ux-card-shadow);
+    }
+
+    .kanban-stage-nav {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .kanban-stage-nav::-webkit-scrollbar { display: none; }
+
+    .kanban-stage-pill {
+      min-height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 0 12px;
+      font-size: 11px !important;
+      font-weight: 900;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .kanban-card-v2 {
+      border-left-width: 5px !important;
+      cursor: grab;
+    }
+
+    .kanban-card-v2 h4 {
+      text-transform: none !important;
+      font-size: 15px !important;
+      line-height: 1.25 !important;
+      letter-spacing: -0.03em !important;
+    }
+
+    .kanban-next-step {
+      margin-top: 10px;
+      border-radius: 14px;
+      background: color-mix(in srgb, var(--primary) 7%, var(--surface-2));
+      border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--border));
+      padding: 9px;
+      color: var(--muted);
+      font-size: 12px !important;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    .stale-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 999px;
+      background: rgba(245,158,11,.13);
+      color: #b45309;
+      padding: 5px 8px;
+      font-size: 10px !important;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .calendar-planning-panel {
+      padding: 16px;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      box-shadow: var(--ux-card-shadow);
+    }
+
+    .calendar-planning-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .calendar-mode-switch {
+      display: inline-flex;
+      gap: 4px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 4px;
+      background: var(--surface-2);
+    }
+
+    .calendar-mode-btn {
+      min-height: 36px;
+      border: 0;
+      border-radius: 12px;
+      background: transparent;
+      color: var(--muted);
+      padding: 0 12px;
+      font-size: 11px !important;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .calendar-mode-btn.is-active { background: var(--primary); color: #fff; }
+
+    .calendar-week-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .calendar-summary-card {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--surface-2);
+      padding: 11px;
+    }
+    .calendar-summary-card strong { display: block; font-size: 20px !important; line-height: 1; }
+    .calendar-summary-card span { display: block; margin-top: 6px; color: var(--muted); font-size: 11px !important; font-weight: 800; text-transform: uppercase; }
+
+    .calendar-day.is-overloaded {
+      background: color-mix(in srgb, var(--surface) 72%, #f59e0b 28%) !important;
+    }
+
+    .calendar-load-warning {
+      margin-top: auto;
+      border-radius: 10px;
+      background: rgba(245,158,11,.16);
+      color: #b45309;
+      padding: 5px;
+      font-size: 10px !important;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .calendar-item-v2 {
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      white-space: normal !important;
+      line-height: 1.2;
+    }
+
+    .calendar-item-meta {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 10px !important;
+      font-weight: 800;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .analytics-decision-panel {
+      padding: 18px;
+      border-radius: 26px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      box-shadow: var(--ux-card-shadow);
+    }
+
+    .analytics-insight-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .analytics-insight-card {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface-2);
+      padding: 14px;
+    }
+
+    .analytics-insight-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px !important;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .analytics-insight-card strong {
+      display: block;
+      margin-top: 8px;
+      color: var(--text);
+      font-size: 18px !important;
+      line-height: 1.15;
+      font-weight: 950;
+      letter-spacing: -0.04em;
+    }
+
+    .analytics-insight-card p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px !important;
+      font-weight: 650;
+      line-height: 1.35;
+    }
+
+    .task-discussion-panel {
+      border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--border));
+      border-radius: 22px;
+      background: color-mix(in srgb, var(--primary) 5%, var(--surface));
+      padding: 16px;
+    }
+
+    .task-discussion-row {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--surface);
+      padding: 10px;
+      margin-top: 8px;
+    }
+
+    .chat-message-action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .create-mode-switch {
+      display: inline-flex;
+      gap: 4px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      padding: 4px;
+      margin-top: 12px;
+    }
+
+    .ux-create-mode-btn {
+      min-height: 36px;
+      border: 0;
+      border-radius: 12px;
+      background: transparent;
+      color: var(--muted);
+      padding: 0 12px;
+      font-size: 11px !important;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .ux-create-mode-btn.is-active { background: var(--primary); color: #fff; }
+    #createModal[data-create-mode="quick"] .full-create-only { display: none !important; }
+    #createModal[data-create-mode="quick"] #ideaForm { max-width: 760px; margin-left: auto; margin-right: auto; }
+
+    #mobileBottomNav {
+      display: none;
+      position: fixed;
+      left: 10px;
+      right: 10px;
+      bottom: calc(10px + var(--mobile-safe-bottom));
+      z-index: 120;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      box-shadow: 0 18px 40px rgba(15,23,42,.18);
+      backdrop-filter: blur(18px);
+      padding: 8px;
+    }
+
+    .mobile-nav-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 4px;
+    }
+
+    .mobile-nav-btn {
+      min-height: 54px;
+      border: 0;
+      border-radius: 18px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 10px !important;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .mobile-nav-btn span { display: block; font-size: 18px !important; line-height: 1; margin-bottom: 4px; }
+    .mobile-nav-btn.is-active { background: var(--primary); color: #fff; }
+
+
+
+    #view-kanban.compact-empty [data-kanban-wrapper].is-empty {
+      flex: 0 0 112px !important;
+      min-width: 112px !important;
+      opacity: .72;
+    }
+
+    #view-kanban.compact-empty [data-kanban-wrapper].is-empty .kanban-col {
+      display: none !important;
+    }
+
+    #view-kanban.compact-empty [data-kanban-wrapper].is-empty > div:first-child {
+      writing-mode: vertical-rl;
+      min-height: 170px;
+      justify-content: center;
+    }
+
+    @media (max-width: 1180px) {
+      .analytics-insight-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .calendar-week-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 767px) {
+      #mobileBottomNav { display: block; }
+      .calendar-planning-head, .kanban-toolbar { flex-direction: column; align-items: stretch; }
+      .analytics-insight-grid, .calendar-week-summary { grid-template-columns: 1fr; }
+      .task-primary-row, .task-title-row { flex-direction: column; align-items: flex-start; }
+      .task-meta-grid { grid-template-columns: 1fr; }
+      .task-card-actions { display: grid; grid-template-columns: 1fr 1fr; }
+      .task-action-btn { width: 100%; }
+      .ux-section-title { font-size: 23px !important; }
+      .analytics-insight-card strong { font-size: 17px !important; }
+    }
+
   </style>
 </head>
 <body class="min-h-screen">
@@ -1682,6 +2265,7 @@
             <button type="button" class="quick-filter-btn" data-quick-filter="TODAY"><span>Сегодня</span><span class="quick-filter-count" data-filter-count="TODAY">0</span></button>
             <button type="button" class="quick-filter-btn" data-quick-filter="OVERDUE"><span>Просрочено</span><span class="quick-filter-count" data-filter-count="OVERDUE">0</span></button>
             <button type="button" class="quick-filter-btn" data-quick-filter="UNASSIGNED"><span>Без исполнителя</span><span class="quick-filter-count" data-filter-count="UNASSIGNED">0</span></button>
+            <button type="button" class="quick-filter-btn" data-quick-filter="REVIEW"><span>На проверке</span><span class="quick-filter-count" data-filter-count="REVIEW">0</span></button>
           </div>
           <input id="taskSearch" type="search" placeholder="Поиск задач..." aria-label="Поиск задач" class="flex-1 rounded-2xl border px-4 py-4 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);" />
           <select id="tagFilter" aria-label="Фильтр по тегу" class="rounded-2xl border px-4 py-4 text-[11px] font-black uppercase outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);">
@@ -2231,6 +2815,60 @@
         return new Date(y, m - 1, d);
       },
 
+      getLocalDateString(date = new Date()) {
+        const d = date instanceof Date ? date : new Date(date);
+        if (Number.isNaN(d.getTime())) return '';
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      },
+
+      getTodayMeta() {
+        const today = new Date();
+        const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        return {
+          today,
+          start,
+          dateStr: Utils.getLocalDateString(today)
+        };
+      },
+
+      getTaskFreshnessTime(task = {}) {
+        const candidates = [
+          task.created_at,
+          task.createdAt,
+          task.inserted_at,
+          task.updated_at,
+          task.id
+        ];
+
+        for (const candidate of candidates) {
+          if (candidate === null || candidate === undefined || candidate === '') continue;
+          const raw = String(candidate);
+          const parsed = raw.includes('-') || raw.includes('T')
+            ? new Date(raw).getTime()
+            : Number(raw);
+          if (Number.isFinite(parsed)) return parsed;
+        }
+
+        return 0;
+      },
+
+      sortNewestFirst(tasks = []) {
+        return [...(tasks || [])].sort((a, b) => {
+          const createdDelta = Utils.getTaskFreshnessTime(b) - Utils.getTaskFreshnessTime(a);
+          if (createdDelta) return createdDelta;
+          const dateA = Utils.parseLocalDate(a.date)?.getTime() || 0;
+          const dateB = Utils.parseLocalDate(b.date)?.getTime() || 0;
+          return dateB - dateA || Number(b.id || 0) - Number(a.id || 0);
+        });
+      },
+
+      renderAfterTaskMutation() {
+        if (state.currentView === 'list') renderCards();
+        if (state.currentView === 'kanban') renderKanban();
+        if (state.currentView === 'calendar') renderCalendar();
+        renderMetaOnly();
+      },
+
       formatShortDate(dateStr) {
         const d = Utils.parseLocalDate(dateStr);
         return d ? d.toLocaleDateString('ru-RU') : '—';
@@ -2246,9 +2884,8 @@
           };
         }
 
-        const today = new Date();
-        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        const tomorrowStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+        const { start: todayStart } = Utils.getTodayMeta();
+        const tomorrowStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), todayStart.getDate() + 1);
 
         if (status !== 'published' && d < todayStart) {
           return {
@@ -2339,6 +2976,9 @@
     const getProgress = Utils.getProgress;
     const getNextStepHint = Utils.getNextStepHint;
     const isSameMonthYear = Utils.isSameMonthYear;
+    const getLocalDateString = Utils.getLocalDateString;
+    const getTodayMeta = Utils.getTodayMeta;
+    const renderAfterTaskMutation = Utils.renderAfterTaskMutation;
         const TaskHelpers = {
       normalizeLinks(links = {}) {
         return Object.fromEntries(
@@ -2359,8 +2999,8 @@
           channels: $$('input[name="chan"]:checked').map(cb => cb.value),
           executors: $$('input[name="exec"]:checked').map(cb => cb.value),
           responsible: state.currentUser,
-          start_date: startDate || new Date().toISOString().split('T')[0],
-          date: endDate || new Date().toISOString().split('T')[0],
+          start_date: startDate || getLocalDateString(),
+          date: endDate || getLocalDateString(),
           status: 'idea',
           links: {},
           play_counts: {},
@@ -2438,11 +3078,21 @@
 
     const TaskState = {
       setTasks(tasks = []) {
-        state.tasks = Array.isArray(tasks) ? tasks : [];
+        const byId = new Map();
+        (Array.isArray(tasks) ? tasks : []).forEach(task => {
+          if (!task || task.is_deleted) return;
+          byId.set(String(task.id), task);
+        });
+        state.tasks = Utils.sortNewestFirst(StatsDataService.enrichTasksWithStats(Array.from(byId.values())));
       },
 
       setTrash(trash = []) {
-        state.trash = Array.isArray(trash) ? trash : [];
+        const byId = new Map();
+        (Array.isArray(trash) ? trash : []).forEach(task => {
+          if (!task) return;
+          byId.set(String(task.id), task);
+        });
+        state.trash = Utils.sortNewestFirst(Array.from(byId.values()));
       },
 
       findTaskIndex(id) {
@@ -2476,13 +3126,26 @@
       },
 
       addTask(task) {
-        if (!task) return;
-        state.tasks.unshift(StatsDataService.enrichTasksWithStats([task])[0]);
+        if (!task || task.is_deleted) return;
+        const enriched = StatsDataService.enrichTasksWithStats([task])[0];
+        const existingIndex = TaskState.findTaskIndex(enriched.id);
+        if (existingIndex !== -1) {
+          state.tasks[existingIndex] = enriched;
+        } else {
+          state.tasks.unshift(enriched);
+        }
+        state.tasks = Utils.sortNewestFirst(state.tasks);
       },
 
       addToTrash(task) {
         if (!task) return;
-        state.trash.unshift(task);
+        const existingIndex = TaskState.findTrashIndex(task.id);
+        if (existingIndex !== -1) {
+          state.trash[existingIndex] = task;
+        } else {
+          state.trash.unshift(task);
+        }
+        state.trash = Utils.sortNewestFirst(state.trash);
       },
 
       removeFromTrash(id) {
@@ -2495,7 +3158,7 @@
 
       restoreTask(task) {
         if (!task) return;
-        state.tasks.unshift(task);
+        TaskState.addTask(task);
       }
     };
     
@@ -3042,6 +3705,9 @@
         const messageContent = isTaskMessage
   ? ChatUI.renderTaskBubbleFromMessage(message.message || '')
   : `<div class="chat-text">${escapeHtml(message.message || '')}</div>`;
+        const createAction = !isTaskMessage && String(message.message || '').trim().length > 8
+          ? `<button type="button" class="chat-reaction create-task-from-chat" data-message-id="${escapeHtml(message.id)}">Создать задачу</button>`
+          : '';
         return `
           ${divider}
           <div class="chat-row ${isMe ? 'me' : 'other'} ${isMessagePrivate(message) ? 'private' : ''}">
@@ -3054,7 +3720,7 @@
               <div class="chat-emoji-bar">${picker}</div>
               ${messageContent}
 
-              ${reactionsHtml ? `<div class="chat-actions">${reactionsHtml}</div>` : ''}
+              ${(reactionsHtml || createAction) ? `<div class="chat-actions">${reactionsHtml}${createAction}</div>` : ''}
 
               ${isMe ? `
                 <button class="delete-message chat-delete-btn" data-message-id="${escapeHtml(message.id)}">✕</button>
@@ -3189,147 +3855,6 @@
       render() {
         CalendarUI.renderTabs();
         CalendarUI.renderGrid();
-      }
-    };
-
-    const SidebarUI = {
-      getTodayMeta() {
-        const today = new Date();
-        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-        const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        return { today, todayStr, dayStart };
-      },
-
-      getData() {
-        const { todayStr, dayStart } = SidebarUI.getTodayMeta();
-        const me = state.currentUser;
-
-        const active = state.tasks.filter(task => task.status !== 'published');
-        const todayTasks = active.filter(task => task.date === todayStr);
-        const overdue = active.filter(task => {
-          const d = parseLocalDate(task.date);
-          return d && d < dayStart && task.status !== 'published';
-        });
-        const mine = active.filter(task => ((task.executors || []).includes(me) || task.responsible === me));
-        const unassigned = active.filter(task => !(task.executors || []).length);
-
-        return { active, todayTasks, overdue, mine, unassigned, dayStart };
-      },
-
-      renderTopItems(data) {
-        const items = [
-          {
-            label: 'На сегодня',
-            value: data.todayTasks.length,
-            note: data.todayTasks.length ? 'есть задачи с дедлайном сегодня' : 'сегодня дедлайнов нет'
-          },
-          {
-            label: 'Просрочено',
-            value: data.overdue.length,
-            note: data.overdue.length ? 'нужно срочно разобрать' : 'просрочки нет'
-          },
-          {
-            label: 'На мне',
-            value: data.mine.length,
-            note: data.mine.length ? 'задачи в личном фокусе' : 'личных задач нет'
-          }
-        ];
-
-        return `
-          <div class="grid grid-cols-3 gap-2">
-            ${items.map(item => `
-              <div class="sidebar-insight rounded-2xl p-3">
-                <div class="text-[9px] font-black uppercase text-slate-400">${item.label}</div>
-                <div class="mt-1 text-xl font-black text-white">${item.value}</div>
-                <div class="mt-1 text-[10px] font-medium text-slate-400">${item.note}</div>
-              </div>
-            `).join('')}
-          </div>
-        `;
-      },
-
-      renderPriority(data) {
-        const priority = [...data.todayTasks, ...data.overdue.filter(task => !data.todayTasks.some(todayTask => String(todayTask.id) === String(task.id)))]
-          .slice(0, 4)
-          .map(task => {
-            const due = formatShortDate(task.date);
-            const d = parseLocalDate(task.date);
-            const overdueTask = d && d < data.dayStart;
-
-            return `
-              <button class="open-task sidebar-insight ${overdueTask ? 'sidebar-task-overdue' : 'sidebar-task-urgent'} w-full rounded-2xl p-3 text-left" data-task-id="${escapeHtml(task.id)}">
-                <div class="mb-1 flex items-center justify-between gap-2">
-                  <span class="text-[9px] font-black uppercase ${overdueTask ? 'text-rose-300' : 'text-amber-300'}">${overdueTask ? 'Просрочено' : 'Сегодня'}</span>
-                  <span class="text-[10px] font-bold text-slate-300">${escapeHtml(due)}</span>
-                </div>
-                <div class="text-[11px] font-black uppercase leading-tight text-white">${escapeHtml(task.title || 'Без названия')}</div>
-              </button>
-            `;
-          }).join('');
-
-        return `
-          <div class="sidebar-insight rounded-2xl p-4">
-            <div class="mb-3 flex items-center justify-between gap-2">
-              <div>
-                <div class="text-[10px] font-black uppercase text-amber-300">Приоритетные карточки</div>
-                <div class="mt-1 text-[11px] font-medium text-slate-400">То, что лучше не откладывать.</div>
-              </div>
-              <div class="rounded-full bg-white/10 px-2 py-1 text-[9px] font-black text-white">${data.todayTasks.length + data.overdue.length}</div>
-            </div>
-            <div class="space-y-2">
-              ${priority || '<div class="rounded-2xl bg-white/5 p-3 text-[11px] font-medium text-slate-400">Срочных карточек сейчас нет.</div>'}
-            </div>
-          </div>
-        `;
-      },
-
-      renderMyTasks(data) {
-        const myTasksHtml = data.mine.length
-          ? data.mine.slice(0, 5).map(task => `
-              <button   class="open-task focus-task-draggable w-full rounded-2xl bg-slate-800 p-4 text-left transition hover:bg-slate-700"   data-task-id="${escapeHtml(task.id)}"   draggable="true" >
-                <div class="mb-1 flex items-center justify-between gap-2">
-                  <span class="text-[8px] font-black uppercase text-blue-400">${escapeHtml(task.work_type || 'Пост')}</span>
-                  <span class="text-[8px] font-black uppercase text-slate-500">${escapeHtml(STATUS_MAP[task.status] || 'Идея')}</span>
-                </div>
-                <div class="text-[10px] font-black uppercase leading-tight text-white">${escapeHtml(task.title || 'Без названия')}</div>
-              </button>
-            `).join('')
-          : '<div class="rounded-2xl bg-white/5 p-4 text-center text-[10px] font-black uppercase text-slate-500">Личных задач сейчас нет</div>';
-
-        return `
-          <div class="sidebar-insight rounded-2xl p-4">
-            <div class="mb-3 flex items-center justify-between gap-2">
-              <div>
-                <div class="text-[10px] font-black uppercase text-blue-300">Мои задачи в работе</div>
-                <div class="mt-1 text-[11px] font-medium text-slate-400">Быстрый доступ к личному фокусу.</div>
-              </div>
-              <div class="rounded-full bg-white/10 px-2 py-1 text-[9px] font-black text-white">${data.mine.length}</div>
-            </div>
-            <div class="space-y-2">${myTasksHtml}</div>
-          </div>
-        `;
-      },
-
-      renderUnassigned(data) {
-        return `
-          <div class="sidebar-insight rounded-2xl p-4 text-[11px] font-medium text-slate-300">
-            Без исполнителя: <span class="font-black text-white">${data.unassigned.length}</span>
-          </div>
-        `;
-      },
-
-      render() {
-        const root = $('#focusSidebar');
-        if (!root) return;
-
-        const data = SidebarUI.getData();
-
-        root.innerHTML = `
-          ${SidebarUI.renderTopItems(data)}
-          ${SidebarUI.renderPriority(data)}
-          ${SidebarUI.renderMyTasks(data)}
-          ${SidebarUI.renderUnassigned(data)}
-        `;
       }
     };
 
@@ -3959,14 +4484,16 @@
       const endDate = $('#date_val').value;
       const channels = $$('input[name="chan"]:checked').map(cb => cb.value);
       const executors = $$('input[name="exec"]:checked').map(cb => cb.value);
+      const createMode = window.AndromedaUXRevision?.getCreateMode?.() || $('#createModal')?.dataset.createMode || 'quick';
+      const quick = createMode !== 'full';
       let valid = true;
       if (title.length < 4) { setFieldError('title', 'Нужно название хотя бы из 4 символов.'); valid = false; }
-      if (description.length < 10) { setFieldError('description', 'Добавь короткое ТЗ: хотя бы 10 символов.'); valid = false; }
+      if (!quick && description.length < 10) { setFieldError('description', 'Для полного ТЗ добавь описание хотя бы из 10 символов.'); valid = false; }
       if (!startDate) { setFieldError('start_date_val', 'Выбери дату старта.'); valid = false; }
       if (!endDate) { setFieldError('date_val', 'Выбери дедлайн.'); valid = false; }
       if (startDate && endDate && endDate < startDate) { setFieldError('date_val', 'Дедлайн не может быть раньше старта.'); valid = false; }
       if (!channels.length) { setFieldError('channels', 'Выбери хотя бы одну площадку.'); valid = false; }
-      if (!executors.length) { setFieldError('executors', 'Назначь хотя бы одного исполнителя.'); valid = false; }
+      if (!quick && !executors.length) { setFieldError('executors', 'В полном ТЗ назначь хотя бы одного исполнителя.'); valid = false; }
       return valid;
     }
 
@@ -4344,21 +4871,24 @@
 
     function buildMainTabs() {
       const root = $('#mainTabs');
+      if (!root) return;
+      const labels = {
+        list: 'Задачи',
+        kanban: 'Процесс',
+        calendar: 'Контент-план',
+        analytics: 'Эффективность',
+        accounts: 'Аккаунты',
+        chat: 'Чат'
+      };
+      root.setAttribute('role', 'tablist');
       root.innerHTML = VIEWS.map(view => {
-        const label = {
-  list: 'Список',
-  kanban: 'Канбан',
-  calendar: 'Календарь',
-  analytics: 'Аналитика',
-  accounts: 'Справочник',
-  chat: 'Мессенджер'
-}[view];
-
-const unreadBadge = view === 'chat' && state.unreadChatCount > 0
-  ? `<span class="ml-2 rounded-full bg-rose-500 px-2 py-0.5 text-[9px] font-black text-white">${state.unreadChatCount}</span>`
-  : '';
-       return `<button data-view="${view}" class="view-tab rounded-xl px-4 py-2 ${view === state.currentView ? 'tab-active' : 'text-slate-400'}">${label}${unreadBadge}</button>`;
+        const active = view === state.currentView;
+        const unreadBadge = view === 'chat' && state.unreadChatCount > 0
+          ? `<span class="ml-2 rounded-full bg-rose-500 px-2 py-0.5 text-[9px] font-black text-white">${state.unreadChatCount}</span>`
+          : '';
+        return `<button data-view="${view}" role="tab" aria-selected="${active}" aria-current="${active ? 'page' : 'false'}" class="view-tab rounded-xl px-4 py-2 ${active ? 'tab-active' : 'text-slate-400'}">${labels[view] || view}${unreadBadge}</button>`;
       }).join('');
+      window.AndromedaUXRevision?.renderMobileNav?.();
     }
 
     function syncQuickFilters() {
@@ -4367,12 +4897,14 @@ const unreadBadge = view === 'chat' && state.unreadChatCount > 0
       });
     }
 
+    function getTaskCreatedSortValue(task = {}) {
+      return Utils.getTaskFreshnessTime(task);
+    }
+
     function getFilteredTasks() {
       const query = ($('#taskSearch')?.value || '').trim().toLowerCase();
       const tag = $('#tagFilter')?.value || 'ALL';
-      const today = new Date();
-      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const { dateStr: todayStr, start: todayStart } = getTodayMeta();
       const me = state.currentUser;
 
       syncQuickFilters();
@@ -4390,10 +4922,13 @@ const unreadBadge = view === 'chat' && state.unreadChatCount > 0
           if (state.quickFilter === 'TODAY') matchesQuick = isActive && task.date === todayStr;
           if (state.quickFilter === 'OVERDUE') matchesQuick = isActive && date && date < todayStart;
           if (state.quickFilter === 'UNASSIGNED') matchesQuick = isActive && !(task.executors || []).length;
+          if (state.quickFilter === 'REVIEW') matchesQuick = isActive && task.status === 'review';
 
           return matchesText && matchesTag && matchesQuick;
         })
         .sort((a, b) => {
+          const createdDelta = getTaskCreatedSortValue(b) - getTaskCreatedSortValue(a);
+          if (createdDelta) return createdDelta;
           const dateA = parseLocalDate(a.date)?.getTime() || 0;
           const dateB = parseLocalDate(b.date)?.getTime() || 0;
           return dateB - dateA || Number(b.id || 0) - Number(a.id || 0);
@@ -4418,9 +4953,7 @@ const unreadBadge = view === 'chat' && state.unreadChatCount > 0
     }
 
     function getQuickFilterCounts() {
-      const today = new Date();
-      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const { dateStr: todayStr, start: todayStart } = getTodayMeta();
       const me = state.currentUser;
       const base = getQuickFilterBaseTasks();
       const active = base.filter(task => task.status !== 'published');
@@ -4433,7 +4966,8 @@ const unreadBadge = view === 'chat' && state.unreadChatCount > 0
           const date = parseLocalDate(task.date);
           return date && date < todayStart;
         }).length,
-        UNASSIGNED: active.filter(task => !(task.executors || []).length).length
+        UNASSIGNED: active.filter(task => !(task.executors || []).length).length,
+        REVIEW: active.filter(task => task.status === 'review').length
       };
     }
 
@@ -4491,10 +5025,7 @@ const unreadBadge = view === 'chat' && state.unreadChatCount > 0
 state.inlineEditId = null;
 state.inlineDraft = null;
 
-if (state.currentView === 'list') renderCards();
-if (state.currentView === 'kanban') renderKanban();
-if (state.currentView === 'calendar') renderCalendar();
-renderMetaOnly();
+renderAfterTaskMutation();
 
       updateToast(loadingToast, 'Карточка обновлена без открытия модалки.', 'success', 'Сохранено');
     }
@@ -4518,7 +5049,7 @@ renderMetaOnly();
             <p class="mx-auto mt-2 max-w-md text-sm font-medium" style="color: var(--muted);">
               Задач нет.
             </p>
-            <button type="button" id="resetFiltersBtn" class="mt-5 rounded-2xl px-5 py-3 text-[11px] font-black uppercase text-white" style="background: var(--text);">
+            <button type="button" id="resetFiltersBtnLegacy" class="mt-5 rounded-2xl px-5 py-3 text-[11px] font-black uppercase text-white" style="background: var(--text);">
               Сбросить фильтры
             </button>
           </div>
@@ -5191,12 +5722,13 @@ function renderPeopleAnalytics() {
 
     async function moveTaskPublicationDate(taskId, newDate) {
       const task = state.tasks.find(item => String(item.id) === String(taskId));
-      if (!task || !newDate || task.date === newDate) return;
+      const field = state.calendarDateMode === 'start_date' ? 'start_date' : 'date';
+      const fieldLabel = field === 'start_date' ? 'Дата старта' : 'Дата публикации';
+      if (!task || !newDate || task[field] === newDate) return;
 
-      const oldDate = task.date;
-      TaskState.patchTask(taskId, { date: newDate });
-      renderCalendar();
-      renderMetaOnly();
+      const oldDate = task[field];
+      TaskState.patchTask(taskId, { [field]: newDate });
+      renderAfterTaskMutation();
 
       const loadingToast = notify(
         `Переношу «${task.title || 'задачу'}» на ${formatShortDate(newDate)}…`,
@@ -5205,18 +5737,17 @@ function renderPeopleAnalytics() {
         { closable: false }
       );
 
-      const { error } = await TaskService.update(taskId, { date: newDate });
+      const { error } = await TaskService.update(taskId, { [field]: newDate });
 
       if (error) {
-        TaskState.patchTask(taskId, { date: oldDate });
-        renderCalendar();
-        renderMetaOnly();
-        updateToast(loadingToast, 'Не удалось перенести дату публикации. Вернул старую дату.', 'error', 'Ошибка');
+        TaskState.patchTask(taskId, { [field]: oldDate });
+        renderAfterTaskMutation();
+        updateToast(loadingToast, `Не удалось изменить поле «${fieldLabel}». Вернул старую дату.`, 'error', 'Ошибка');
         return;
       }
 
-      updateToast(loadingToast, `Дата публикации изменена: ${formatShortDate(oldDate)} -> ${formatShortDate(newDate)}.`, 'success', 'Перенесено');
-      await logAction('date_change', task.title, `Календарь: ${formatShortDate(oldDate)} -> ${formatShortDate(newDate)}`);
+      updateToast(loadingToast, `${fieldLabel} изменена: ${formatShortDate(oldDate)} -> ${formatShortDate(newDate)}.`, 'success', 'Перенесено');
+      await logAction('date_change', task.title, `${fieldLabel}: ${formatShortDate(oldDate)} -> ${formatShortDate(newDate)}`);
     }
 
     function setupTasksRealtime() {
@@ -5229,13 +5760,20 @@ function renderPeopleAnalytics() {
           { event: '*', schema: 'public', table: Services.tables.tasks },
           payload => {
             const { eventType, new: newRow, old: oldRow } = payload;
-
             if (eventType === 'INSERT') {
-              TaskState.addTask(newRow);
+              if (newRow?.is_deleted) TaskState.addToTrash(newRow);
+              else TaskState.addTask(newRow);
             }
 
             if (eventType === 'UPDATE') {
-              TaskState.patchTask(newRow.id, newRow);
+              if (newRow?.is_deleted) {
+                const removed = TaskState.removeTask(newRow.id) || newRow;
+                TaskState.addToTrash({ ...removed, ...newRow });
+              } else {
+                TaskState.removeFromTrash(newRow.id);
+                const patched = TaskState.patchTask(newRow.id, newRow);
+                if (!patched) TaskState.addTask(newRow);
+              }
             }
 
             if (eventType === 'DELETE') {
@@ -5243,11 +5781,7 @@ function renderPeopleAnalytics() {
               TaskState.removeFromTrash(oldRow.id);
             }
 
-            // мягкий ререндер
-            if (state.currentView === 'list') renderCards();
-            if (state.currentView === 'kanban') renderKanban();
-            if (state.currentView === 'calendar') renderCalendar();
-            renderMetaOnly();
+            renderAfterTaskMutation();
           }
         )
         .subscribe();
@@ -5463,10 +5997,7 @@ function renderPeopleAnalytics() {
         });
       }
 
-      if (state.currentView === 'list') renderCards();
-      if (state.currentView === 'kanban') renderKanban();
-      if (state.currentView === 'calendar') renderCalendar();
-      renderMetaOnly();
+renderAfterTaskMutation();
 
       showUndoDeleteToast(task);
       await logAction('delete', task.title || 'Задача', 'Перенесено в корзину');
@@ -5522,10 +6053,7 @@ function renderPeopleAnalytics() {
         });
       }
 
-            if (state.currentView === 'list') renderCards();
-      if (state.currentView === 'kanban') renderKanban();
-      if (state.currentView === 'calendar') renderCalendar();
-      renderMetaOnly();
+      renderAfterTaskMutation();
       renderTrash();
     }
 
@@ -5583,6 +6111,8 @@ function renderPeopleAnalytics() {
       $$('input[name="edit_exec"]').forEach(cb => cb.checked = (task.executors || []).includes(cb.value));
 
       renderEditLinkFields(task.channels || [], task.links || {});
+      window.AndromedaUXRevision?.ensureDiscussionPanel?.();
+      window.AndromedaUXRevision?.renderTaskDiscussion?.(task.id);
     }
 
     function openEditModal(id) {
@@ -5597,7 +6127,7 @@ function renderPeopleAnalytics() {
       setSelectedTag('tag', '');
       clearCreateFormErrors();
       $$('input[type="checkbox"]', $('#createModal')).forEach(cb => cb.checked = false);
-      const date = prefillDate || new Date().toISOString().split('T')[0];
+      const date = prefillDate || getLocalDateString();
       state.createPrefillDate = date;
       $('#start_date_val').value = date;
       $('#date_val').value = date;
@@ -5616,6 +6146,7 @@ function renderPeopleAnalytics() {
       if ($('#createModalTitle')) $('#createModalTitle').textContent = prefillDate ? 'Новая задача' : 'Новая задача';
       if ($('#createPreviewDate')) $('#createPreviewDate').textContent = formatted;
       openModal('createModal');
+      window.AndromedaUXRevision?.setCreateMode?.('quick');
       renderCalendar();
     }
 
@@ -5638,10 +6169,7 @@ if (error) return notify('Не удалось сохранить изменен�
 
 TaskState.patchTask(id, data || payload);
 
-if (state.currentView === 'list') renderCards();
-if (state.currentView === 'kanban') renderKanban();
-if (state.currentView === 'calendar') renderCalendar();
-renderMetaOnly();
+renderAfterTaskMutation();
 
 closeModal('editModal');
 
@@ -5665,10 +6193,7 @@ closeModal('editModal');
 if (error) return notify('Не удалось создать задачу', 'error', 'Ошибка');
 
 TaskState.addTask(data || task);
-          if (state.currentView === 'list') renderCards();
-if (state.currentView === 'kanban') renderKanban();
-if (state.currentView === 'calendar') renderCalendar();
-renderMetaOnly();
+          renderAfterTaskMutation();
       $('#ideaForm').reset();
       setSelectedTag('tag', '');
       $$('input[type="checkbox"]', $('#createModal')).forEach(cb => cb.checked = false);
@@ -6030,7 +6555,7 @@ function getChatTaskSearchMatches(query = '') {
       $('#closeLogsBtn').addEventListener('click', () => toggleLogs(false));
       $('#taskSearch').addEventListener('input', renderAll);
       $('#tagFilter').addEventListener('change', renderAll);
-      $$('.quick-filter-btn').forEach(btn => btn.addEventListener('click', () => { state.quickFilter = btn.dataset.quickFilter || 'ALL'; renderAll(); }));
+      // Быстрые фильтры обрабатываются единым делегированным обработчиком UX-слоя.
       $('#analyticsTableBtn').addEventListener('click', () => { state.analyticsSubView = 'table'; renderAll(); });
       $('#analyticsVisualsBtn').addEventListener('click', () => { state.analyticsSubView = 'visuals'; renderAll(); });
       $('#chartMonthsBtn').addEventListener('click', () => { state.chartMode = 'months'; renderCharts(); });
@@ -6150,17 +6675,17 @@ function getChatTaskSearchMatches(query = '') {
       $('#toggleAllChannels').addEventListener('change', e => $$('input[name="chan"]', $('#createModal')).forEach(cb => cb.checked = e.target.checked));
       $('#title').addEventListener('input', () => setFieldError('title', $('#title').value.trim().length >= 4 ? '' : 'Нужно название хотя бы из 4 символов.'));
       $('#description').addEventListener('input', () => setFieldError('description', $('#description').value.trim().length >= 10 ? '' : 'Добавь короткое ТЗ: хотя бы 10 символов.'));
-      $('#start_date_val').addEventListener('change', () => { if ($('#start_date_val').value) setFieldError('start_date_val', ''); });
+      $('#start_date_val').addEventListener('change', event => {
+        if ($('#start_date_val').value) setFieldError('start_date_val', '');
+        $('#date_val').min = event.target.value;
+        if ($('#date_val').value && $('#date_val').value < event.target.value) $('#date_val').value = event.target.value;
+      });
       $('#date_val').addEventListener('change', () => { if ($('#date_val').value) setFieldError('date_val', ''); });
       document.addEventListener('change', event => {
         if (event.target.name === 'chan') setFieldError('channels', $$('input[name="chan"]:checked').length ? '' : 'Выбери хотя бы одну площадку.');
         if (event.target.name === 'exec') setFieldError('executors', $$('input[name="exec"]:checked').length ? '' : 'Назначь хотя бы одного исполнителя.');
       });
-      $('#start_date_val').addEventListener('change', e => {
-        $('#date_val').min = e.target.value;
-        if ($('#date_val').value && $('#date_val').value < e.target.value) $('#date_val').value = e.target.value;
-      });
-      $('#edit_start_date').addEventListener('change', e => {
+            $('#edit_start_date').addEventListener('change', e => {
         $('#edit_date').min = e.target.value;
         if ($('#edit_date').value && $('#edit_date').value < e.target.value) $('#edit_date').value = e.target.value;
       });
@@ -6204,7 +6729,7 @@ if (viewTab) {
           return;
         }
 
-        const resetFiltersBtn = event.target.closest('#resetFiltersBtn');
+        const resetFiltersBtn = event.target.closest('#resetFiltersBtn, #resetFiltersBtnLegacy');
         if (resetFiltersBtn) { $('#taskSearch').value = ''; $('#tagFilter').value = 'ALL'; state.quickFilter = 'ALL'; renderAll(); return; }
 
         const editTrashTaskBtn = event.target.closest('#editTrashTaskBtn');
@@ -6294,7 +6819,7 @@ if (viewTab) {
       });
 
             document.addEventListener('dragstart', event => {
-  const card = event.target.closest('.kanban-card, .focus-task-draggable, .calendar-item');
+  const card = event.target.closest('.kanban-card, .calendar-item');
   if (!card) return;
 
   state.draggedTaskId = card.dataset.taskId;
@@ -6305,7 +6830,7 @@ if (viewTab) {
 });
 
       document.addEventListener('dragend', event => {
-        event.target.closest?.('.calendar-item, .kanban-card, .focus-task-draggable')?.classList.remove('dragging');
+        event.target.closest?.('.calendar-item, .kanban-card')?.classList.remove('dragging');
         state.draggedTaskId = null;
         $$('.calendar-day.calendar-drag-over').forEach(day => day.classList.remove('calendar-drag-over'));
       });
@@ -6357,10 +6882,7 @@ if (viewTab) {
           if (error) return notify('Не удалось изменить статус');
 
           TaskState.patchTask(taskId, { status: newStatus });
-                if (state.currentView === 'list') renderCards();
-      if (state.currentView === 'kanban') renderKanban();
-      if (state.currentView === 'calendar') renderCalendar();
-      renderMetaOnly();
+          renderAfterTaskMutation();
           await logAction('status_change', task.title, `Канбан: ${oldStatus} → ${newStatus}`);
         });
       });
@@ -6386,6 +6908,762 @@ if (viewTab) {
     initStaticUI();
     bindEvents();
     checkAuth();
+  </script>
+
+
+
+  <script>
+    (function andromedaUnifiedUxLayer() {
+      const UX = {
+        statusOrder: ['idea', 'script', 'production', 'editing', 'review', 'scheduled', 'published'],
+        navLabels: {
+          list: { label: 'Задачи', icon: '✓' },
+          kanban: { label: 'Процесс', icon: '↔' },
+          calendar: { label: 'Контент-план', icon: '□' },
+          analytics: { label: 'Эффективность', icon: '◆' },
+          accounts: { label: 'Аккаунты', icon: '@' },
+          chat: { label: 'Чат', icon: '●' }
+        },
+
+        todayMeta() {
+          return getTodayMeta();
+        },
+
+        taskDate(task, key = 'date') {
+          return parseLocalDate(task?.[key]);
+        },
+
+        activeTasks(tasks = state.tasks) {
+          return (tasks || []).filter(task => task.status !== 'published');
+        },
+
+        nextStatus(status) {
+          const idx = UX.statusOrder.indexOf(status || 'idea');
+          if (idx < 0 || idx >= UX.statusOrder.length - 1) return '';
+          return UX.statusOrder[idx + 1];
+        },
+
+        nextStep(status) {
+          const map = {
+            idea: 'Уточнить идею и перевести в сценарий.',
+            script: 'Подготовить сценарий / ТЗ и передать в продакшн.',
+            production: 'Снять или собрать материалы для монтажа.',
+            editing: 'Завершить монтаж и отправить на проверку.',
+            review: 'Принять, вернуть на правки или запланировать публикацию.',
+            scheduled: 'Проверить дату, ссылки и дождаться публикации.',
+            published: 'Проверить статистику, выводы и повторяемые форматы.'
+          };
+          return map[status || 'idea'] || map.idea;
+        },
+
+        taskAgeDays(task) {
+          const raw = task?.updated_at || task?.created_at || task?.start_date || task?.date;
+          const d = raw && String(raw).includes('T') ? new Date(raw) : parseLocalDate(raw);
+          if (!d || Number.isNaN(d.getTime())) return 0;
+          return Math.max(0, Math.floor((Date.now() - d.getTime()) / 86400000));
+        },
+
+        firstChannel(task) {
+          return (task.channels || [])[0] || Object.keys(task.links || {})[0] || '';
+        },
+
+        taskExecutorLabel(task) {
+          const executors = task.executors || [];
+          if (executors.length) return executors.slice(0, 2).join(', ') + (executors.length > 2 ? ` +${executors.length - 2}` : '');
+          return task.responsible || 'Не назначен';
+        },
+
+        filteredBaseTasks() {
+          const query = ($('#taskSearch')?.value || '').trim().toLowerCase();
+          const tag = $('#tagFilter')?.value || 'ALL';
+          return state.tasks.filter(task => {
+            const haystack = [task.title, task.description, task.work_type, task.tag, ...(task.channels || []), task.responsible, ...(task.executors || [])]
+              .join(' ')
+              .toLowerCase();
+            const matchesText = !query || haystack.includes(query);
+            const matchesTag = tag === 'ALL' || task.tag === tag;
+            return matchesText && matchesTag;
+          });
+        },
+
+        quickCounts() {
+          const { dateStr, start } = UX.todayMeta();
+          const me = state.currentUser;
+          const base = UX.filteredBaseTasks();
+          const active = UX.activeTasks(base);
+          return {
+            ALL: base.length,
+            MINE: active.filter(task => (task.responsible === me) || (task.executors || []).includes(me)).length,
+            TODAY: active.filter(task => task.date === dateStr).length,
+            OVERDUE: active.filter(task => {
+              const d = parseLocalDate(task.date);
+              return d && d < start;
+            }).length,
+            UNASSIGNED: active.filter(task => !(task.executors || []).length).length,
+            REVIEW: active.filter(task => task.status === 'review').length
+          };
+        },
+
+        ensureShell() {
+          const kanban = $('#view-kanban');
+          if (kanban && !$('#kanbanToolbar')) {
+            kanban.insertAdjacentHTML('beforebegin', `
+              <div id="kanbanToolbar" class="kanban-toolbar is-hidden" aria-label="Навигация по процессу">
+                <div>
+                  <div class="ux-section-kicker">Процесс</div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2"><div class="kanban-stage-nav" id="kanbanStageNav"></div><button type="button" class="ux-action-btn kanban-toggle-empty" data-kanban-toggle-empty>Свернуть пустые</button></div>
+              </div>
+            `);
+          }
+
+          const calendarView = $('#view-calendar');
+          if (calendarView && !$('#calendarPlanningPanel')) {
+            calendarView.insertAdjacentHTML('afterbegin', `
+              <section id="calendarPlanningPanel" class="calendar-planning-panel is-hidden" aria-label="Панель контент-плана">
+                <div class="calendar-planning-head">
+                  <div>
+                    <div class="ux-section-kicker">Контент-план</div>
+                  </div>
+                  <div class="calendar-mode-switch" role="tablist" aria-label="Тип даты в календаре">
+                    <button type="button" class="calendar-mode-btn is-active" data-calendar-mode="date" role="tab">Дедлайн / публикация</button>
+                    <button type="button" class="calendar-mode-btn" data-calendar-mode="start_date" role="tab">Старт работы</button>
+                  </div>
+                </div>
+                <div id="calendarWeekSummary" class="calendar-week-summary"></div>
+              </section>
+            `);
+          }
+
+          const analyticsView = $('#view-analytics');
+          if (analyticsView && !$('#analyticsDecisionPanel')) {
+            analyticsView.insertAdjacentHTML('afterbegin', `
+              <section id="analyticsDecisionPanel" class="analytics-decision-panel is-hidden" aria-label="Ключевые выводы аналитики">
+                <div class="ux-section-kicker">Выводы</div>
+                <h2 class="ux-section-title">Что делать дальше</h2>
+                <div id="analyticsInsightGrid" class="analytics-insight-grid"></div>
+              </section>
+            `);
+          }
+
+          if (!$('#mobileBottomNav')) {
+            document.body.insertAdjacentHTML('beforeend', '<nav id="mobileBottomNav" aria-label="Быстрая мобильная навигация"><div id="mobileBottomNavGrid" class="mobile-nav-grid"></div></nav>');
+          }
+
+          UX.ensureCreateModeSwitch();
+          UX.ensureDiscussionPanel();
+        },
+        ensureReviewFilter() {
+          // REVIEW фильтр теперь статически присутствует в HTML.
+        },
+
+        ensureCreateModeSwitch() {
+          const modal = $('#createModal');
+          const title = $('#createModalTitle');
+          if (!modal || !title || $('#createModeSwitch')) return;
+          modal.dataset.createMode = 'quick';
+          title.closest('div')?.insertAdjacentHTML('beforeend', `
+            <div id="createModeSwitch" class="create-mode-switch" role="tablist" aria-label="Режим создания задачи">
+              <button type="button" class="ux-create-mode-btn is-active" data-create-mode="quick" role="tab" aria-selected="true">Быстро</button>
+              <button type="button" class="ux-create-mode-btn" data-create-mode="full" role="tab" aria-selected="false">Полное ТЗ</button>
+            </div>
+          `);
+          $('#description')?.classList.add('full-create-only');
+          $('#error_description')?.classList.add('full-create-only');
+          $('#start_date_val')?.closest('label')?.classList.add('full-create-only');
+          $('#executorList')?.closest('div')?.classList.add('full-create-only');
+        },
+
+        setCreateMode(mode = 'quick') {
+          const normalized = mode === 'full' ? 'full' : 'quick';
+          const modal = $('#createModal');
+          if (modal) modal.dataset.createMode = normalized;
+          $$('.ux-create-mode-btn').forEach(btn => {
+            const active = btn.dataset.createMode === normalized;
+            btn.classList.toggle('is-active', active);
+            btn.setAttribute('aria-selected', String(active));
+          });
+        },
+
+        getCreateMode() {
+          return $('#createModal')?.dataset.createMode || 'quick';
+        },
+
+        ensureDiscussionPanel() {
+          const form = $('#editForm');
+          if (!form || $('#taskDiscussionPanel')) return;
+          form.insertAdjacentHTML('afterbegin', '<section id="taskDiscussionPanel" class="task-discussion-panel"></section>');
+        },
+
+        syncVisibility() {
+          $('#kanbanToolbar')?.classList.toggle('is-hidden', state.currentView !== 'kanban');
+          $('#calendarPlanningPanel')?.classList.toggle('is-hidden', state.currentView !== 'calendar');
+          $('#analyticsDecisionPanel')?.classList.toggle('is-hidden', state.currentView !== 'analytics');
+        },
+
+        renderQuickCounts() {
+          const counts = UX.quickCounts();
+          Object.entries(counts).forEach(([key, value]) => {
+            const el = document.querySelector(`[data-filter-count="${key}"]`);
+            if (el) el.textContent = String(value);
+          });
+          $$('.quick-filter-btn').forEach(btn => {
+            btn.classList.toggle('is-active', btn.dataset.quickFilter === state.quickFilter);
+          });
+        },
+
+        renderKanbanToolbar() {
+          const root = $('#kanbanStageNav');
+          if (!root) return;
+          root.innerHTML = UX.statusOrder.map(status => `
+            <button type="button" class="kanban-stage-pill" data-kanban-scroll="${status}">
+              ${escapeHtml(STATUS_MAP[status] || status)} <span>${state.tasks.filter(task => task.status === status).length}</span>
+            </button>
+          `).join('');
+          UX.markKanbanColumns();
+        },
+
+        markKanbanColumns() {
+          $$('#view-kanban > .flex > div').forEach(wrapper => {
+            const col = wrapper.querySelector('[data-kanban]');
+            if (col) {
+              wrapper.dataset.kanbanWrapper = col.dataset.kanban;
+              wrapper.classList.toggle('is-empty', !col.querySelector('.kanban-card'));
+            }
+          });
+        },
+
+        renderCalendarPlanningPanel() {
+          const root = $('#calendarWeekSummary');
+          if (!root) return;
+          const mode = state.calendarDateMode || 'date';
+          $$('.calendar-mode-btn').forEach(btn => {
+            const active = btn.dataset.calendarMode === mode;
+            btn.classList.toggle('is-active', active);
+            btn.setAttribute('aria-selected', String(active));
+          });
+          const { year, month } = CalendarUI.getMonthMeta(state.viewDate);
+          const selectedChannel = state.calendarChannel || 'ALL';
+          const isSpecificChannel = selectedChannel !== 'ALL';
+          const monthTasks = state.tasks.filter(task => {
+            const d = parseLocalDate(task[mode]);
+            const channelMatch = !isSpecificChannel || (task.channels || []).includes(selectedChannel);
+            return channelMatch && d && d.getFullYear() === year && d.getMonth() === month;
+          });
+          const overloadedDays = {};
+          const overloadEnabled = isSpecificChannel && mode === 'date';
+          if (overloadEnabled) {
+            monthTasks.forEach(task => { overloadedDays[task.date] = (overloadedDays[task.date] || 0) + 1; });
+          }
+          const overloadedCount = overloadEnabled
+            ? Object.values(overloadedDays).filter(count => count > 3).length
+            : 0;
+          const scheduled = monthTasks.filter(task => task.status === 'scheduled').length;
+          const published = monthTasks.filter(task => task.status === 'published').length;
+          const platforms = new Set(monthTasks.flatMap(task => task.channels || []));
+          const summaryItems = isSpecificChannel
+            ? [
+                { value: monthTasks.length, label: mode === 'date' ? '\u043f\u043e\u0441\u0442\u043e\u0432 \u0432 \u043f\u043b\u0430\u043d\u0435' : '\u0441\u0442\u0430\u0440\u0442\u043e\u0432 \u0440\u0430\u0431\u043e\u0442' },
+                { value: overloadEnabled ? overloadedCount : '—', label: overloadEnabled ? '\u0434\u043d\u0435\u0439 \u0432\u044b\u0448\u0435 3 \u043f\u043e\u0441\u0442\u043e\u0432' : '\u043b\u0438\u043c\u0438\u0442 \u043f\u043e\u0441\u0442\u043e\u0432 \u043d\u0435 \u043f\u0440\u0438\u043c\u0435\u043d\u044f\u0435\u0442\u0441\u044f' },
+                { value: scheduled, label: '\u0437\u0430\u043f\u043b\u0430\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u043e' },
+                { value: published, label: '\u043e\u043f\u0443\u0431\u043b\u0438\u043a\u043e\u0432\u0430\u043d\u043e' }
+              ]
+            : [
+                { value: monthTasks.length, label: mode === 'date' ? '\u0437\u0430\u0434\u0430\u0447 \u0432 \u043f\u043b\u0430\u043d\u0435' : '\u0441\u0442\u0430\u0440\u0442\u043e\u0432 \u0440\u0430\u0431\u043e\u0442' },
+                { value: scheduled, label: '\u0437\u0430\u043f\u043b\u0430\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u043e' },
+                { value: published, label: '\u043e\u043f\u0443\u0431\u043b\u0438\u043a\u043e\u0432\u0430\u043d\u043e' },
+                { value: platforms.size, label: '\u043f\u043b\u043e\u0449\u0430\u0434\u043e\u043a \u0437\u0430\u0434\u0435\u0439\u0441\u0442\u0432\u043e\u0432\u0430\u043d\u043e' }
+              ];
+          root.innerHTML = summaryItems.map(item => `
+            <div class="calendar-summary-card"><strong>${item.value}</strong><span>${escapeHtml(item.label)}</span></div>
+          `).join('');
+        },
+
+        renderAnalyticsDecisionPanel() {
+          const root = $('#analyticsInsightGrid');
+          if (!root) return;
+          const currentMonth = state.statsDate;
+          const prevMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+          const published = state.tasks.filter(task => {
+            const d = parseLocalDate(task.date);
+            return task.status === 'published' && d && isSameMonthYear(d, currentMonth);
+          });
+          const prevPublished = state.tasks.filter(task => {
+            const d = parseLocalDate(task.date);
+            return task.status === 'published' && d && isSameMonthYear(d, prevMonth);
+          });
+          const views = published.reduce((sum, task) => sum + Number(task.play_count || 0), 0);
+          const prevViews = prevPublished.reduce((sum, task) => sum + Number(task.play_count || 0), 0);
+          const delta = prevViews ? Math.round(((views - prevViews) / prevViews) * 100) : null;
+          const byType = {};
+          published.forEach(task => {
+            const type = task.work_type || 'Без типа';
+            byType[type] = byType[type] || { views: 0, count: 0 };
+            byType[type].views += Number(task.play_count || 0);
+            byType[type].count += 1;
+          });
+          const bestType = Object.entries(byType).sort((a, b) => b[1].views - a[1].views)[0];
+          const topTask = [...published].sort((a, b) => Number(b.play_count || 0) - Number(a.play_count || 0))[0];
+          const missingStats = published.filter(task => !Number(task.play_count || 0) || !Object.values(task.links || {}).some(Boolean));
+          const platformTotals = {};
+          published.forEach(task => {
+            (task.channels || []).forEach(ch => { platformTotals[ch] = (platformTotals[ch] || 0) + StatsDataService.getTaskMetric(task, ch); });
+          });
+          const topPlatform = Object.entries(platformTotals).sort((a, b) => b[1] - a[1])[0];
+          root.innerHTML = [
+            {
+              label: 'Динамика месяца',
+              value: delta === null ? `${views.toLocaleString('ru-RU')}` : `${delta >= 0 ? '+' : ''}${delta}%`,
+              text: delta === null ? 'Нет базы прошлого месяца для сравнения.' : `Охват: ${views.toLocaleString('ru-RU')} против ${prevViews.toLocaleString('ru-RU')}.`
+            },
+            {
+              label: 'Лучший формат',
+              value: bestType ? bestType[0] : 'Нет данных',
+              text: bestType ? `${bestType[1].count} публикаций · ${bestType[1].views.toLocaleString('ru-RU')} охвата.` : 'Опубликуйте материалы и обновите статистику.'
+            },
+            {
+              label: 'Что повторить',
+              value: topTask ? topTask.title : 'Пока нечего',
+              text: topTask ? `${Number(topTask.play_count || 0).toLocaleString('ru-RU')} охвата. Откройте задачу и соберите паттерн.` : 'Нет опубликованных задач в периоде.'
+            },
+            {
+              label: 'Контроль данных',
+              value: `${missingStats.length}`,
+              text: missingStats.length ? 'Опубликованные задачи без ссылок или статистики.' : `Данные заполнены. Топ площадка: ${topPlatform ? topPlatform[0] : '—'}.`
+            }
+          ].map(card => `
+            <div class="analytics-insight-card">
+              <span>${escapeHtml(card.label)}</span>
+              <strong>${escapeHtml(String(card.value || '—'))}</strong>
+              <p>${escapeHtml(card.text)}</p>
+            </div>
+          `).join('');
+        },
+
+        renderMobileNav() {
+          const root = $('#mobileBottomNavGrid');
+          if (!root) return;
+          const items = ['list', 'calendar', 'chat', 'analytics', 'accounts'];
+          root.innerHTML = items.map(view => {
+            const meta = view === 'accounts' ? { label: 'Ещё', icon: '⋯' } : UX.navLabels[view];
+            const active = state.currentView === view;
+            const badge = view === 'chat' && state.unreadChatCount > 0 ? ` (${state.unreadChatCount})` : '';
+            return `
+              <button type="button" class="mobile-nav-btn ${active ? 'is-active' : ''}" data-mobile-view="${view}" aria-current="${active ? 'page' : 'false'}">
+                <span>${meta.icon}</span>${meta.label}${badge}
+              </button>
+            `;
+          }).join('');
+        },
+
+        applyA11y() {
+          const tabs = $('#mainTabs');
+          if (tabs) tabs.setAttribute('role', 'tablist');
+          VIEWS.forEach(view => {
+            const panel = document.getElementById(`view-${view}`);
+            if (panel) {
+              panel.setAttribute('role', 'tabpanel');
+              panel.setAttribute('aria-label', UX.navLabels[view]?.label || view);
+            }
+          });
+        },
+
+        renderTaskDiscussion(taskId) {
+          const root = $('#taskDiscussionPanel');
+          if (!root) return;
+          const task = state.tasks.find(item => String(item.id) === String(taskId));
+          const token = ChatUI.getTaskToken(taskId);
+          const related = (state.chatMessages || [])
+            .filter(message => String(message.message || '').includes(token))
+            .slice(-3)
+            .reverse();
+          root.innerHTML = `
+            <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div>
+                <div class="ux-section-kicker">Обсуждение задачи</div>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button type="button" class="ux-action-btn primary send-edit-task-to-chat" data-task-id="${escapeHtml(taskId)}">Отправить в чат</button>
+                <button type="button" class="ux-action-btn open-task-thread-chat" data-task-id="${escapeHtml(taskId)}">Открыть чат</button>
+              </div>
+            </div>
+            <div class="mt-2">
+              ${related.length ? related.map(message => `
+                <div class="task-discussion-row">
+                  <div class="text-[11px] font-black uppercase" style="color: var(--primary);">${escapeHtml(message.sender_name || 'Команда')} · ${escapeHtml(new Date(message.created_at).toLocaleString('ru-RU'))}</div>
+                  <div class="mt-1 text-sm font-semibold" style="color: var(--muted);">Отправлена карточка задачи${task ? ` «${escapeHtml(task.title || 'Без названия')}»` : ''}</div>
+                </div>
+              `).join('') : '<div class="task-discussion-row"><div class="text-sm font-semibold" style="color: var(--muted);">Пока нет сообщений, связанных с этой задачей.</div></div>'}
+            </div>
+          `;
+        },
+
+        async updateTaskStatus(taskId) {
+          const task = state.tasks.find(item => String(item.id) === String(taskId));
+          if (!task) return;
+          const next = UX.nextStatus(task.status);
+          if (!next) return notify('Задача уже находится в финальном статусе.', 'info', 'Статус');
+          const oldStatus = task.status;
+          TaskState.patchTask(taskId, { status: next });
+          renderAfterTaskMutation();
+          const { error } = await TaskService.update(taskId, { status: next });
+          if (error) {
+            TaskState.patchTask(taskId, { status: oldStatus });
+            renderAll();
+            return notify('Не удалось изменить статус. Изменение отменено.', 'error', 'Ошибка');
+          }
+          notify(`Статус: ${STATUS_MAP[oldStatus]} → ${STATUS_MAP[next]}`, 'success', 'Готово');
+          await logAction('status_change', task.title || 'Задача', `Быстрое действие: ${oldStatus} → ${next}`);
+        },
+
+        async assignTaskToMe(taskId) {
+          const task = state.tasks.find(item => String(item.id) === String(taskId));
+          if (!task || !state.currentUser) return;
+          const executors = Array.from(new Set([...(task.executors || []), state.currentUser]));
+          const payload = { responsible: state.currentUser, executors };
+          TaskState.patchTask(taskId, payload);
+          renderAfterTaskMutation();
+          const { error } = await TaskService.update(taskId, payload);
+          if (error) return notify('Не удалось назначить задачу.', 'error', 'Ошибка');
+          notify('Задача назначена на вас.', 'success', 'Назначено');
+        },
+
+        openCreateFromMessage(messageId) {
+          const message = (state.chatMessages || []).find(item => String(item.id) === String(messageId));
+          if (!message) return;
+          openCreateModal(getLocalDateString());
+          UX.setCreateMode('full');
+          const text = String(message.message || '').trim();
+          if ($('#title')) $('#title').value = text.slice(0, 80) || 'Задача из чата';
+          if ($('#description')) $('#description').value = text;
+          notify('Черновик задачи создан из сообщения. Проверь поля и сохрани.', 'info', 'Задача из чата');
+        },
+
+        installOverrides() {
+          const originalRenderDashboardSummary = renderDashboardSummary;
+          renderDashboardSummary = function patchedDashboardSummary() {
+            originalRenderDashboardSummary?.();
+            UX.renderQuickCounts();
+          };
+
+          renderSmartSidebar = function patchedSmartSidebar() {
+            UX.renderQuickCounts();
+          };
+
+          const originalRenderCards = renderCards;
+          renderCards = function patchedRenderCards() {
+            const container = $('#view-list');
+            if (!container) return;
+            if (state.isLoadingTasks) return renderListSkeleton();
+            const tasks = getFilteredTasks();
+            if (!tasks.length) {
+              const emptyMap = {
+                ALL: ['Задач нет', 'Создайте первую задачу или сбросьте поиск.'],
+                MINE: ['На вас ничего не висит', 'Можно взять задачу из общего списка или проверить контент-план.'],
+                TODAY: ['На сегодня дедлайнов нет', 'Отлично. Можно планировать следующий день.'],
+                OVERDUE: ['Просроченных задач нет', 'Команда держит сроки.'],
+                UNASSIGNED: ['Все задачи распределены', 'Неразобранных карточек без владельца нет.'],
+                REVIEW: ['Ничего не ждёт проверки', 'Проверочные задачи появятся здесь автоматически.']
+              };
+              const [title, text] = emptyMap[state.quickFilter] || emptyMap.ALL;
+              container.innerHTML = `
+                <div class="empty-state col-span-full rounded-[2rem] p-10 text-center">
+                  <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl" style="background: var(--surface);">✓</div>
+                  <div class="text-lg font-black">${escapeHtml(title)}</div>
+                  <p class="mx-auto mt-2 max-w-md text-sm font-medium" style="color: var(--muted);">${escapeHtml(text)}</p>
+                  <div class="mt-5 flex flex-wrap justify-center gap-2">
+                    <button type="button" id="resetFiltersBtn" class="ux-action-btn primary">Сбросить фильтры</button>
+                    <button type="button" class="ux-action-btn" data-open-create-empty>Создать задачу</button>
+                  </div>
+                </div>
+              `;
+              return;
+            }
+            container.innerHTML = tasks.map(task => {
+              const isEditing = state.inlineEditId === String(task.id);
+              const draft = isEditing ? (state.inlineDraft || {}) : {};
+              return TaskUI.renderListCard(task, { isEditing, draft });
+            }).join('');
+          };
+
+          const originalRenderKanban = renderKanban;
+          renderKanban = function patchedRenderKanban() {
+            originalRenderKanban();
+            UX.renderKanbanToolbar();
+          };
+
+          const originalRenderCalendar = renderCalendar;
+          renderCalendar = function patchedRenderCalendar() {
+            CalendarUI.render();
+            UX.renderCalendarPlanningPanel();
+          };
+
+          const originalRenderStats = renderStats;
+          renderStats = function patchedRenderStats() {
+            AnalyticsUI.renderStatsTable();
+            UX.renderAnalyticsDecisionPanel();
+          };
+
+          const originalRenderCharts = renderCharts;
+          renderCharts = function patchedRenderCharts() {
+            ChartUI.render();
+            UX.renderAnalyticsDecisionPanel();
+          };
+
+          const originalRenderAll = renderAll;
+          renderAll = function patchedRenderAll() {
+            originalRenderAll();
+            UX.renderKanbanToolbar();
+            UX.renderCalendarPlanningPanel();
+            UX.renderAnalyticsDecisionPanel();
+            UX.renderMobileNav();
+            UX.syncVisibility();
+            UX.applyA11y();
+          };
+
+          const originalRenderMetaOnly = renderMetaOnly;
+          renderMetaOnly = function patchedRenderMetaOnly() {
+            originalRenderMetaOnly();
+            UX.renderQuickCounts();
+            UX.renderMobileNav();
+            UX.syncVisibility();
+          };
+          TaskUI.renderListCard = function renderListCardV2(task, options = {}) {
+            const isEditing = options.isEditing || false;
+            const draft = options.draft || {};
+            const title = escapeHtml(task.title || 'Без названия');
+            const description = escapeHtml(task.description || 'Описание пока не добавлено.');
+            const deadline = getDeadlineMeta(task.date, task.status);
+            const responsible = escapeHtml(task.responsible || 'Не назначен');
+            const executors = escapeHtml(UX.taskExecutorLabel(task));
+            const views = Number(task.play_count || 0).toLocaleString('ru-RU');
+            const next = UX.nextStatus(task.status);
+            const nextLabel = next ? `В ${STATUS_MAP[next]}` : 'Финальный статус';
+            const inlineEditHtml = isEditing ? TaskUI.renderInlineEdit(task, draft) : '';
+            return `
+              <article class="task-card task-card-v2 ${isEditing ? 'is-editing' : ''} status-${escapeHtml(task.status || 'idea')} app-surface rounded-[2rem] border border-transparent" data-task-id="${escapeHtml(task.id)}" tabindex="0" aria-label="Открыть задачу ${title}">
+                <div class="task-primary-row">
+                  <div class="task-platforms">${TaskUI.renderChannels(task.channels || []) || '<span class="status-chip">Без площадки</span>'}</div>
+                  <span class="deadline-chip ${deadline.className}">${escapeHtml(deadline.label)}</span>
+                </div>
+                <div class="task-title-row mt-4">
+                  <div class="min-w-0">
+                    <div class="mb-2 flex flex-wrap gap-2">
+                      ${task.tag ? `<span class="status-chip">${escapeHtml(task.tag)}</span>` : ''}
+                      <span class="status-chip">${escapeHtml(task.work_type || 'Пост')}</span>
+                    </div>
+                    <h3>${title}</h3>
+                  </div>
+                  <span class="status-chip" data-status="${escapeHtml(task.status || 'idea')}">${escapeHtml(STATUS_MAP[task.status] || 'Идея')}</span>
+                </div>
+                <p class="task-description-preview">${description}</p>
+                <div class="task-next-step"><span>Следующее действие</span><strong>${escapeHtml(UX.nextStep(task.status))}</strong></div>
+                <div class="task-meta-grid">
+                  <div class="task-meta-item"><span>Ответственный</span><strong>${responsible}</strong></div>
+                  <div class="task-meta-item"><span>Исполнители</span><strong>${executors}</strong></div>
+                  <div class="task-meta-item"><span>Старт</span><strong>${escapeHtml(formatShortDate(task.start_date))}</strong></div>
+                  <div class="task-meta-item"><span>Охват</span><strong>${views}</strong></div>
+                </div>
+                <div class="task-card-actions">
+                  <button type="button" class="task-action-btn primary open-task-explicit" data-task-id="${escapeHtml(task.id)}">Открыть</button>
+                  <button type="button" class="task-action-btn task-status-next" data-task-id="${escapeHtml(task.id)}" ${next ? '' : 'disabled'}>${escapeHtml(nextLabel)}</button>
+                  <button type="button" class="task-action-btn task-assign-me" data-task-id="${escapeHtml(task.id)}">На меня</button>
+                  <button type="button" class="task-action-btn send-task-chat-quick" data-task-id="${escapeHtml(task.id)}">В чат</button>
+                </div>
+                ${inlineEditHtml}
+              </article>
+            `;
+          };
+
+          TaskUI.renderKanbanCard = function renderKanbanCardV2(task) {
+            const deadline = getDeadlineMeta(task.date, task.status);
+            const next = UX.nextStatus(task.status);
+            const age = UX.taskAgeDays(task);
+            const stale = task.status !== 'published' && age >= 5;
+            return `
+              <div class="kanban-card kanban-card-v2 status-${escapeHtml(task.status || 'idea')} rounded-2xl border p-4 shadow-sm active:cursor-grabbing" draggable="true" data-task-id="${escapeHtml(task.id)}" style="border-color: var(--border); color: var(--text); background: var(--surface);">
+                <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+                  <div class="task-platforms">${TaskUI.renderChannels(task.channels || [], 2)}</div>
+                  ${stale ? `<span class="stale-badge">Стоит ${age} дн.</span>` : ''}
+                </div>
+                <span class="status-chip" data-status="${escapeHtml(task.status || 'idea')}">${escapeHtml(STATUS_MAP[task.status] || 'Идея')}</span>
+                <h4 class="mt-3">${escapeHtml(task.title || 'Без названия')}</h4>
+                <div class="kanban-next-step">${escapeHtml(UX.nextStep(task.status))}</div>
+                <div class="mt-3 flex items-center justify-between border-t pt-2 text-[11px] font-bold" style="border-color: var(--border); color: var(--muted);">
+                  <span>${escapeHtml(UX.taskExecutorLabel(task))}</span>
+                  <span class="deadline-chip ${deadline.className}" style="padding:6px 8px; font-size:10px;">${escapeHtml(deadline.shortLabel)}</span>
+                </div>
+                <div class="kanban-card-actions mt-3">
+                  <button type="button" class="kanban-action-btn open-task-explicit" data-task-id="${escapeHtml(task.id)}">Открыть</button>
+                  <button type="button" class="kanban-action-btn primary task-status-next" data-task-id="${escapeHtml(task.id)}" ${next ? '' : 'disabled'}>${next ? escapeHtml(STATUS_MAP[next]) : 'Готово'}</button>
+                </div>
+              </div>
+            `;
+          };
+
+          CalendarUI.getTasksForDate = function patchedGetTasksForDate(dateStr) {
+            const mode = state.calendarDateMode || 'date';
+            return state.tasks.filter(task => {
+              const channelMatch = state.calendarChannel === 'ALL' || (task.channels || []).includes(state.calendarChannel);
+              return channelMatch && task[mode] === dateStr;
+            });
+          };
+
+          CalendarUI.renderTaskItem = function patchedCalendarTaskItem(task) {
+            const channel = UX.firstChannel(task);
+            return `
+              <button class="calendar-item calendar-item-v2 status-${escapeHtml(task.status || 'idea')} w-full text-left" draggable="true" data-task-id="${escapeHtml(task.id)}">
+                ${channel ? getSocialIcon(channel) : ''}${escapeHtml(task.title || 'Без названия')}
+                <span class="calendar-item-meta">${escapeHtml(STATUS_MAP[task.status] || 'Идея')} · ${escapeHtml(task.work_type || 'Пост')}</span>
+              </button>
+            `;
+          };
+
+          CalendarUI.renderDay = function patchedCalendarDay(dateStr, day) {
+            const items = CalendarUI.getTasksForDate(dateStr);
+            const isSpecificChannel = (state.calendarChannel || 'ALL') !== 'ALL';
+            const overloadEnabled = isSpecificChannel && (state.calendarDateMode || 'date') === 'date';
+            const overloaded = overloadEnabled && items.length > 3;
+            return `
+              <div class="calendar-day cursor-pointer ${dateStr === state.createPrefillDate ? 'create-target' : ''} ${overloaded ? 'is-overloaded' : ''}" data-date="${dateStr}">
+                <div class="mb-1 flex items-center justify-between gap-1 text-[10px] font-black text-slate-400"><span>${day}</span>${items.length ? `<span>${items.length}</span>` : ''}</div>
+                ${items.map(task => CalendarUI.renderTaskItem(task)).join('')}
+                ${overloaded ? `<div class="calendar-load-warning">\u0411\u043e\u043b\u044c\u0448\u0435 3 \u043f\u043e\u0441\u0442\u043e\u0432 (${items.length})</div>` : ''}
+              </div>
+            `;
+          };
+        },
+
+        bindUxEvents() {
+          if (UX.eventsBound) return;
+          UX.eventsBound = true;
+          document.addEventListener('click', async event => {
+            const createModeBtn = event.target.closest('.ux-create-mode-btn');
+            if (createModeBtn) {
+              event.preventDefault(); event.stopPropagation();
+              UX.setCreateMode(createModeBtn.dataset.createMode || 'quick');
+              return;
+            }
+
+            const emptyCreate = event.target.closest('[data-open-create-empty]');
+            if (emptyCreate) {
+              event.preventDefault(); event.stopPropagation();
+              openCreateModal();
+              return;
+            }
+
+            const quickBtn = event.target.closest('.quick-filter-btn');
+            if (quickBtn) {
+              event.preventDefault(); event.stopPropagation();
+              state.quickFilter = quickBtn.dataset.quickFilter || 'ALL';
+              renderAll();
+              return;
+            }
+
+            const mobileBtn = event.target.closest('.mobile-nav-btn');
+            if (mobileBtn) {
+              event.preventDefault(); event.stopPropagation();
+              state.currentView = mobileBtn.dataset.mobileView || 'list';
+              renderAll();
+              return;
+            }
+
+            const navBtn = event.target.closest('.kanban-stage-pill');
+            if (navBtn) {
+              event.preventDefault(); event.stopPropagation();
+              const wrapper = document.querySelector(`[data-kanban-wrapper="${navBtn.dataset.kanbanScroll}"]`);
+              wrapper?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+              return;
+            }
+
+            const toggleEmptyBtn = event.target.closest('[data-kanban-toggle-empty]');
+            if (toggleEmptyBtn) {
+              event.preventDefault(); event.stopPropagation();
+              $('#view-kanban')?.classList.toggle('compact-empty');
+              toggleEmptyBtn.textContent = $('#view-kanban')?.classList.contains('compact-empty') ? 'Показать пустые' : 'Свернуть пустые';
+              UX.markKanbanColumns();
+              return;
+            }
+
+            const calendarModeBtn = event.target.closest('.calendar-mode-btn');
+            if (calendarModeBtn) {
+              event.preventDefault(); event.stopPropagation();
+              state.calendarDateMode = calendarModeBtn.dataset.calendarMode || 'date';
+              renderCalendar();
+              return;
+            }
+
+            const explicitOpen = event.target.closest('.open-task-explicit');
+            if (explicitOpen) {
+              event.preventDefault(); event.stopPropagation();
+              openEditModal(explicitOpen.dataset.taskId);
+              return;
+            }
+
+            const nextBtn = event.target.closest('.task-status-next');
+            if (nextBtn) {
+              event.preventDefault(); event.stopPropagation();
+              if (!nextBtn.disabled) await UX.updateTaskStatus(nextBtn.dataset.taskId);
+              return;
+            }
+
+            const assignBtn = event.target.closest('.task-assign-me');
+            if (assignBtn) {
+              event.preventDefault(); event.stopPropagation();
+              await UX.assignTaskToMe(assignBtn.dataset.taskId);
+              return;
+            }
+
+            const sendChatBtn = event.target.closest('.send-task-chat-quick, .send-edit-task-to-chat');
+            if (sendChatBtn) {
+              event.preventDefault(); event.stopPropagation();
+              await sendTaskToChat(sendChatBtn.dataset.taskId);
+              return;
+            }
+
+            const openThread = event.target.closest('.open-task-thread-chat');
+            if (openThread) {
+              event.preventDefault(); event.stopPropagation();
+              state.currentView = 'chat';
+              renderAll();
+              return;
+            }
+
+            const createFromChat = event.target.closest('.create-task-from-chat');
+            if (createFromChat) {
+              event.preventDefault(); event.stopPropagation();
+              UX.openCreateFromMessage(createFromChat.dataset.messageId);
+              return;
+            }
+          }, true);
+
+          document.addEventListener('keydown', event => {
+            const card = event.target.closest?.('.task-card-v2');
+            if (!card) return;
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              openEditModal(card.dataset.taskId);
+            }
+          });
+        },
+
+        install() {
+          UX.ensureShell();
+          UX.installOverrides();
+          UX.bindUxEvents();
+          buildMainTabs();
+          UX.renderKanbanToolbar();
+          UX.renderCalendarPlanningPanel();
+          UX.renderAnalyticsDecisionPanel();
+          UX.renderMobileNav();
+          UX.syncVisibility();
+          UX.applyA11y();
+        }
+      };
+
+      window.AndromedaUXRevision = UX;
+      UX.install();
+    })();
   </script>
 
   <script>
