@@ -996,8 +996,9 @@
     .task-card .progress-track { height: 5px !important; opacity: .68; }
     .task-card .progress-fill { opacity: .9; }
     .task-card .soft-pill, .deadline-chip { border-radius: 10px !important; }
-    .task-card [title="В корзину"] { opacity: .45; color: var(--muted) !important; }
-    .task-card [title="В корзину"]:hover { opacity: 1; }
+    #editTrashTaskBtn { color: #e11d48 !important; }
+    body.theme-dark #editTrashTaskBtn { background: rgba(225,29,72,.12) !important; border-color: rgba(251,113,133,.30) !important; color: #fb7185 !important; }
+    body.theme-pink #editTrashTaskBtn { background: rgba(225,29,72,.10) !important; border-color: rgba(225,29,72,.24) !important; color: #be123c !important; }
     .kanban-card { border-radius: 16px !important; }
     .kanban-card h4 { text-transform: none !important; font-size: 13px !important; }
     .kanban-card .stage-hint { display: none !important; }
@@ -1762,7 +1763,17 @@
             </div>
           </div>
         </div>
-        <button class="w-full rounded-2xl px-4 py-5 text-xs font-black uppercase text-white" style="background: var(--text);">Сохранить</button>
+        <div class="flex flex-col gap-3 border-t pt-5 md:flex-row md:items-center md:justify-between" style="border-color: var(--border);">
+          <button
+            type="button"
+            id="editTrashTaskBtn"
+            class="rounded-2xl border px-5 py-4 text-[11px] font-black uppercase text-rose-600 transition hover:-translate-y-0.5 hover:bg-rose-50"
+            style="border-color: rgba(225,29,72,.25); background: rgba(225,29,72,.07);"
+          >
+            🗑️ Переместить в корзину
+          </button>
+          <button class="rounded-2xl px-6 py-5 text-xs font-black uppercase text-white md:min-w-[220px]" style="background: var(--text);">Сохранить</button>
+        </div>
       </form>
     </div>
   </div>
@@ -2370,7 +2381,6 @@
               <div class="flex max-w-[80%] flex-wrap gap-1">${channels}</div>
               <div class="flex items-center gap-1">
                 <button type="button" class="inline-edit-trigger rounded-full p-2 text-slate-400 hover:bg-blue-50 hover:text-blue-600" data-task-id="${escapeHtml(task.id)}" title="Быстрое редактирование">✎</button>
-                <button type="button" class="trash-task rounded-full p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-500" data-task-id="${escapeHtml(task.id)}" title="В корзину">✕</button>
               </div>
             </div>
 
@@ -5993,10 +6003,16 @@ if (viewTab) {
         const resetFiltersBtn = event.target.closest('#resetFiltersBtn');
         if (resetFiltersBtn) { $('#taskSearch').value = ''; $('#tagFilter').value = 'ALL'; state.quickFilter = 'ALL'; renderAll(); return; }
 
-        const trashTask = event.target.closest('.trash-task');
-        if (trashTask) {
+        const editTrashTaskBtn = event.target.closest('#editTrashTaskBtn');
+        if (editTrashTaskBtn) {
           event.stopPropagation();
-          await moveToTrash(trashTask.dataset.taskId);
+          const taskId = $('#edit_id')?.value;
+          if (!taskId) return;
+          const task = state.tasks.find(item => String(item.id) === String(taskId));
+          const title = task?.title || 'эту задачу';
+          if (!confirm(`Переместить «${title}» в корзину?`)) return;
+          closeModal('editModal');
+          await moveToTrash(taskId);
           return;
         }
 
