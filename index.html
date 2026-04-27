@@ -2214,6 +2214,776 @@
       .analytics-insight-card strong { font-size: 17px !important; }
     }
 
+
+    /* Analytics efficiency redesign v8 */
+    .analytics-page {
+      --analytics-good: #10b981;
+      --analytics-warning: #f59e0b;
+      --analytics-danger: #e11d48;
+      --analytics-purple: #8b5cf6;
+      --analytics-card-shadow: 0 18px 44px rgba(15, 23, 42, 0.09);
+    }
+
+    .analytics-hero,
+    .analytics-decision-panel,
+    .analytics-table-shell,
+    .analytics-chart-shell,
+    .analytics-people-shell {
+      border-radius: 30px !important;
+      border: 1px solid var(--border);
+      box-shadow: var(--analytics-card-shadow);
+    }
+
+    .analytics-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(340px, .85fr);
+      gap: 18px;
+      padding: 24px !important;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 38%),
+        radial-gradient(circle at 95% 15%, rgba(16,185,129,.12), transparent 32%),
+        var(--surface);
+    }
+
+    .analytics-hero-copy {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .analytics-eyebrow {
+      color: var(--primary);
+      font-size: 12px !important;
+      font-weight: 950;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+    }
+
+    .analytics-hero h2 {
+      margin: 10px 0 0;
+      max-width: 760px;
+      font-size: clamp(32px, 4.2vw, 64px) !important;
+      line-height: .92 !important;
+      letter-spacing: -0.075em;
+      font-weight: 950;
+      text-transform: none !important;
+    }
+
+    .analytics-hero p {
+      margin: 16px 0 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 16px !important;
+      line-height: 1.55;
+      font-weight: 650;
+    }
+
+    .analytics-control-panel {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      border-radius: 24px;
+      border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
+      background: color-mix(in srgb, var(--surface-2) 86%, transparent);
+      padding: 14px;
+    }
+
+    .analytics-date-switch {
+      display: grid;
+      grid-template-columns: 46px minmax(0, 1fr) 46px;
+      gap: 8px;
+      align-items: center;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 6px;
+    }
+
+    .analytics-date-switch button {
+      min-height: 42px;
+      border: 0;
+      border-radius: 14px;
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 17px !important;
+      font-weight: 950;
+      cursor: pointer;
+      transition: .18s ease;
+    }
+
+    .analytics-date-switch button:hover {
+      transform: translateY(-1px);
+      background: color-mix(in srgb, var(--primary) 12%, var(--surface-2));
+      color: var(--primary);
+    }
+
+    .analytics-date-switch h2 {
+      margin: 0;
+      text-align: center;
+      font-size: 14px !important;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
+    }
+
+    .analytics-filter-label {
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 11px !important;
+      font-weight: 950;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .analytics-filter-label select {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--surface) !important;
+      color: var(--text) !important;
+      padding: 0 14px;
+      font-size: 14px !important;
+      font-weight: 850;
+      letter-spacing: -0.02em;
+      outline: none;
+    }
+
+    .analytics-action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 8px;
+    }
+
+    .analytics-action {
+      min-height: 46px;
+      border: 1px solid transparent;
+      border-radius: 15px;
+      padding: 0 14px;
+      color: #fff;
+      font-size: 12px !important;
+      font-weight: 950;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: .18s ease;
+    }
+
+    .analytics-action:hover {
+      transform: translateY(-1px);
+      filter: brightness(.98);
+    }
+
+    .analytics-action.primary { background: linear-gradient(135deg, #10b981, #059669); }
+    .analytics-action.accent { background: linear-gradient(135deg, #ec4899, #be123c); }
+    .analytics-action.neutral { background: var(--text); color: var(--surface); border-color: var(--border); }
+
+    .analytics-tabs,
+    .analytics-chart-tabs {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      width: fit-content;
+      border-radius: 20px;
+      padding: 5px;
+      font-size: 12px !important;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
+    .analytics-tabs {
+      margin-inline: auto;
+    }
+
+    .analytics-tabs button,
+    .analytics-chart-tabs button {
+      min-height: 42px;
+      border: 0;
+      border-radius: 15px;
+      background: transparent;
+      color: var(--muted);
+      padding: 0 18px;
+      font-size: 12px !important;
+      font-weight: 950;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: .18s ease;
+    }
+
+    .analytics-tabs button:hover,
+    .analytics-chart-tabs button:hover {
+      color: var(--text);
+      background: color-mix(in srgb, var(--primary) 8%, transparent);
+    }
+
+    .analytics-tabs .tab-active,
+    .analytics-chart-tabs .tab-active {
+      background: var(--primary) !important;
+      color: #fff !important;
+      box-shadow: 0 12px 22px color-mix(in srgb, var(--primary) 20%, transparent);
+    }
+
+    .analytics-section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .analytics-section-head.table-head {
+      margin-bottom: 10px;
+      padding: 20px 20px 0;
+    }
+
+    .analytics-section-badge {
+      display: inline-flex;
+      min-height: 34px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--muted);
+      padding: 0 12px;
+      font-size: 11px !important;
+      font-weight: 900;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .analytics-subtitle {
+      margin: 4px 0 0;
+      font-size: 24px !important;
+      line-height: 1.06 !important;
+      font-weight: 950;
+      letter-spacing: -0.05em;
+      text-transform: none !important;
+    }
+
+    .analytics-kpi-grid,
+    .analytics-chart-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .analytics-kpi-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 154px;
+      border-radius: 26px !important;
+      padding: 18px !important;
+      background:
+        radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--primary) 10%, transparent), transparent 42%),
+        var(--surface);
+    }
+
+    .analytics-kpi-card.featured {
+      background:
+        radial-gradient(circle at 100% 0%, rgba(16,185,129,.20), transparent 42%),
+        linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, var(--surface)), var(--surface));
+    }
+
+    .analytics-kpi-card span,
+    .analytics-mini-label {
+      display: block;
+      color: var(--muted);
+      font-size: 11px !important;
+      font-weight: 950;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .analytics-kpi-card strong {
+      display: block;
+      margin-top: 14px;
+      color: var(--text);
+      font-size: clamp(30px, 3vw, 44px) !important;
+      line-height: .95;
+      font-weight: 950;
+      letter-spacing: -0.07em;
+    }
+
+    .analytics-kpi-card em {
+      display: block;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px !important;
+      font-style: normal;
+      font-weight: 700;
+    }
+
+    .analytics-efficiency-strip,
+    .analytics-platform-mini,
+    .analytics-top-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .analytics-signal-card,
+    .analytics-platform-card,
+    .analytics-top-card,
+    .analytics-decision-card,
+    .analytics-people-card {
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      background: var(--surface);
+      padding: 16px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.055);
+    }
+
+    .analytics-signal-card {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+      background: color-mix(in srgb, var(--surface) 82%, var(--primary) 4%);
+    }
+
+    .analytics-signal-icon,
+    .analytics-decision-icon {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 16px;
+      background: var(--surface-2);
+      font-size: 18px;
+    }
+
+    .analytics-signal-card span,
+    .analytics-platform-card span,
+    .analytics-top-card span,
+    .analytics-decision-card span {
+      color: var(--muted);
+      font-size: 11px !important;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
+    .analytics-signal-card strong,
+    .analytics-platform-card strong,
+    .analytics-top-card strong,
+    .analytics-decision-card strong {
+      display: block;
+      margin-top: 6px;
+      overflow: hidden;
+      color: var(--text);
+      font-size: 17px !important;
+      line-height: 1.15;
+      font-weight: 950;
+      letter-spacing: -0.035em;
+      text-overflow: ellipsis;
+    }
+
+    .analytics-signal-card p,
+    .analytics-platform-card p,
+    .analytics-top-card p,
+    .analytics-decision-card p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 12px !important;
+      line-height: 1.4;
+      font-weight: 650;
+    }
+
+    .analytics-platform-mini {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .analytics-platform-card {
+      padding: 14px;
+    }
+
+    .analytics-mini-progress {
+      margin-top: 12px;
+      width: 100%;
+      height: 7px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: var(--surface-2);
+    }
+
+    .analytics-mini-progress > i {
+      display: block;
+      height: 100%;
+      width: var(--value, 0%);
+      border-radius: inherit;
+      background: var(--primary);
+    }
+
+    .analytics-table-shell {
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    .analytics-table-wrap {
+      overflow-x: auto;
+    }
+
+    .analytics-table-v2 {
+      width: 100%;
+      min-width: 980px;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 13px !important;
+    }
+
+    .analytics-table-v2 thead {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: var(--surface-2);
+      color: var(--muted);
+    }
+
+    .analytics-table-v2 th {
+      padding: 14px 16px;
+      font-size: 11px !important;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      white-space: nowrap;
+    }
+
+    .analytics-table-v2 td {
+      border-top: 1px solid var(--border);
+      padding: 16px;
+      vertical-align: middle;
+      font-weight: 750;
+    }
+
+    .analytics-material-title {
+      max-width: 390px;
+      overflow: hidden;
+      color: var(--text);
+      font-size: 14px !important;
+      font-weight: 950;
+      line-height: 1.25;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .analytics-material-meta {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 10px !important;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .analytics-metric-main {
+      color: var(--text);
+      font-size: 18px !important;
+      font-weight: 950;
+      letter-spacing: -0.04em;
+      white-space: nowrap;
+    }
+
+    .analytics-metric-main.good { color: var(--analytics-good); }
+    .analytics-metric-main.info { color: var(--primary); }
+
+    .analytics-data-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 32px;
+      border-radius: 999px;
+      padding: 0 10px;
+      font-size: 10px !important;
+      font-weight: 950;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .analytics-data-pill.good {
+      background: rgba(16,185,129,.12);
+      color: #059669;
+    }
+
+    .analytics-data-pill.warning {
+      background: rgba(245,158,11,.14);
+      color: #b45309;
+    }
+
+    .analytics-data-pill.danger {
+      background: rgba(225,29,72,.12);
+      color: #e11d48;
+    }
+
+    .analytics-link-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .analytics-chart-shell {
+      padding: 22px !important;
+      background:
+        radial-gradient(circle at top left, color-mix(in srgb, var(--primary) 9%, transparent), transparent 36%),
+        var(--surface);
+    }
+
+    .analytics-chart-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.65fr) minmax(300px, .75fr);
+      gap: 16px;
+    }
+
+    .analytics-chart-card {
+      position: relative;
+      height: 460px;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      background: color-mix(in srgb, var(--surface-2) 88%, transparent);
+      padding: 16px;
+    }
+
+    .analytics-chart-insights {
+      min-height: 100%;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      background: color-mix(in srgb, var(--surface-2) 88%, transparent);
+      padding: 16px;
+    }
+
+    .analytics-insight-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .analytics-insight-stack .analytics-signal-card {
+      grid-template-columns: 1fr;
+      background: var(--surface);
+    }
+
+    .analytics-breakdown-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 14px;
+    }
+
+    .analytics-breakdown-card {
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      background: var(--surface);
+      box-shadow: var(--analytics-card-shadow);
+      padding: 18px;
+    }
+
+    .analytics-ranking-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding: 12px 0;
+    }
+
+    .analytics-ranking-row:last-child {
+      border-bottom: 0;
+    }
+
+    .analytics-rank {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 13px;
+      background: var(--surface-2);
+      color: var(--primary);
+      font-size: 12px !important;
+      font-weight: 950;
+    }
+
+    .analytics-people-shell {
+      padding: 22px !important;
+      background:
+        radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--primary) 8%, transparent), transparent 38%),
+        var(--surface);
+    }
+
+    .analytics-people-grid {
+      display: grid;
+      grid-template-columns: minmax(280px, .85fr) minmax(0, 1.4fr);
+      gap: 16px;
+    }
+
+    .analytics-people-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .analytics-people-card strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 24px !important;
+      line-height: 1;
+      font-weight: 950;
+      letter-spacing: -0.06em;
+    }
+
+    .analytics-person-card {
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      background: var(--surface);
+      padding: 14px;
+    }
+
+    .analytics-person-name {
+      overflow: hidden;
+      font-size: 14px !important;
+      font-weight: 950;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .analytics-person-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .analytics-person-metrics div {
+      border-radius: 14px;
+      background: var(--surface-2);
+      padding: 9px;
+      text-align: center;
+    }
+
+    .analytics-person-metrics strong {
+      display: block;
+      font-size: 14px !important;
+      line-height: 1;
+      font-weight: 950;
+    }
+
+    .analytics-person-metrics span {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 9px !important;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
+    .analytics-empty {
+      border: 1px dashed var(--border);
+      border-radius: 24px;
+      background: var(--surface-2);
+      padding: 28px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px !important;
+      font-weight: 800;
+    }
+
+    body.theme-dark .analytics-action.neutral {
+      background: #f8fafc;
+      color: #0f172a;
+    }
+
+    body.theme-dark .analytics-hero,
+    body.theme-dark .analytics-chart-shell,
+    body.theme-dark .analytics-people-shell {
+      box-shadow: 0 24px 56px rgba(0,0,0,.32);
+    }
+
+    @media (max-width: 1180px) {
+      .analytics-hero,
+      .analytics-chart-layout,
+      .analytics-people-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .analytics-kpi-grid,
+      .analytics-chart-kpi-grid,
+      .analytics-people-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .analytics-platform-mini {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .analytics-breakdown-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 767px) {
+      .analytics-hero,
+      .analytics-decision-panel,
+      .analytics-chart-shell,
+      .analytics-people-shell {
+        border-radius: 24px !important;
+      }
+
+      .analytics-hero,
+      .analytics-chart-shell,
+      .analytics-people-shell {
+        padding: 16px !important;
+      }
+
+      .analytics-hero h2 {
+        font-size: 36px !important;
+      }
+
+      .analytics-action-row,
+      .analytics-efficiency-strip,
+      .analytics-top-grid,
+      .analytics-kpi-grid,
+      .analytics-chart-kpi-grid,
+      .analytics-people-kpis,
+      .analytics-platform-mini,
+      .analytics-insight-grid {
+        grid-template-columns: 1fr !important;
+      }
+
+      .analytics-tabs,
+      .analytics-chart-tabs {
+        width: 100%;
+        overflow-x: auto;
+        justify-content: flex-start;
+      }
+
+      .analytics-tabs button,
+      .analytics-chart-tabs button {
+        flex: 1 0 auto;
+      }
+
+      .analytics-section-head {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .analytics-section-badge {
+        width: fit-content;
+      }
+
+      .analytics-chart-card {
+        height: 320px;
+      }
+
+      .analytics-table-v2 {
+        min-width: 860px;
+      }
+    }
+
   </style>
 </head>
 <body class="min-h-screen">
@@ -2346,84 +3116,129 @@
           </div>
         </div>
 
-        <div id="view-analytics" class="hidden space-y-6">
-          <div class="mx-auto flex w-fit gap-1 rounded-2xl p-1 surface-muted text-[10px] font-black uppercase">
-  <button id="analyticsTableBtn" type="button" aria-label="Показать таблицу аналитики" class="tab-active rounded-xl px-6 py-2.5">📊 Таблица</button>
-  <button id="analyticsVisualsBtn" type="button" aria-label="Показать графики аналитики" class="rounded-xl px-6 py-2.5 text-slate-400">📈 Графики</button>
-  <button id="analyticsPeopleBtn" type="button" aria-label="Показать аналитику команды" class="rounded-xl px-6 py-2.5 text-slate-400">👥 Команда</button>
-</div>
+        <div id="view-analytics" class="hidden analytics-page space-y-6">
+          <section class="analytics-hero app-surface" aria-label="Панель управления аналитикой">
+            <div class="analytics-hero-copy">
+              <div class="analytics-eyebrow">Модуль эффективности</div>
+              <h2>Эффективность контента</h2>
+              <p>Сводим охваты, вовлечённость, качество данных и вклад команды в один рабочий экран — чтобы быстрее понять, что повторять, что чинить и куда направить продакшн.</p>
+            </div>
+
+            <div class="analytics-control-panel">
+              <div class="analytics-date-switch" aria-label="Период статистики">
+                <button id="statsPrevBtn" type="button" aria-label="Предыдущий месяц статистики">←</button>
+                <h2 id="statsMonthLabel"></h2>
+                <button id="statsNextBtn" type="button" aria-label="Следующий месяц статистики">→</button>
+              </div>
+
+              <label class="analytics-filter-label">
+                <span>Площадка</span>
+                <select id="statsPlatformFilter" aria-label="Фильтр по площадке">
+                  <option value="ALL">Все площадки</option>
+                  <option value="YouTube">YouTube</option>
+                  <option value="Rutube">Rutube</option>
+                  <option value="TikTok">TikTok</option>
+                  <option value="Instagram">Instagram</option>
+                  <option value="VK">VK</option>
+                  <option value="Telegram">Telegram (Все)</option>
+                </select>
+              </label>
+
+              <div class="analytics-action-row" aria-label="Действия со статистикой">
+                <button id="btnUpdateAll" type="button" aria-label="Обновить всю статистику" class="analytics-action primary">Обновить всё</button>
+                <button id="btnUpdateInstagram" type="button" aria-label="Обновить статистику Instagram" class="analytics-action accent">Instagram</button>
+                <button id="exportStatsBtn" type="button" aria-label="Экспортировать статистику в CSV" class="analytics-action neutral">CSV</button>
+              </div>
+            </div>
+          </section>
+
+          <section id="analyticsDecisionPanel" class="analytics-decision-panel analytics-command-center is-hidden" aria-label="Ключевые выводы аналитики">
+            <div class="analytics-section-head">
+              <div>
+                <div class="ux-section-kicker">Решения</div>
+                <h2 class="ux-section-title">Что усиливать дальше</h2>
+              </div>
+              <div class="analytics-section-badge">Автовыводы по выбранному месяцу</div>
+            </div>
+            <div id="analyticsInsightGrid" class="analytics-insight-grid"></div>
+          </section>
+
+          <div class="analytics-tabs surface-muted" role="tablist" aria-label="Разделы аналитики эффективности">
+            <button id="analyticsTableBtn" type="button" aria-label="Показать таблицу аналитики" class="tab-active" role="tab" aria-selected="true">Сводка</button>
+            <button id="analyticsVisualsBtn" type="button" aria-label="Показать графики аналитики" role="tab" aria-selected="false">Графики</button>
+            <button id="analyticsPeopleBtn" type="button" aria-label="Показать аналитику команды" role="tab" aria-selected="false">Команда</button>
+          </div>
 
           <div id="analytics-table" class="space-y-6">
-            <div class="app-surface flex flex-col gap-4 rounded-[2rem] p-6 md:flex-row md:items-center md:justify-between">
-              <div class="flex items-center gap-2">
-                <button id="statsPrevBtn" type="button" aria-label="Предыдущий месяц статистики" class="rounded-xl border px-3 py-2" style="border-color: var(--border);">←</button>
-                <h2 id="statsMonthLabel" class="w-36 text-center text-sm font-black uppercase"></h2>
-                <button id="statsNextBtn" type="button" aria-label="Следующий месяц статистики" class="rounded-xl border px-3 py-2" style="border-color: var(--border);">→</button>
-              </div>
-              <select id="statsPlatformFilter" aria-label="Фильтр по площадке" class="rounded-xl border px-3 py-2 text-xs font-bold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);">
-                <option value="ALL">Все площадки</option>
-                <option value="YouTube">YouTube</option>
-                <option value="Rutube">Rutube</option>
-                <option value="TikTok">TikTok</option>
-                <option value="Instagram">Instagram</option>
-                <option value="VK">VK</option>
-                <option value="Telegram">Telegram (Все)</option>
-              </select>
-              <div class="flex gap-2">
-                <button id="btnUpdateAll" type="button" aria-label="Обновить всю статистику" class="rounded-xl bg-emerald-500 px-4 py-3 text-[10px] font-black uppercase text-white">Обновить всё</button>
-                <button id="btnUpdateInstagram" type="button" aria-label="Обновить статистику Instagram" class="rounded-xl bg-pink-600 px-4 py-3 text-[10px] font-black uppercase text-white">Instagram</button>
-                <button id="exportStatsBtn" type="button" aria-label="Экспортировать статистику в CSV" class="rounded-xl bg-slate-900 px-4 py-3 text-[10px] font-black uppercase text-white">CSV</button>
-              </div>
+            <div class="analytics-kpi-grid">
+              <article class="analytics-kpi-card app-surface">
+                <span>Опубликовано</span>
+                <strong id="stat-total">0</strong>
+                <em>материалов в периоде</em>
+              </article>
+              <article class="analytics-kpi-card app-surface featured">
+                <span>Суммарный охват</span>
+                <strong id="stat-views">0</strong>
+                <em>по выбранной площадке</em>
+              </article>
+              <article class="analytics-kpi-card app-surface">
+                <span>Вовлечённость</span>
+                <strong id="stat-engagement">0</strong>
+                <em>лайки + комментарии</em>
+              </article>
+              <article class="analytics-kpi-card app-surface">
+                <span>Средний охват</span>
+                <strong id="stat-avg">0</strong>
+                <em>на одну публикацию</em>
+              </article>
             </div>
 
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div class="app-surface rounded-[2rem] p-6 text-center">
-                <p class="text-[10px] font-black uppercase text-slate-400">Опубликовано</p>
-                <h3 id="stat-total" class="mt-2 text-4xl font-black">0</h3>
+            <div id="analyticsEfficiencyStrip" class="analytics-efficiency-strip"></div>
+            <div id="analyticsPlatformMini" class="analytics-platform-mini"></div>
+
+            <div class="analytics-table-shell app-surface">
+              <div class="analytics-section-head table-head">
+                <div>
+                  <div class="ux-section-kicker">Материалы</div>
+                  <h3 class="analytics-subtitle">Публикации периода</h3>
+                </div>
+                <div id="stat-data-health" class="analytics-section-badge">Данные: 0%</div>
               </div>
-              <div class="app-surface rounded-[2rem] p-6 text-center">
-                <p class="text-[10px] font-black uppercase text-slate-400">Суммарный охват</p>
-                <h3 id="stat-views" class="mt-2 text-4xl font-black text-emerald-600">0</h3>
-              </div>
+              <div id="statsTableContainer" class="analytics-table-wrap"></div>
             </div>
 
-            <div id="statsTableContainer" class="app-surface overflow-x-auto rounded-[2rem]"></div>
+            <div id="analyticsTopTasks" class="analytics-top-grid"></div>
           </div>
 
           <div id="analytics-visuals" class="hidden space-y-6">
-            <div id="chartKpiGrid" class="grid grid-cols-1 gap-4 md:grid-cols-4"></div>
+            <div id="chartKpiGrid" class="analytics-chart-kpi-grid"></div>
 
-            <div class="app-surface rounded-[2rem] p-8">
-              <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div class="analytics-chart-shell app-surface">
+              <div class="analytics-section-head">
                 <div>
-                  <div class="text-[10px] font-black uppercase tracking-[0.24em]" style="color: var(--primary);">Визуальная аналитика</div>
-                  <h3 id="chartTitle" class="mt-2 text-xl font-black uppercase">Аналитика охватов</h3>
-                  
+                  <div class="ux-section-kicker">Визуальная аналитика</div>
+                  <h3 id="chartTitle" class="analytics-subtitle">Аналитика охватов</h3>
                 </div>
-                <div class="flex flex-wrap gap-1 rounded-xl p-1 surface-muted text-[10px] font-black uppercase">
-                  <button id="chartMonthsBtn" type="button" aria-label="График за шесть месяцев" class="tab-active rounded-lg px-3 py-2">6 месяцев</button>
-                  <button id="chartDaysBtn" type="button" aria-label="График по дням" class="rounded-lg px-3 py-2 text-slate-400">По дням</button>
-                  <button id="chartPlatformsBtn" type="button" aria-label="График по площадкам" class="rounded-lg px-3 py-2 text-slate-400">Площадки</button>
-                  <button id="chartTopBtn" type="button" aria-label="Топ публикаций" class="rounded-lg px-3 py-2 text-slate-400">Топ постов</button>
+                <div class="analytics-chart-tabs surface-muted" role="tablist" aria-label="Режим графика">
+                  <button id="chartMonthsBtn" type="button" aria-label="График за шесть месяцев" class="tab-active">6 месяцев</button>
+                  <button id="chartDaysBtn" type="button" aria-label="График по дням">По дням</button>
+                  <button id="chartPlatformsBtn" type="button" aria-label="График по площадкам">Площадки</button>
+                  <button id="chartTopBtn" type="button" aria-label="Топ публикаций">Топ постов</button>
                 </div>
               </div>
 
-              <div class="grid grid-cols-1 gap-6 xl:grid-cols-12">
-                <div class="xl:col-span-8">
-                  <div class="relative h-[440px] rounded-[1.5rem] border p-4" style="border-color: var(--border); background: var(--surface-2);">
-                    <canvas id="reachChart"></canvas>
-                  </div>
+              <div class="analytics-chart-layout">
+                <div class="analytics-chart-card">
+                  <canvas id="reachChart"></canvas>
                 </div>
-                <div class="xl:col-span-4">
-                  <div id="chartInsightPanel" class="h-full rounded-[1.5rem] border p-5" style="border-color: var(--border); background: var(--surface-2);"></div>
-                </div>
+                <aside id="chartInsightPanel" class="analytics-chart-insights"></aside>
               </div>
             </div>
 
-            <div id="chartBreakdownGrid" class="grid grid-cols-1 gap-4 xl:grid-cols-2"></div>
+            <div id="chartBreakdownGrid" class="analytics-breakdown-grid"></div>
           </div>
 
-          <div id="analytics-people" class="hidden app-surface rounded-[2rem] p-6"></div>
+          <div id="analytics-people" class="hidden analytics-people-shell app-surface"></div>
         </div>
 
         <div id="view-accounts" class="hidden grid grid-cols-1 gap-6 md:grid-cols-2"></div>
@@ -3705,9 +4520,6 @@
         const messageContent = isTaskMessage
   ? ChatUI.renderTaskBubbleFromMessage(message.message || '')
   : `<div class="chat-text">${escapeHtml(message.message || '')}</div>`;
-        const createAction = !isTaskMessage && String(message.message || '').trim().length > 8
-          ? `<button type="button" class="chat-reaction create-task-from-chat" data-message-id="${escapeHtml(message.id)}">Создать задачу</button>`
-          : '';
         return `
           ${divider}
           <div class="chat-row ${isMe ? 'me' : 'other'} ${isMessagePrivate(message) ? 'private' : ''}">
@@ -3720,7 +4532,7 @@
               <div class="chat-emoji-bar">${picker}</div>
               ${messageContent}
 
-              ${(reactionsHtml || createAction) ? `<div class="chat-actions">${reactionsHtml}${createAction}</div>` : ''}
+              ${reactionsHtml ? `<div class="chat-actions">${reactionsHtml}</div>` : ''}
 
               ${isMe ? `
                 <button class="delete-message chat-delete-btn" data-message-id="${escapeHtml(message.id)}">✕</button>
@@ -7629,12 +8441,6 @@ if (viewTab) {
               return;
             }
 
-            const createFromChat = event.target.closest('.create-task-from-chat');
-            if (createFromChat) {
-              event.preventDefault(); event.stopPropagation();
-              UX.openCreateFromMessage(createFromChat.dataset.messageId);
-              return;
-            }
           }, true);
 
           document.addEventListener('keydown', event => {
@@ -7665,6 +8471,775 @@ if (viewTab) {
       UX.install();
     })();
   </script>
+
+
+  <script>
+    (function andromedaAnalyticsEfficiencyRedesign() {
+      const AnalyticsV8 = {
+        platforms: ['YouTube', 'Rutube', 'Instagram', 'TikTok', 'VK', 'Telegram'],
+
+        fmt(value = 0) {
+          return Number(value || 0).toLocaleString('ru-RU');
+        },
+
+        compact(value = 0) {
+          try {
+            return new Intl.NumberFormat('ru-RU', { notation: 'compact', maximumFractionDigits: 1 }).format(Number(value || 0));
+          } catch (error) {
+            return AnalyticsV8.fmt(value);
+          }
+        },
+
+        monthLabel(date = state.statsDate) {
+          return date.toLocaleString('ru-RU', { month: 'long', year: 'numeric' });
+        },
+
+        selectedPlatform() {
+          return $('#statsPlatformFilter')?.value || 'ALL';
+        },
+
+        platformLabel(platform = AnalyticsV8.selectedPlatform()) {
+          return platform === 'ALL' ? 'всем площадкам' : platform;
+        },
+
+        monthTasks(date = state.statsDate) {
+          return (state.tasks || []).filter(task => {
+            const d = parseLocalDate(task.date);
+            return d && isSameMonthYear(d, date);
+          });
+        },
+
+        published(date = state.statsDate, platform = AnalyticsV8.selectedPlatform()) {
+          return AnalyticsV8.monthTasks(date).filter(task => {
+            if (task.status !== 'published') return false;
+            if (platform === 'ALL') return true;
+            if (platform === 'Telegram') return TG_LIST.some(tg => task.links?.[tg] || Number(task.play_counts?.[tg] || 0) > 0);
+            return Boolean(task.links?.[platform]) || Number(task.play_counts?.[platform] || 0) > 0 || Number(task.stat_rows?.[platform]?.views || 0) > 0;
+          });
+        },
+
+        views(task = {}, platform = AnalyticsV8.selectedPlatform()) {
+          return StatsDataService.getTaskMetric(task, platform);
+        },
+
+        engagement(task = {}, platform = AnalyticsV8.selectedPlatform()) {
+          return StatsDataService.getTaskEngagement(task, platform);
+        },
+
+        totals(tasks = AnalyticsV8.published()) {
+          const platform = AnalyticsV8.selectedPlatform();
+          const views = tasks.reduce((sum, task) => sum + AnalyticsV8.views(task, platform), 0);
+          const engagement = tasks.reduce((sum, task) => sum + AnalyticsV8.engagement(task, platform), 0);
+          const withStats = tasks.filter(task => AnalyticsV8.views(task, platform) > 0).length;
+          const withLinks = tasks.filter(task => Object.values(task.links || {}).some(Boolean)).length;
+          const avg = tasks.length ? Math.round(views / tasks.length) : 0;
+          return { views, engagement, withStats, withLinks, avg };
+        },
+
+        platformTotals(tasks = AnalyticsV8.published(state.statsDate, 'ALL')) {
+          return AnalyticsV8.platforms.map(platform => {
+            const views = tasks.reduce((sum, task) => sum + StatsDataService.getTaskMetric(task, platform), 0);
+            const posts = tasks.filter(task => StatsDataService.getTaskMetric(task, platform) > 0 || task.links?.[platform]).length;
+            return { platform, views, posts };
+          }).sort((a, b) => b.views - a.views);
+        },
+
+        bestType(tasks = AnalyticsV8.published()) {
+          const byType = {};
+          tasks.forEach(task => {
+            const type = task.work_type || 'Без типа';
+            byType[type] = byType[type] || { views: 0, count: 0 };
+            byType[type].views += AnalyticsV8.views(task);
+            byType[type].count += 1;
+          });
+          const entry = Object.entries(byType).sort((a, b) => b[1].views - a[1].views)[0];
+          return entry ? { name: entry[0], ...entry[1] } : null;
+        },
+
+        topTasks(tasks = AnalyticsV8.published(), limit = 5) {
+          return tasks
+            .map(task => ({ ...task, analyticsViews: AnalyticsV8.views(task), analyticsEngagement: AnalyticsV8.engagement(task) }))
+            .sort((a, b) => b.analyticsViews - a.analyticsViews)
+            .slice(0, limit);
+        },
+
+        dataPill(task = {}, platform = AnalyticsV8.selectedPlatform()) {
+          const views = AnalyticsV8.views(task, platform);
+          const hasLinks = Object.values(task.links || {}).some(Boolean);
+          if (views > 0) return { tone: 'good', label: 'Данные есть' };
+          if (hasLinks) return { tone: 'warning', label: 'Обновить' };
+          return { tone: 'danger', label: 'Нет ссылок' };
+        },
+
+        syncTabs() {
+          const map = {
+            table: $('#analyticsTableBtn'),
+            visuals: $('#analyticsVisualsBtn'),
+            people: $('#analyticsPeopleBtn')
+          };
+          Object.entries(map).forEach(([view, btn]) => {
+            if (!btn) return;
+            const active = state.analyticsSubView === view;
+            btn.classList.toggle('tab-active', active);
+            btn.classList.toggle('text-slate-400', !active);
+            btn.setAttribute('aria-selected', String(active));
+          });
+        },
+
+        renderSignals(tasks = AnalyticsV8.published()) {
+          const root = $('#analyticsEfficiencyStrip');
+          if (!root) return;
+
+          const totals = AnalyticsV8.totals(tasks);
+          const topTask = AnalyticsV8.topTasks(tasks, 1)[0];
+          const bestType = AnalyticsV8.bestType(tasks);
+          const missing = tasks.length - totals.withStats;
+          const avg = totals.avg;
+          const underAvg = tasks.filter(task => AnalyticsV8.views(task) > 0 && AnalyticsV8.views(task) < avg * 0.55).length;
+
+          const cards = [
+            {
+              icon: '🏆',
+              label: 'Что повторять',
+              value: topTask ? topTask.title || 'Без названия' : 'Нет данных',
+              text: topTask ? `${AnalyticsV8.fmt(topTask.analyticsViews)} охвата — разберите структуру и крючок.` : 'Опубликуйте задачи и обновите статистику.'
+            },
+            {
+              icon: '⚡',
+              label: 'Самый эффективный формат',
+              value: bestType ? bestType.name : 'Нет данных',
+              text: bestType ? `${bestType.count} публикаций · ${AnalyticsV8.fmt(bestType.views)} охвата.` : 'Формат появится после публикаций.'
+            },
+            {
+              icon: missing ? '🛠️' : '✅',
+              label: 'Гигиена данных',
+              value: missing ? `${missing} без цифр` : 'Чисто',
+              text: missing ? 'Есть опубликованные материалы без обновлённой статистики.' : `${underAvg} материалов ниже 55% среднего охвата.`
+            }
+          ];
+
+          root.innerHTML = cards.map(card => `
+            <article class="analytics-signal-card">
+              <div class="analytics-signal-icon">${card.icon}</div>
+              <div>
+                <span>${escapeHtml(card.label)}</span>
+                <strong title="${escapeHtml(card.value)}">${escapeHtml(card.value)}</strong>
+                <p>${escapeHtml(card.text)}</p>
+              </div>
+            </article>
+          `).join('');
+        },
+
+        renderPlatformMini(tasks = AnalyticsV8.published(state.statsDate, 'ALL')) {
+          const root = $('#analyticsPlatformMini');
+          if (!root) return;
+          const totals = AnalyticsV8.platformTotals(tasks);
+          const max = Math.max(...totals.map(item => item.views), 1);
+
+          root.innerHTML = totals.map(item => {
+            const share = Math.round((item.views / max) * 100);
+            return `
+              <article class="analytics-platform-card">
+                <span>${getSocialIcon(item.platform)} ${escapeHtml(item.platform)}</span>
+                <strong>${AnalyticsV8.compact(item.views)}</strong>
+                <p>${item.posts} публикаций</p>
+                <div class="analytics-mini-progress"><i style="--value:${share}%"></i></div>
+              </article>
+            `;
+          }).join('');
+        },
+
+        renderTopTasks(tasks = AnalyticsV8.published()) {
+          const root = $('#analyticsTopTasks');
+          if (!root) return;
+          const top = AnalyticsV8.topTasks(tasks, 3);
+
+          if (!top.length) {
+            root.innerHTML = `
+              <div class="analytics-empty" style="grid-column: 1 / -1;">
+                Пока нет опубликованных материалов за выбранный период. После обновления статистики здесь появится топ контента.
+              </div>
+            `;
+            return;
+          }
+
+          root.innerHTML = top.map((task, index) => {
+            const er = task.analyticsViews ? ((task.analyticsEngagement / task.analyticsViews) * 100).toFixed(1) : '0.0';
+            return `
+              <article class="analytics-top-card">
+                <span>#${index + 1} · ${escapeHtml(formatShortDate(task.date))}</span>
+                <strong title="${escapeHtml(task.title || 'Без названия')}">${escapeHtml(task.title || 'Без названия')}</strong>
+                <p>${AnalyticsV8.fmt(task.analyticsViews)} охвата · ER ${er}% · ${escapeHtml(task.work_type || 'Пост')}</p>
+              </article>
+            `;
+          }).join('');
+        },
+
+        patchAnalyticsUI() {
+          AnalyticsUI.renderTableRows = function renderTableRowsV8(tasks) {
+            if (!tasks.length) {
+              return `
+                <tr>
+                  <td colspan="6" class="p-10 text-center text-[11px] font-black uppercase text-slate-400">
+                    Нет опубликованных задач за выбранный период
+                  </td>
+                </tr>
+              `;
+            }
+
+            const platform = AnalyticsV8.selectedPlatform();
+
+            return tasks.map(task => {
+              const views = AnalyticsV8.views(task, platform);
+              const engagement = AnalyticsV8.engagement(task, platform);
+              const er = views ? `${((engagement / views) * 100).toFixed(1)}%` : '—';
+              const pill = AnalyticsV8.dataPill(task, platform);
+              const channelLabels = (task.channels || []).slice(0, 4).map(ch => `${getSocialIcon(ch)} ${escapeHtml(ch)}`).join(' ');
+              const linksHtml = AnalyticsUI.renderTaskLinks(task) || '<span class="analytics-data-pill danger">Нет линков</span>';
+
+              return `
+                <tr>
+                  <td>
+                    <div class="analytics-material-title" title="${escapeHtml(task.title || 'Без названия')}">${escapeHtml(task.title || 'Без названия')}</div>
+                    <div class="analytics-material-meta">
+                      <span>${escapeHtml(formatShortDate(task.date))}</span>
+                      <span>${escapeHtml(task.work_type || 'Пост')}</span>
+                      ${task.tag ? `<span>${escapeHtml(task.tag)}</span>` : ''}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="analytics-metric-main good">${AnalyticsV8.fmt(views)}</div>
+                    <div class="analytics-material-meta"><span>${escapeHtml(AnalyticsV8.platformLabel(platform))}</span></div>
+                  </td>
+                  <td>
+                    <div class="analytics-metric-main info">${AnalyticsV8.fmt(engagement)}</div>
+                    <div class="analytics-material-meta"><span>ER ${er}</span></div>
+                  </td>
+                  <td><span class="analytics-data-pill ${pill.tone}">${escapeHtml(pill.label)}</span></td>
+                  <td>
+                    <div class="analytics-material-meta">${channelLabels || '<span>Без площадок</span>'}</div>
+                  </td>
+                  <td><div class="analytics-link-stack">${linksHtml}</div></td>
+                </tr>
+              `;
+            }).join('');
+          };
+
+          AnalyticsUI.renderTable = function renderTableV8(tasks) {
+            return `
+              <table class="analytics-table-v2">
+                <thead>
+                  <tr>
+                    <th>Материал</th>
+                    <th>Охват</th>
+                    <th>Вовлечённость</th>
+                    <th>Статус данных</th>
+                    <th>Площадки</th>
+                    <th class="text-center">Линки</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${AnalyticsUI.renderTableRows(tasks)}
+                </tbody>
+              </table>
+            `;
+          };
+
+          AnalyticsUI.renderSummary = function renderSummaryV8(tasks) {
+            const totals = AnalyticsV8.totals(tasks);
+            const coverage = tasks.length ? Math.round((totals.withStats / tasks.length) * 100) : 0;
+
+            if ($('#stat-total')) $('#stat-total').textContent = AnalyticsV8.fmt(tasks.length);
+            if ($('#stat-views')) $('#stat-views').textContent = AnalyticsV8.fmt(totals.views);
+            if ($('#stat-engagement')) $('#stat-engagement').textContent = AnalyticsV8.fmt(totals.engagement);
+            if ($('#stat-avg')) $('#stat-avg').textContent = AnalyticsV8.fmt(totals.avg);
+            if ($('#stat-data-health')) $('#stat-data-health').textContent = `Данные: ${coverage}%`;
+
+            AnalyticsV8.renderSignals(tasks);
+            AnalyticsV8.renderPlatformMini();
+            AnalyticsV8.renderTopTasks(tasks);
+          };
+
+          AnalyticsUI.renderStatsTable = function renderStatsTableV8() {
+            const label = $('#statsMonthLabel');
+            if (label) label.textContent = AnalyticsV8.monthLabel();
+            const tasks = AnalyticsUI.getPublishedTasksForMonth();
+            AnalyticsUI.renderSummary(tasks);
+            const container = $('#statsTableContainer');
+            if (container) container.innerHTML = AnalyticsUI.renderTable(tasks);
+            AnalyticsV8.syncTabs();
+          };
+        },
+
+        patchChartUI() {
+          ChartUI.renderKpis = function renderChartKpisV8() {
+            const root = $('#chartKpiGrid');
+            if (!root) return;
+            const meta = ChartUI.getTotalsMeta();
+            const engagement = ChartUI.getPublishedTasks().reduce((sum, task) => sum + StatsDataService.getTaskEngagement(task, 'ALL'), 0);
+            const er = meta.totalViews ? ((engagement / meta.totalViews) * 100).toFixed(1) : '0.0';
+
+            const cards = [
+              { label: 'Публикации', value: meta.published.length, hint: 'со статусом опубликовано' },
+              { label: 'Охват', value: AnalyticsV8.compact(meta.totalViews), hint: 'по всем площадкам' },
+              { label: 'Средний', value: AnalyticsV8.compact(meta.avg), hint: 'на материал' },
+              { label: 'ER', value: `${er}%`, hint: 'вовлечённость / охват' }
+            ];
+
+            root.innerHTML = cards.map(card => `
+              <article class="analytics-kpi-card app-surface">
+                <span>${escapeHtml(card.label)}</span>
+                <strong>${escapeHtml(String(card.value))}</strong>
+                <em>${escapeHtml(card.hint)}</em>
+              </article>
+            `).join('');
+          };
+
+          ChartUI.renderInsights = function renderChartInsightsV8() {
+            const root = $('#chartInsightPanel');
+            if (!root) return;
+            const meta = ChartUI.getTotalsMeta();
+            const totalViews = meta.totalViews || 1;
+            const totals = meta.platformTotals.filter(item => item.views > 0);
+            const weakest = totals.length ? totals[totals.length - 1] : null;
+            const topTask = ChartUI.getTopTasks(1)[0];
+
+            const cards = [
+              {
+                icon: '🏆',
+                label: 'Лидер',
+                value: meta.topPlatform.platform || '—',
+                text: `${Math.round((meta.topPlatform.views / totalViews) * 100)}% общего охвата`
+              },
+              {
+                icon: '📌',
+                label: 'Повторить',
+                value: topTask ? topTask.title || 'Без названия' : 'Нет данных',
+                text: topTask ? `${AnalyticsV8.fmt(topTask.totalViews)} охвата` : 'Добавьте публикации с цифрами'
+              },
+              {
+                icon: '🧪',
+                label: 'Тестировать',
+                value: weakest ? weakest.platform : '—',
+                text: weakest ? `${AnalyticsV8.fmt(weakest.views)} охвата — нужна гипотеза` : 'Недостаточно данных'
+              }
+            ];
+
+            root.innerHTML = `
+              <div class="ux-section-kicker">Фокус</div>
+              <h3 class="analytics-subtitle">Инсайты графика</h3>
+              <div class="analytics-insight-stack mt-4">
+                ${cards.map(card => `
+                  <article class="analytics-signal-card">
+                    <div class="analytics-signal-icon">${card.icon}</div>
+                    <div>
+                      <span>${escapeHtml(card.label)}</span>
+                      <strong title="${escapeHtml(card.value)}">${escapeHtml(card.value)}</strong>
+                      <p>${escapeHtml(card.text)}</p>
+                    </div>
+                  </article>
+                `).join('')}
+              </div>
+            `;
+          };
+
+          ChartUI.renderBreakdowns = function renderBreakdownsV8() {
+            const root = $('#chartBreakdownGrid');
+            if (!root) return;
+            const meta = ChartUI.getTotalsMeta();
+            const totalViews = meta.totalViews || 1;
+
+            const platformRows = meta.platformTotals.map(item => {
+              const share = Math.round((item.views / totalViews) * 100);
+              return `
+                <div class="analytics-ranking-row">
+                  <div class="analytics-rank">${getSocialIcon(item.platform)}</div>
+                  <div class="min-w-0">
+                    <div class="analytics-material-title">${escapeHtml(item.platform)}</div>
+                    <div class="analytics-mini-progress"><i style="--value:${share}%"></i></div>
+                  </div>
+                  <div class="text-right">
+                    <div class="analytics-metric-main good">${AnalyticsV8.compact(item.views)}</div>
+                    <div class="analytics-material-meta"><span>${share}% · ${item.posts} публ.</span></div>
+                  </div>
+                </div>
+              `;
+            }).join('');
+
+            const topRows = ChartUI.getTopTasks(6).map((task, index) => `
+              <div class="analytics-ranking-row">
+                <div class="analytics-rank">#${index + 1}</div>
+                <div class="min-w-0">
+                  <div class="analytics-material-title" title="${escapeHtml(task.title || 'Без названия')}">${escapeHtml(task.title || 'Без названия')}</div>
+                  <div class="analytics-material-meta"><span>${escapeHtml(formatShortDate(task.date))}</span><span>${escapeHtml(task.work_type || 'Пост')}</span></div>
+                </div>
+                <div class="analytics-metric-main good">${AnalyticsV8.compact(task.totalViews)}</div>
+              </div>
+            `).join('');
+
+            root.innerHTML = `
+              <section class="analytics-breakdown-card">
+                <div class="analytics-section-head">
+                  <div><div class="ux-section-kicker">Каналы</div><h3 class="analytics-subtitle">Вклад площадок</h3></div>
+                </div>
+                ${platformRows || '<div class="analytics-empty">Нет данных по площадкам</div>'}
+              </section>
+              <section class="analytics-breakdown-card">
+                <div class="analytics-section-head">
+                  <div><div class="ux-section-kicker">Контент</div><h3 class="analytics-subtitle">Топ публикаций</h3></div>
+                </div>
+                ${topRows || '<div class="analytics-empty">Нет публикаций с охватом</div>'}
+              </section>
+            `;
+          };
+
+          ChartUI.getChartOptions = function getChartOptionsV8(type) {
+            const styles = getComputedStyle(document.body);
+            const textColor = styles.getPropertyValue('--text').trim() || '#0f172a';
+            const mutedColor = styles.getPropertyValue('--muted').trim() || '#64748b';
+            const borderColor = styles.getPropertyValue('--border').trim() || '#e2e8f0';
+
+            const commonPlugins = {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  color: mutedColor,
+                  font: { weight: '800', size: 12 },
+                  usePointStyle: true,
+                  boxWidth: 8
+                }
+              },
+              tooltip: {
+                mode: type === 'doughnut' ? 'nearest' : 'index',
+                intersect: false,
+                backgroundColor: 'rgba(15,23,42,.92)',
+                titleFont: { weight: '900' },
+                bodyFont: { weight: '700' },
+                callbacks: {
+                  label(context) {
+                    const label = context.dataset.label || context.label || '';
+                    const value = context.parsed?.y ?? context.parsed ?? 0;
+                    return `${label}: ${ChartUI.formatNumber(value)}`;
+                  }
+                }
+              }
+            };
+
+            if (type === 'doughnut') {
+              return {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '66%',
+                plugins: commonPlugins
+              };
+            }
+
+            return {
+              responsive: true,
+              maintainAspectRatio: false,
+              indexAxis: state.chartMode === 'top' ? 'y' : 'x',
+              interaction: { intersect: false, mode: 'index' },
+              plugins: commonPlugins,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  stacked: state.chartMode === 'days',
+                  grid: { color: borderColor },
+                  ticks: { color: mutedColor, callback: value => ChartUI.formatNumber(value) }
+                },
+                x: {
+                  stacked: state.chartMode === 'days',
+                  grid: { display: false },
+                  ticks: { color: textColor, maxRotation: 0, autoSkip: true }
+                }
+              }
+            };
+          };
+        },
+
+        patchDecisionPanel() {
+          const UX = window.AndromedaUXRevision;
+          if (!UX) return;
+
+          UX.renderAnalyticsDecisionPanel = function renderAnalyticsDecisionPanelV8() {
+            const root = $('#analyticsInsightGrid');
+            if (!root) return;
+
+            const currentTasks = AnalyticsV8.published();
+            const prevMonth = new Date(state.statsDate.getFullYear(), state.statsDate.getMonth() - 1, 1);
+            const prevTasks = AnalyticsV8.published(prevMonth, AnalyticsV8.selectedPlatform());
+            const currentTotals = AnalyticsV8.totals(currentTasks);
+            const prevViews = prevTasks.reduce((sum, task) => sum + AnalyticsV8.views(task), 0);
+            const delta = prevViews ? Math.round(((currentTotals.views - prevViews) / prevViews) * 100) : null;
+            const bestType = AnalyticsV8.bestType(currentTasks);
+            const topPlatform = AnalyticsV8.platformTotals(AnalyticsV8.published(state.statsDate, 'ALL'))[0];
+            const missing = currentTasks.length - currentTotals.withStats;
+            const topTask = AnalyticsV8.topTasks(currentTasks, 1)[0];
+
+            const cards = [
+              {
+                icon: delta === null ? '📈' : delta >= 0 ? '🚀' : '📉',
+                label: 'Динамика месяца',
+                value: delta === null ? AnalyticsV8.fmt(currentTotals.views) : `${delta >= 0 ? '+' : ''}${delta}%`,
+                text: delta === null ? 'Нет базы прошлого месяца для сравнения.' : `${AnalyticsV8.fmt(currentTotals.views)} против ${AnalyticsV8.fmt(prevViews)} в прошлом месяце.`,
+                tone: delta !== null && delta < 0 ? 'warning' : 'good'
+              },
+              {
+                icon: '⚡',
+                label: 'Лучший рычаг',
+                value: bestType ? bestType.name : 'Нет данных',
+                text: bestType ? `${bestType.count} публикаций дали ${AnalyticsV8.fmt(bestType.views)} охвата.` : 'Нужны опубликованные материалы с цифрами.',
+                tone: 'good'
+              },
+              {
+                icon: '🎯',
+                label: 'Фокус канала',
+                value: topPlatform?.platform || '—',
+                text: topPlatform ? `${AnalyticsV8.fmt(topPlatform.views)} охвата. Усильте связку формата и площадки.` : 'Пока нет распределения по каналам.',
+                tone: 'info'
+              },
+              {
+                icon: missing ? '🛠️' : '✅',
+                label: 'Контроль данных',
+                value: missing ? `${missing} задач` : 'Готово',
+                text: missing ? 'Обновите статистику или добавьте ссылки к опубликованным задачам.' : topTask ? `Лучший материал: ${topTask.title || 'Без названия'}.` : 'Данные заполнены.',
+                tone: missing ? 'warning' : 'good'
+              }
+            ];
+
+            root.innerHTML = cards.map(card => `
+              <article class="analytics-decision-card" data-tone="${card.tone}">
+                <div class="analytics-decision-icon">${card.icon}</div>
+                <span>${escapeHtml(card.label)}</span>
+                <strong title="${escapeHtml(card.value)}">${escapeHtml(card.value)}</strong>
+                <p>${escapeHtml(card.text)}</p>
+              </article>
+            `).join('');
+          };
+        },
+
+        patchPeople() {
+          const renderPeopleKpi = (label, value, hint, icon) => `
+            <article class="analytics-people-card">
+              <span class="analytics-mini-label">${escapeHtml(label)}</span>
+              <strong>${escapeHtml(String(value))}</strong>
+              <p>${icon} ${escapeHtml(hint)}</p>
+            </article>
+          `;
+
+          const renderLeaderboard = (rows, totalViews) => {
+            if (!rows.length) return '<div class="analytics-empty">Пока нет данных по команде. Опубликуйте задачи и обновите статистику.</div>';
+
+            return rows.slice(0, 6).map((person, index) => {
+              const share = totalViews ? Math.round((person.views / totalViews) * 100) : 0;
+              const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+              return `
+                <article class="analytics-person-card">
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                      <div class="analytics-mini-label">${medal} · ${escapeHtml(person.topPlatform)}</div>
+                      <div class="analytics-person-name">${escapeHtml(person.name)}</div>
+                    </div>
+                    <div class="analytics-metric-main good">${AnalyticsV8.compact(person.views)}</div>
+                  </div>
+                  <div class="analytics-mini-progress"><i style="--value:${share}%"></i></div>
+                  <div class="analytics-person-metrics">
+                    <div><strong>${person.published}</strong><span>публ.</span></div>
+                    <div><strong>${AnalyticsV8.compact(person.avg)}</strong><span>средн.</span></div>
+                    <div><strong>${share}%</strong><span>вклад</span></div>
+                  </div>
+                </article>
+              `;
+            }).join('');
+          };
+
+          const renderPeopleInsights = (rows, periodTasks) => {
+            const leader = rows[0];
+            const efficient = rows.slice().sort((a, b) => b.efficiency - a.efficiency)[0];
+            const load = rows.slice().sort((a, b) => b.activeTasks - a.activeTasks)[0];
+            const bestTask = periodTasks
+              .filter(task => task.status === 'published')
+              .slice()
+              .sort((a, b) => Number(b.play_count || 0) - Number(a.play_count || 0))[0];
+
+            const cards = [
+              {
+                icon: '🏆',
+                label: 'Лидер',
+                value: leader ? leader.name : '—',
+                text: leader ? `${AnalyticsV8.fmt(leader.views)} распределённого охвата.` : 'Пока нет лидера.'
+              },
+              {
+                icon: '⚡',
+                label: 'Эффективность',
+                value: efficient ? efficient.name : '—',
+                text: efficient ? `${AnalyticsV8.fmt(efficient.efficiency)} охвата на задачу.` : 'Появится после публикаций.'
+              },
+              {
+                icon: '📌',
+                label: 'Нагрузка',
+                value: load?.activeTasks ? load.name : 'Ровно',
+                text: load?.activeTasks ? `${load.activeTasks} активных задач — проверьте баланс.` : 'Перегруза по активным задачам не видно.'
+              },
+              {
+                icon: '🚀',
+                label: 'Лучший материал',
+                value: bestTask ? bestTask.title || 'Без названия' : '—',
+                text: bestTask ? `${AnalyticsV8.fmt(bestTask.play_count)} охвата.` : 'Нужны опубликованные задачи с охватом.'
+              }
+            ];
+
+            return `
+              <section class="analytics-breakdown-card">
+                <div class="analytics-section-head">
+                  <div><div class="ux-section-kicker">Команда</div><h3 class="analytics-subtitle">Инсайты</h3></div>
+                </div>
+                <div class="analytics-efficiency-strip">
+                  ${cards.map(card => `
+                    <article class="analytics-signal-card">
+                      <div class="analytics-signal-icon">${card.icon}</div>
+                      <div>
+                        <span>${escapeHtml(card.label)}</span>
+                        <strong title="${escapeHtml(card.value)}">${escapeHtml(card.value)}</strong>
+                        <p>${escapeHtml(card.text)}</p>
+                      </div>
+                    </article>
+                  `).join('')}
+                </div>
+              </section>
+            `;
+          };
+
+          const renderPeopleTable = (rows, totalViews) => `
+            <section class="analytics-breakdown-card">
+              <div class="analytics-section-head">
+                <div><div class="ux-section-kicker">Рейтинг</div><h3 class="analytics-subtitle">Подробно по людям</h3></div>
+              </div>
+              <div class="analytics-table-wrap">
+                <table class="analytics-table-v2">
+                  <thead>
+                    <tr>
+                      <th>Человек</th>
+                      <th>Охват</th>
+                      <th>Доля</th>
+                      <th>Публикации</th>
+                      <th>Активно</th>
+                      <th>Средний</th>
+                      <th>Эффект / задача</th>
+                      <th>Топ-площадка</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${rows.map((person, index) => {
+                      const share = totalViews ? Math.round((person.views / totalViews) * 100) : 0;
+                      const medal = index === 0 ? '🥇 ' : index === 1 ? '🥈 ' : index === 2 ? '🥉 ' : '';
+                      return `
+                        <tr>
+                          <td><div class="analytics-material-title">${medal}${escapeHtml(person.name)}</div><div class="analytics-material-meta"><span>${escapeHtml(person.bestTask?.title || 'без лучшего материала')}</span></div></td>
+                          <td><div class="analytics-metric-main good">${AnalyticsV8.fmt(person.views)}</div></td>
+                          <td>${share}%</td>
+                          <td>${person.published}</td>
+                          <td>${person.activeTasks}</td>
+                          <td>${AnalyticsV8.fmt(person.avg)}</td>
+                          <td>${AnalyticsV8.fmt(person.efficiency)}</td>
+                          <td>${escapeHtml(person.topPlatform)}</td>
+                        </tr>
+                      `;
+                    }).join('') || `
+                      <tr>
+                        <td colspan="8" class="p-10 text-center text-[11px] font-black uppercase text-slate-400">
+                          Пока нет опубликованных задач
+                        </td>
+                      </tr>
+                    `}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          `;
+
+          renderPeopleAnalytics = function renderPeopleAnalyticsV8() {
+            const container = $('#analytics-people');
+            if (!container) return;
+
+            const periodTasks = getAnalyticsPeriodTasks(state.tasks);
+            const stats = calculatePeopleStats(periodTasks);
+            const rows = getPeopleAnalyticsRows(stats);
+            const totalViews = rows.reduce((sum, person) => sum + person.views, 0);
+            const totalPublished = periodTasks.filter(task => task.status === 'published').length;
+            const activeTasks = periodTasks.filter(task => task.status !== 'published').length;
+            const avgPerPost = totalPublished ? totalViews / totalPublished : 0;
+            const leader = rows[0];
+
+            container.innerHTML = `
+              <div class="analytics-section-head">
+                <div>
+                  <div class="ux-section-kicker">Командная эффективность</div>
+                  <h3 class="analytics-subtitle">Кто создаёт результат</h3>
+                </div>
+                <div class="analytics-section-badge">${escapeHtml(AnalyticsV8.monthLabel())}</div>
+              </div>
+
+              <div class="analytics-people-kpis">
+                ${renderPeopleKpi('Командный охват', AnalyticsV8.fmt(Math.round(totalViews)), 'распределённый вклад', '👁️')}
+                ${renderPeopleKpi('Публикации', AnalyticsV8.fmt(totalPublished), 'опубликовано', '🚀')}
+                ${renderPeopleKpi('Средний охват', AnalyticsV8.fmt(Math.round(avgPerPost)), 'на публикацию', '📈')}
+                ${renderPeopleKpi('Лидер', leader ? leader.name.split(' ')[0] : '—', leader ? `${AnalyticsV8.compact(leader.views)} охвата` : 'нет данных', '🏆')}
+              </div>
+
+              <div class="analytics-people-grid">
+                <section class="analytics-breakdown-card">
+                  <div class="analytics-section-head">
+                    <div><div class="ux-section-kicker">Топ</div><h3 class="analytics-subtitle">Лидеры вклада</h3></div>
+                    <div class="analytics-section-badge">${activeTasks} активных</div>
+                  </div>
+                  <div class="grid gap-3">${renderLeaderboard(rows, totalViews)}</div>
+                </section>
+                <div class="space-y-4">
+                  ${renderPeopleInsights(rows, periodTasks)}
+                  ${renderPeopleTable(rows, totalViews)}
+                </div>
+              </div>
+            `;
+          };
+        },
+
+        patchGlobalRenders() {
+          const previousRenderStats = renderStats;
+          renderStats = function renderStatsV8() {
+            AnalyticsUI.renderStatsTable();
+            window.AndromedaUXRevision?.renderAnalyticsDecisionPanel?.();
+          };
+
+          const previousRenderCharts = renderCharts;
+          renderCharts = function renderChartsV8() {
+            ChartUI.render();
+            window.AndromedaUXRevision?.renderAnalyticsDecisionPanel?.();
+            AnalyticsV8.syncTabs();
+          };
+
+          const previousRenderAll = renderAll;
+          renderAll = function renderAllV8() {
+            previousRenderAll();
+            AnalyticsV8.syncTabs();
+          };
+        },
+
+        install() {
+          AnalyticsV8.patchAnalyticsUI();
+          AnalyticsV8.patchChartUI();
+          AnalyticsV8.patchDecisionPanel();
+          AnalyticsV8.patchPeople();
+          AnalyticsV8.patchGlobalRenders();
+          AnalyticsV8.syncTabs();
+          window.AndromedaAnalyticsV8 = AnalyticsV8;
+        }
+      };
+
+      AnalyticsV8.install();
+    })();
+  </script>
+
 
   <script>
     (function mobileEnhancements() {
