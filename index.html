@@ -524,6 +524,28 @@
   }
 }
     
+
+.chat-audience-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px 12px;
+  background: color-mix(in srgb, var(--surface-2) 78%, transparent);
+}
+.chat-mode-switch { display: inline-flex; gap: 4px; border-radius: 16px; padding: 4px; background: var(--surface); border: 1px solid var(--border); }
+.chat-mode-btn { min-height: 36px; border: 0; border-radius: 12px; background: transparent; color: var(--muted); padding: 0 12px; font-size: 10px; font-weight: 950; text-transform: uppercase; cursor: pointer; transition: .18s ease; }
+.chat-mode-btn.is-active { background: var(--primary); color: #fff; }
+.chat-recipient-wrap { display: flex; align-items: center; gap: 10px; min-width: min(100%, 320px); }
+.chat-recipient-label { color: var(--muted); font-size: 10px; font-weight: 900; text-transform: uppercase; white-space: nowrap; }
+#chatRecipientSelect { flex: 1; min-height: 40px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--text); padding: 0 12px; font-size: 12px; font-weight: 850; outline: none; }
+.chat-context-pill { border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); padding: 8px 12px; font-size: 10px; font-weight: 900; text-transform: uppercase; }
+.chat-row.private .chat-bubble.other { border-color: rgba(168,85,247,.32); }
+.chat-row.private .chat-meta::before { content: 'лично'; border-radius: 999px; background: rgba(168,85,247,.14); color: #a855f7; padding: 3px 7px; font-size: 8px; font-weight: 950; }
+@media (max-width: 767px) { .chat-audience-panel { padding: 12px; } .chat-mode-switch, .chat-recipient-wrap, .chat-context-pill { width: 100%; } .chat-mode-btn { flex: 1; } }
+
 .chat-feed {
   height: 360px;
   max-height: 50vh;
@@ -1549,6 +1571,17 @@
         <div id="view-accounts" class="hidden grid grid-cols-1 gap-6 md:grid-cols-2"></div>
      <div id="view-chat" class="hidden h-full">
   <div class="app-surface overflow-hidden rounded-[2rem]">
+    <div class="chat-audience-panel">
+      <div class="chat-mode-switch" role="tablist" aria-label="Режим чата">
+        <button type="button" id="chatTeamModeBtn" class="chat-mode-btn is-active" data-chat-mode="team">Команда</button>
+        <button type="button" id="chatDirectModeBtn" class="chat-mode-btn" data-chat-mode="direct">Личные</button>
+      </div>
+      <div id="chatRecipientWrap" class="chat-recipient-wrap hidden">
+        <span class="chat-recipient-label">Кому</span>
+        <select id="chatRecipientSelect" aria-label="Собеседник для личного сообщения"></select>
+      </div>
+      <div id="chatContextPill" class="chat-context-pill">Общий чат команды</div>
+    </div>
     <div class="px-6 pt-3">
       <div id="chatTaskSearchBox" class="chat-task-search-box">
         <div class="chat-task-search-row">
@@ -1856,6 +1889,10 @@
       inlineEditId: null,
       inlineDraft: null,
       chatChannel: null,
+      chatMessages: [],
+      chatMode: 'team',
+      chatRecipientUid: '',
+      chatRecipientName: '',
       unreadChatCount: 0,
       lastSeenChatMessageId: null,
       apiConfig: {
@@ -2312,7 +2349,7 @@
       }
     };
         const ChatService = {
-      async fetchMessages(limit = 50) {
+      async fetchMessages(limit = 200) {
         return db
           .from(Services.tables.teamChat)
           .select('*')
@@ -2713,7 +2750,7 @@
   : `<div class="chat-text">${escapeHtml(message.message || '')}</div>`;
         return `
           ${divider}
-          <div class="chat-row ${isMe ? 'me' : 'other'}">
+          <div class="chat-row ${isMe ? 'me' : 'other'} ${isMessagePrivate(message) ? 'private' : ''}">
             <div class="chat-meta">
               <span class="chat-author">${escapeHtml(message.sender_name || '')}</span>
               <span class="chat-time">${escapeHtml(time)}</span>
@@ -3807,7 +3844,7 @@
         if (!opts.force && (!ChatNotificationService.isEnabled() || Notification.permission !== 'granted')) return false;
 
         try {
-          const title = message.sender_name ? `Новое сообщение от ${message.sender_name}` : 'Новое сообщение в чате';
+          const title = isMessagePrivate(message) && message.sender_name ? `Личное сообщение от ${message.sender_name}` : (message.sender_name ? `Новое сообщение от ${message.sender_name}` : 'Новое сообщение в чате');
           const notification = new Notification(title, {
             body: ChatNotificationService.getMessagePreview(message.message || ''),
             tag: opts.tag || `andromeda-chat-${message.id || Date.now()}`,
@@ -4546,23 +4583,106 @@ function renderPeopleAnalytics() {
       }).join('');
     }
 
-        function renderMessages(messages) {
+        
+    function getChatUserOptions() {
+      const currentName = state.currentUser || sessionStorage.getItem('e_name') || '';
+      const currentUid = sessionStorage.getItem('e_uid') || currentName;
+      return USERS
+        .filter(name => String(name || '').trim() && String(name) !== String(currentName) && String(name) !== String(currentUid))
+        .map(name => ({ uid: name, name }));
+    }
+
+    function isMessagePrivate(message = {}) {
+      return Boolean(message.recipient_uid || message.recipient_name || message.chat_type === 'direct');
+    }
+
+    function messageBelongsToCurrentDirect(message = {}) {
+      const myUid = sessionStorage.getItem('e_uid') || '';
+      const myName = state.currentUser || sessionStorage.getItem('e_name') || '';
+      const peerUid = state.chatRecipientUid || '';
+      const peerName = state.chatRecipientName || peerUid;
+      if (!peerUid && !peerName) return false;
+
+      const senderMatchesMe = String(message.sender_uid || '') === String(myUid) || String(message.sender_name || '') === String(myName);
+      const senderMatchesPeer = String(message.sender_uid || '') === String(peerUid) || String(message.sender_name || '') === String(peerName);
+      const recipientMatchesMe = String(message.recipient_uid || '') === String(myUid) || String(message.recipient_name || '') === String(myName);
+      const recipientMatchesPeer = String(message.recipient_uid || '') === String(peerUid) || String(message.recipient_name || '') === String(peerName);
+
+      return isMessagePrivate(message) && ((senderMatchesMe && recipientMatchesPeer) || (senderMatchesPeer && recipientMatchesMe));
+    }
+
+    function messageIsVisibleForMe(message = {}) {
+      const myUid = sessionStorage.getItem('e_uid') || '';
+      const myName = state.currentUser || sessionStorage.getItem('e_name') || '';
+      if (!isMessagePrivate(message)) return true;
+      return String(message.sender_uid || '') === String(myUid)
+        || String(message.sender_name || '') === String(myName)
+        || String(message.recipient_uid || '') === String(myUid)
+        || String(message.recipient_name || '') === String(myName);
+    }
+
+    function getVisibleChatMessages(messages = []) {
+      const visibleForMe = (messages || []).filter(messageIsVisibleForMe);
+      if (state.chatMode === 'direct') return visibleForMe.filter(messageBelongsToCurrentDirect);
+      return visibleForMe.filter(message => !isMessagePrivate(message));
+    }
+
+    function syncChatAudienceUI() {
+      const teamBtn = $('#chatTeamModeBtn');
+      const directBtn = $('#chatDirectModeBtn');
+      const wrap = $('#chatRecipientWrap');
+      const select = $('#chatRecipientSelect');
+      const pill = $('#chatContextPill');
+      const input = $('#chatInput');
+      const taskSearch = $('#chatTaskSearchInput');
+      if (!teamBtn || !directBtn || !wrap || !select || !pill) return;
+
+      const options = getChatUserOptions();
+      if (!state.chatRecipientUid && options.length) {
+        state.chatRecipientUid = options[0].uid;
+        state.chatRecipientName = options[0].name;
+      }
+
+      select.innerHTML = options.map(user => `
+        <option value="${escapeHtml(user.uid)}" ${String(user.uid) === String(state.chatRecipientUid) ? 'selected' : ''}>${escapeHtml(user.name)}</option>
+      `).join('');
+
+      teamBtn.classList.toggle('is-active', state.chatMode === 'team');
+      directBtn.classList.toggle('is-active', state.chatMode === 'direct');
+      wrap.classList.toggle('hidden', state.chatMode !== 'direct');
+
+      if (state.chatMode === 'direct') {
+        pill.textContent = state.chatRecipientName ? `Личный чат с ${state.chatRecipientName}` : 'Выбери собеседника';
+        if (input) input.placeholder = state.chatRecipientName ? `Личное сообщение для ${state.chatRecipientName}...` : 'Выбери собеседника...';
+        if (taskSearch) taskSearch.placeholder = 'Найти задачу и отправить лично...';
+      } else {
+        pill.textContent = 'Общий чат команды';
+        if (input) input.placeholder = 'Напиши сообщение команде...';
+        if (taskSearch) taskSearch.placeholder = 'Найти задачу и отправить в чат...';
+      }
+    }
+
+    function renderMessages(messages) {
       const root = $('#chatMessages');
       if (!root) return;
 
+      syncChatAudienceUI();
       const myUid = sessionStorage.getItem('e_uid') || '';
-      root.innerHTML = ChatUI.renderMessages(messages || [], myUid);
+      const visibleMessages = getVisibleChatMessages(messages || []);
+      root.innerHTML = ChatUI.renderMessages(visibleMessages, myUid);
       ChatUI.scrollToBottom();
     }
-  
+
     async function refreshChat() {
-      const { data, error } = await ChatService.fetchMessages(50);
+      const { data, error } = await ChatService.fetchMessages(200);
       if (!error && data) {
-        renderMessages(data);
+        state.chatMessages = data;
+        renderMessages(state.chatMessages);
       }
     }
 
   async function setupChat() {
+  syncChatAudienceUI();
   await refreshChat();
 
   if (state.chatChannel) return;
@@ -4572,12 +4692,12 @@ function renderPeopleAnalytics() {
       const message = payload.new;
       const myUid = sessionStorage.getItem('e_uid');
 
-      if (state.currentView !== 'chat' && message.sender_uid !== myUid) {
+      if (messageIsVisibleForMe(message) && state.currentView !== 'chat' && message.sender_uid !== myUid) {
         state.unreadChatCount += 1;
         buildMainTabs();
       }
 
-      ChatNotificationService.handleIncoming(message);
+      if (messageIsVisibleForMe(message)) ChatNotificationService.handleIncoming(message);
     }
 
     refreshChat();
@@ -5315,17 +5435,29 @@ function getChatTaskSearchMatches(query = '') {
       const task = state.tasks.find(item => String(item.id) === String(taskId));
       if (!task) return notify('Задача не найдена', 'warning', 'Не получилось');
 
-      const { error } = await ChatService.sendMessage({
+      const payload = {
         sender_name: state.currentUser,
         sender_uid: sessionStorage.getItem('e_uid'),
         message: ChatUI.getTaskToken(task.id)
-      });
+      };
+
+      if (state.chatMode === 'direct') {
+        if (!state.chatRecipientUid) {
+          return notify('Выбери собеседника для личной отправки задачи.', 'warning', 'Личные сообщения');
+        }
+
+        payload.chat_type = 'direct';
+        payload.recipient_uid = state.chatRecipientUid;
+        payload.recipient_name = state.chatRecipientName;
+      }
+
+      const { error } = await ChatService.sendMessage(payload);
 
       if (error) return notify('Не удалось отправить задачу в чат', 'error', 'Ошибка');
 
       clearChatTaskSearch();
       await refreshChat();
-      notify(`Задача «${task.title || 'Без названия'}» отправлена в чат`, 'success', 'Готово');
+      notify(`Задача «${task.title || 'Без названия'}» отправлена ${state.chatMode === 'direct' ? 'лично' : 'в чат'}`, 'success', 'Готово');
     }
         async function sendChatMessage() {
       const input = $('#chatInput');
@@ -5336,11 +5468,24 @@ function getChatTaskSearchMatches(query = '') {
 
       sendBtn.disabled = true;
 
-      const { error } = await ChatService.sendMessage({
+      const payload = {
         sender_name: state.currentUser,
         sender_uid: sessionStorage.getItem('e_uid'),
         message
-      });
+      };
+
+      if (state.chatMode === 'direct') {
+        if (!state.chatRecipientUid) {
+          sendBtn.disabled = false;
+          return notify('Выбери собеседника для личного сообщения.', 'warning', 'Личные сообщения');
+        }
+
+        payload.chat_type = 'direct';
+        payload.recipient_uid = state.chatRecipientUid;
+        payload.recipient_name = state.chatRecipientName;
+      }
+
+      const { error } = await ChatService.sendMessage(payload);
 
       sendBtn.disabled = false;
 
@@ -5465,6 +5610,19 @@ function getChatTaskSearchMatches(query = '') {
       $('#ideaForm').addEventListener('submit', saveCreateForm);
       $('#editForm').addEventListener('submit', saveEditForm);
       $('#sendChatBtn').addEventListener('click', sendChatMessage);
+      $$('.chat-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.chatMode = btn.dataset.chatMode || 'team';
+          syncChatAudienceUI();
+          renderMessages(state.chatMessages || []);
+        });
+      });
+      $('#chatRecipientSelect')?.addEventListener('change', e => {
+        state.chatRecipientUid = e.target.value;
+        state.chatRecipientName = e.target.options[e.target.selectedIndex]?.textContent || e.target.value;
+        syncChatAudienceUI();
+        renderMessages(state.chatMessages || []);
+      });
       $('#chatInput').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage();}
 });
 
@@ -5710,6 +5868,7 @@ if (viewTab) {
 
     function initStaticUI() {
       populateSelect($('#loginUser'), USERS);
+      syncChatAudienceUI();
       populateSelect($('#work_type'), WORK_TYPES);
       populateSelect($('#edit_work_type'), WORK_TYPES);
       populateSelect($('#tag'), TAGS, x => x.toUpperCase());
