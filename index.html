@@ -546,6 +546,43 @@
 .chat-row.private .chat-meta::before { content: 'лично'; border-radius: 999px; background: rgba(168,85,247,.14); color: #a855f7; padding: 3px 7px; font-size: 8px; font-weight: 950; }
 @media (max-width: 767px) { .chat-audience-panel { padding: 12px; } .chat-mode-switch, .chat-recipient-wrap, .chat-context-pill { width: 100%; } .chat-mode-btn { flex: 1; } }
 
+/* Messenger layout: dialog list + conversation panel */
+.messenger-layout { display: grid; grid-template-columns: 320px minmax(0, 1fr); min-height: 0; height: calc(100vh - 150px); }
+.messenger-sidebar { border-right: 1px solid var(--border); background: color-mix(in srgb, var(--surface-2) 78%, transparent); min-height: 0; display: flex; flex-direction: column; }
+.messenger-sidebar-head { padding: 20px; border-bottom: 1px solid var(--border); }
+.messenger-title { font-size: 18px; font-weight: 950; text-transform: uppercase; letter-spacing: -0.03em; }
+.messenger-subtitle { margin-top: 4px; font-size: 11px; font-weight: 800; color: var(--muted); }
+.messenger-dialog-list { flex: 1; min-height: 0; overflow-y: auto; padding: 10px; }
+.messenger-dialog { width: 100%; border: 1px solid transparent; background: transparent; color: var(--text); border-radius: 18px; padding: 12px; display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: 10px; align-items: center; text-align: left; cursor: pointer; transition: .18s ease; }
+.messenger-dialog:hover { background: color-mix(in srgb, var(--surface) 82%, var(--primary) 18%); border-color: color-mix(in srgb, var(--primary) 22%, var(--border)); }
+.messenger-dialog.is-active { background: var(--primary); color: #fff; border-color: transparent; box-shadow: 0 12px 24px rgba(37,99,235,.18); }
+.messenger-avatar { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 16px; background: var(--surface); color: var(--primary); font-size: 14px; font-weight: 950; border: 1px solid var(--border); }
+.messenger-dialog.is-active .messenger-avatar { background: rgba(255,255,255,.18); color: #fff; border-color: rgba(255,255,255,.22); }
+.messenger-dialog-main { min-width: 0; }
+.messenger-dialog-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 950; text-transform: uppercase; }
+.messenger-dialog-last { display: block; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; font-weight: 700; color: var(--muted); }
+.messenger-dialog.is-active .messenger-dialog-last { color: rgba(255,255,255,.76); }
+.messenger-dialog-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.messenger-dialog-time { font-size: 9px; font-weight: 900; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.messenger-dialog.is-active .messenger-dialog-time { color: rgba(255,255,255,.74); }
+.messenger-unread { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: #e11d48; color: #fff; font-size: 9px; font-weight: 950; }
+.messenger-main { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.messenger-chat-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; border-bottom: 1px solid var(--border); padding: 16px 22px; background: color-mix(in srgb, var(--surface) 88%, transparent); }
+.messenger-current { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.messenger-current-title { font-size: 14px; font-weight: 950; text-transform: uppercase; }
+.messenger-current-subtitle { margin-top: 3px; font-size: 10px; font-weight: 850; text-transform: uppercase; color: var(--muted); }
+.messenger-main #chatMessages { flex: 1 1 auto; height: auto !important; max-height: none !important; min-height: 0 !important; padding-top: 14px; }
+@media (max-width: 900px) {
+  .messenger-layout { grid-template-columns: 1fr; height: calc(100dvh - 190px - var(--mobile-safe-bottom)); }
+  .messenger-sidebar { max-height: 240px; border-right: 0; border-bottom: 1px solid var(--border); }
+  .messenger-sidebar-head { padding: 14px; }
+  .messenger-dialog-list { display: flex; overflow-x: auto; overflow-y: hidden; gap: 8px; padding: 10px 12px; }
+  .messenger-dialog { min-width: 230px; }
+  .messenger-chat-head { padding: 12px; }
+  #view-chat .app-surface { height: auto !important; }
+}
+
+
 .chat-feed {
   height: 360px;
   max-height: 50vh;
@@ -1571,45 +1608,57 @@
         <div id="view-accounts" class="hidden grid grid-cols-1 gap-6 md:grid-cols-2"></div>
      <div id="view-chat" class="hidden h-full">
   <div class="app-surface overflow-hidden rounded-[2rem]">
-    <div class="chat-audience-panel">
-      <div class="chat-mode-switch" role="tablist" aria-label="Режим чата">
-        <button type="button" id="chatTeamModeBtn" class="chat-mode-btn is-active" data-chat-mode="team">Команда</button>
-        <button type="button" id="chatDirectModeBtn" class="chat-mode-btn" data-chat-mode="direct">Личные</button>
-      </div>
-      <div id="chatRecipientWrap" class="chat-recipient-wrap hidden">
-        <span class="chat-recipient-label">Кому</span>
-        <select id="chatRecipientSelect" aria-label="Собеседник для личного сообщения"></select>
-      </div>
-      <div id="chatContextPill" class="chat-context-pill">Общий чат команды</div>
-    </div>
-    <div class="px-6 pt-3">
-      <div id="chatTaskSearchBox" class="chat-task-search-box">
-        <div class="chat-task-search-row">
-          <span class="chat-task-search-icon">🔎</span>
-          <input id="chatTaskSearchInput" type="text" placeholder="Найти задачу и отправить в чат..." autocomplete="off" />
-          <button id="chatTaskSearchClear" type="button" aria-label="Очистить поиск">×</button>
+    <div class="messenger-layout">
+      <aside class="messenger-sidebar" aria-label="Диалоги мессенджера">
+        <div class="messenger-sidebar-head">
+          <div class="messenger-title">Мессенджер</div>
+          <div class="messenger-subtitle">Команда и личные диалоги</div>
         </div>
-        <div id="chatTaskSearchResults" class="chat-task-search-results hidden"></div>
-      </div>
-    </div>
+        <div id="messengerDialogList" class="messenger-dialog-list"></div>
+      </aside>
 
-    <div id="chatMessages" class="chat-feed px-6 pb-5" style="height: calc(100vh - 220px); min-height: 360px;"></div>
-
-    <div class="border-t p-5" style="border-color: var(--border);">
-      <div class="chat-composer">
-        <div class="chat-quick-actions">
-          <button type="button" class="chat-quick-btn" data-quick-message="Взял в работу">Взял в работу</button>
-          <button type="button" class="chat-quick-btn" data-quick-message="Нужен фидбек">Нужен фидбек</button>
-          <button type="button" class="chat-quick-btn" data-quick-message="Готово к проверке">Готово к проверке</button>
-        </div>
-
-        <div class="chat-input-row">
-          <div class="chat-input-wrap">
-            <textarea id="chatInput" class="chat-input" rows="1" placeholder="Напиши сообщение команде..."></textarea>
+      <section class="messenger-main">
+        <div class="messenger-chat-head">
+          <div class="messenger-current">
+            <div id="messengerCurrentAvatar" class="messenger-avatar">👥</div>
+            <div class="min-w-0">
+              <div id="messengerCurrentTitle" class="messenger-current-title">Команда</div>
+              <div id="messengerCurrentSubtitle" class="messenger-current-subtitle">Общий чат команды</div>
+            </div>
           </div>
-          <button id="sendChatBtn" class="chat-send-btn" type="button">➤</button>
+          <div id="chatContextPill" class="chat-context-pill">Общий чат команды</div>
         </div>
-      </div>
+
+        <div class="px-6 pt-3">
+          <div id="chatTaskSearchBox" class="chat-task-search-box">
+            <div class="chat-task-search-row">
+              <span class="chat-task-search-icon">🔎</span>
+              <input id="chatTaskSearchInput" type="text" placeholder="Найти задачу и отправить в мессенджер..." autocomplete="off" />
+              <button id="chatTaskSearchClear" type="button" aria-label="Очистить поиск">×</button>
+            </div>
+            <div id="chatTaskSearchResults" class="chat-task-search-results hidden"></div>
+          </div>
+        </div>
+
+        <div id="chatMessages" class="chat-feed px-6 pb-5" style="height: calc(100vh - 220px); min-height: 360px;"></div>
+
+        <div class="border-t p-5" style="border-color: var(--border);">
+          <div class="chat-composer">
+            <div class="chat-quick-actions">
+              <button type="button" class="chat-quick-btn" data-quick-message="Взял в работу">Взял в работу</button>
+              <button type="button" class="chat-quick-btn" data-quick-message="Нужен фидбек">Нужен фидбек</button>
+              <button type="button" class="chat-quick-btn" data-quick-message="Готово к проверке">Готово к проверке</button>
+            </div>
+
+            <div class="chat-input-row">
+              <div class="chat-input-wrap">
+                <textarea id="chatInput" class="chat-input" rows="1" placeholder="Напиши сообщение команде..."></textarea>
+              </div>
+              <button id="sendChatBtn" class="chat-send-btn" type="button">➤</button>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 </div>
@@ -1780,7 +1829,7 @@
 
         <button id="chatNotifyBtn" class="relative flex w-full items-center justify-between rounded-2xl border p-4 text-left transition hover:-translate-y-0.5" style="border-color: var(--border); background: var(--surface-2); color: var(--text);">
           <span>
-            <span class="block text-sm font-black uppercase">🔔 Уведомления чата</span>
+            <span class="block text-sm font-black uppercase">🔔 Уведомления мессенджера</span>
             <span id="chatNotifyHint" class="mt-1 block text-[11px] font-semibold" style="color: var(--muted);">Включить пуши о новых сообщениях</span>
           </span>
           <span id="chatNotifyStatus" class="rounded-full px-2 py-1 text-[9px] font-black uppercase" style="background: rgba(148,163,184,.14); color: var(--muted);">off</span>
@@ -1893,6 +1942,7 @@
       chatMode: 'team',
       chatRecipientUid: '',
       chatRecipientName: '',
+      activeDialogId: 'team',
       unreadChatCount: 0,
       lastSeenChatMessageId: null,
       apiConfig: {
@@ -3823,7 +3873,7 @@
 
         if (ChatNotificationService.isEnabled() && Notification.permission === 'granted') {
           ChatNotificationService.setEnabled(false);
-          notify('Уведомления чата выключены.', 'info', 'Уведомления');
+          notify('Уведомления мессенджера выключены.', 'info', 'Уведомления');
           return;
         }
 
@@ -3833,7 +3883,7 @@
 
         if (permission === 'granted') {
           ChatNotificationService.setEnabled(true);
-          notify('Уведомления чата включены.', 'success', 'Готово');
+          notify('Уведомления мессенджера включены.', 'success', 'Готово');
           ChatNotificationService.showSystemNotification({
             sender_name: 'ANDROMEDA',
             message: 'Пуш-уведомления работают. Новые сообщения будут появляться поверх окна браузера.'
@@ -4041,7 +4091,7 @@
   calendar: 'Календарь',
   analytics: 'Аналитика',
   accounts: 'Справочник',
-  chat: 'Чат'
+  chat: 'Мессенджер'
 }[view];
 
 const unreadBadge = view === 'chat' && state.unreadChatCount > 0
@@ -4645,39 +4695,102 @@ function renderPeopleAnalytics() {
       return visibleForMe.filter(message => !isMessagePrivate(message));
     }
 
+    function getMessengerInitials(name = '') {
+      const value = String(name || '').trim();
+      if (!value) return '👤';
+      if (value === 'Команда') return '👥';
+      return value.split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase();
+    }
+
+    function getMessengerDialogMessages(dialog = {}) {
+      const visibleForMe = (state.chatMessages || []).filter(messageIsVisibleForMe);
+      if (dialog.type === 'team') return visibleForMe.filter(message => !isMessagePrivate(message));
+      const oldUid = state.chatRecipientUid;
+      const oldName = state.chatRecipientName;
+      state.chatRecipientUid = dialog.uid;
+      state.chatRecipientName = dialog.name;
+      const result = visibleForMe.filter(messageBelongsToCurrentDirect);
+      state.chatRecipientUid = oldUid;
+      state.chatRecipientName = oldName;
+      return result;
+    }
+
+    function getMessengerDialogs() {
+      const dialogs = [{ id: 'team', type: 'team', uid: '', name: 'Команда', subtitle: 'Общий чат команды' }];
+      getChatUserOptions().forEach(user => dialogs.push({ id: 'direct:' + user.uid, type: 'direct', uid: user.uid, name: user.name, subtitle: 'Личный диалог' }));
+      return dialogs;
+    }
+
+    function getMessengerActiveDialog() {
+      const dialogs = getMessengerDialogs();
+      return dialogs.find(dialog => dialog.id === state.activeDialogId) || dialogs[0];
+    }
+
+    function getMessageShortPreview(message = null) {
+      if (!message) return 'Пока нет сообщений';
+      const text = String(message.message || '').trim();
+      if (ChatUI.isTaskTokenMessage(text)) return ChatNotificationService.getMessagePreview(text);
+      return text || 'Сообщение';
+    }
+
+    function renderMessengerDialogs() {
+      const root = $('#messengerDialogList');
+      if (!root) return;
+      const dialogs = getMessengerDialogs();
+      root.innerHTML = dialogs.map(dialog => {
+        const messages = getMessengerDialogMessages(dialog);
+        const last = messages[messages.length - 1] || null;
+        const isActive = dialog.id === state.activeDialogId;
+        const time = last?.created_at ? new Date(last.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        const myUid = sessionStorage.getItem('e_uid') || '';
+        const unread = messages.filter(message => message.sender_uid !== myUid && !message._seen).length;
+        return [
+          '<button type="button" class="messenger-dialog ' + (isActive ? 'is-active' : '') + '" data-dialog-id="' + escapeHtml(dialog.id) + '" data-dialog-type="' + escapeHtml(dialog.type) + '" data-dialog-uid="' + escapeHtml(dialog.uid) + '" data-dialog-name="' + escapeHtml(dialog.name) + '">',
+          '<span class="messenger-avatar">' + escapeHtml(getMessengerInitials(dialog.name)) + '</span>',
+          '<span class="messenger-dialog-main">',
+          '<span class="messenger-dialog-name">' + escapeHtml(dialog.name) + '</span>',
+          '<span class="messenger-dialog-last">' + escapeHtml(getMessageShortPreview(last)) + '</span>',
+          '</span>',
+          '<span class="messenger-dialog-meta">',
+          '<span class="messenger-dialog-time">' + escapeHtml(time) + '</span>',
+          (unread && !isActive ? '<span class="messenger-unread">' + unread + '</span>' : ''),
+          '</span>',
+          '</button>'
+        ].join('');
+      }).join('');
+    }
+
     function syncChatAudienceUI() {
-      const teamBtn = $('#chatTeamModeBtn');
-      const directBtn = $('#chatDirectModeBtn');
-      const wrap = $('#chatRecipientWrap');
-      const select = $('#chatRecipientSelect');
       const pill = $('#chatContextPill');
       const input = $('#chatInput');
       const taskSearch = $('#chatTaskSearchInput');
-      if (!teamBtn || !directBtn || !wrap || !select || !pill) return;
+      const title = $('#messengerCurrentTitle');
+      const subtitle = $('#messengerCurrentSubtitle');
+      const avatar = $('#messengerCurrentAvatar');
+      const activeDialog = getMessengerActiveDialog();
 
-      const options = getChatUserOptions();
-      if (!state.chatRecipientUid && options.length) {
-        state.chatRecipientUid = options[0].uid;
-        state.chatRecipientName = options[0].name;
-      }
+      state.activeDialogId = activeDialog.id;
+      state.chatMode = activeDialog.type === 'direct' ? 'direct' : 'team';
+      state.chatRecipientUid = activeDialog.type === 'direct' ? activeDialog.uid : '';
+      state.chatRecipientName = activeDialog.type === 'direct' ? activeDialog.name : '';
 
-      select.innerHTML = options.map(user => `
-        <option value="${escapeHtml(user.uid)}" ${String(user.uid) === String(state.chatRecipientUid) ? 'selected' : ''}>${escapeHtml(user.name)}</option>
-      `).join('');
-
-      teamBtn.classList.toggle('is-active', state.chatMode === 'team');
-      directBtn.classList.toggle('is-active', state.chatMode === 'direct');
-      wrap.classList.toggle('hidden', state.chatMode !== 'direct');
-
-      if (state.chatMode === 'direct') {
-        pill.textContent = state.chatRecipientName ? `Личный чат с ${state.chatRecipientName}` : 'Выбери собеседника';
-        if (input) input.placeholder = state.chatRecipientName ? `Личное сообщение для ${state.chatRecipientName}...` : 'Выбери собеседника...';
-        if (taskSearch) taskSearch.placeholder = 'Найти задачу и отправить лично...';
+      if (activeDialog.type === 'direct') {
+        if (pill) pill.textContent = 'Личный чат с ' + activeDialog.name;
+        if (title) title.textContent = activeDialog.name;
+        if (subtitle) subtitle.textContent = 'Личный диалог';
+        if (avatar) avatar.textContent = getMessengerInitials(activeDialog.name);
+        if (input) input.placeholder = 'Личное сообщение для ' + activeDialog.name + '...';
+        if (taskSearch) taskSearch.placeholder = 'Найти задачу и отправить в личный диалог...';
       } else {
-        pill.textContent = 'Общий чат команды';
+        if (pill) pill.textContent = 'Общий чат команды';
+        if (title) title.textContent = 'Команда';
+        if (subtitle) subtitle.textContent = 'Общий чат команды';
+        if (avatar) avatar.textContent = '👥';
         if (input) input.placeholder = 'Напиши сообщение команде...';
-        if (taskSearch) taskSearch.placeholder = 'Найти задачу и отправить в чат...';
+        if (taskSearch) taskSearch.placeholder = 'Найти задачу и отправить в общий чат...';
       }
+
+      renderMessengerDialogs();
     }
 
     function renderMessages(messages) {
@@ -5432,7 +5545,7 @@ function getChatTaskSearchMatches(query = '') {
               <span>${escapeHtml(channels)}</span>
               <span>👤 ${escapeHtml(executor)}</span>
             </div>
-            <span class="chat-task-search-send">Отправить в чат</span>
+            <span class="chat-task-search-send">Отправить в мессенджер</span>
           </button>
         `;
       }).join('');
@@ -5471,11 +5584,11 @@ function getChatTaskSearchMatches(query = '') {
 
       const { error } = await ChatService.sendMessage(payload);
 
-      if (error) return notify('Не удалось отправить задачу в чат', 'error', 'Ошибка');
+      if (error) return notify('Не удалось отправить задачу в мессенджер', 'error', 'Ошибка');
 
       clearChatTaskSearch();
       await refreshChat();
-      notify(`Задача «${task.title || 'Без названия'}» отправлена ${state.chatMode === 'direct' ? 'лично' : 'в чат'}`, 'success', 'Готово');
+      notify(`Задача «${task.title || 'Без названия'}» отправлена ${state.chatMode === 'direct' ? 'в личный диалог' : 'в общий чат'}`, 'success', 'Готово');
     }
         async function sendChatMessage() {
       const input = $('#chatInput');
@@ -5628,18 +5741,17 @@ function getChatTaskSearchMatches(query = '') {
       $('#ideaForm').addEventListener('submit', saveCreateForm);
       $('#editForm').addEventListener('submit', saveEditForm);
       $('#sendChatBtn').addEventListener('click', sendChatMessage);
-      $$('.chat-mode-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.chatMode = btn.dataset.chatMode || 'team';
-          syncChatAudienceUI();
-          renderMessages(state.chatMessages || []);
-        });
-      });
-      $('#chatRecipientSelect')?.addEventListener('change', e => {
-        state.chatRecipientUid = e.target.value;
-        state.chatRecipientName = e.target.options[e.target.selectedIndex]?.textContent || e.target.value;
+      document.addEventListener('click', event => {
+        const dialogBtn = event.target.closest('.messenger-dialog');
+        if (!dialogBtn) return;
+        state.activeDialogId = dialogBtn.dataset.dialogId || 'team';
+        state.chatMode = dialogBtn.dataset.dialogType === 'direct' ? 'direct' : 'team';
+        state.chatRecipientUid = dialogBtn.dataset.dialogUid || '';
+        state.chatRecipientName = dialogBtn.dataset.dialogName || '';
+        clearChatTaskSearch();
         syncChatAudienceUI();
         renderMessages(state.chatMessages || []);
+        $('#chatInput')?.focus();
       });
       $('#chatInput').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage();}
 });
