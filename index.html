@@ -3652,9 +3652,7 @@
 
         if (state.currentView === 'accounts') renderAccounts();
         if (state.currentView === 'chat') {
-  state.unreadChatCount = 0;
-  buildMainTabs();
-  refreshChat();
+  refreshChat().then(() => markMessengerDialogSeen(state.activeDialogId));
   setTimeout(() => $('#chatInput')?.focus(), 80);
 }
       },
@@ -3920,7 +3918,7 @@
           notification.onclick = () => {
             window.focus();
             state.currentView = 'chat';
-            state.unreadChatCount = 0;
+            state.activeDialogId = getMessengerDialogIdForMessage(message);
             renderAll();
             notification.close();
           };
@@ -4721,6 +4719,17 @@ function renderPeopleAnalytics() {
       return dialogs;
     }
 
+    function getMessengerDialogIdForMessage(message = {}) {
+      if (!isMessagePrivate(message)) return 'team';
+      const myUid = sessionStorage.getItem('e_uid') || '';
+      const myName = state.currentUser || sessionStorage.getItem('e_name') || '';
+      const senderIsMe = String(message.sender_uid || '') === String(myUid) || String(message.sender_name || '') === String(myName);
+      const peerUid = senderIsMe
+        ? (message.recipient_uid || message.recipient_name || '')
+        : (message.sender_uid || message.sender_name || '');
+      return peerUid ? 'direct:' + peerUid : 'team';
+    }
+
     function getMessengerActiveDialog() {
       const dialogs = getMessengerDialogs();
       return dialogs.find(dialog => dialog.id === state.activeDialogId) || dialogs[0];
@@ -4733,6 +4742,66 @@ function renderPeopleAnalytics() {
       return text || 'Сообщение';
     }
 
+    function getMessengerSeenStorageKey() {
+      const myUid = sessionStorage.getItem('e_uid') || state.currentUser || sessionStorage.getItem('e_name') || 'guest';
+      return 'andromeda_messenger_seen_' + String(myUid);
+    }
+
+    function getMessengerSeenMap() {
+      try {
+        return JSON.parse(localStorage.getItem(getMessengerSeenStorageKey()) || '{}') || {};
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function saveMessengerSeenMap(map = {}) {
+      localStorage.setItem(getMessengerSeenStorageKey(), JSON.stringify(map));
+    }
+
+    function getMessengerSeenAt(dialogId = 'team') {
+      const map = getMessengerSeenMap();
+      return Number(map[dialogId] || 0);
+    }
+
+    function messageIsIncoming(message = {}) {
+      const myUid = sessionStorage.getItem('e_uid') || '';
+      const myName = state.currentUser || sessionStorage.getItem('e_name') || '';
+      const senderUid = String(message.sender_uid || '');
+      const senderName = String(message.sender_name || '');
+      if (senderUid && senderUid === String(myUid)) return false;
+      if (!senderUid && senderName && senderName === String(myName)) return false;
+      return true;
+    }
+
+    function getMessengerUnreadCount(dialog = {}) {
+      const seenAt = getMessengerSeenAt(dialog.id || 'team');
+      return getMessengerDialogMessages(dialog).filter(message => {
+        const createdAt = new Date(message.created_at || 0).getTime();
+        return messageIsIncoming(message) && createdAt > seenAt;
+      }).length;
+    }
+
+    function syncMessengerUnreadCount() {
+      state.unreadChatCount = getMessengerDialogs().reduce((sum, dialog) => sum + getMessengerUnreadCount(dialog), 0);
+      buildMainTabs();
+      renderMetaOnly();
+    }
+
+    function markMessengerDialogSeen(dialogId = state.activeDialogId) {
+      const dialog = getMessengerDialogs().find(item => item.id === dialogId) || getMessengerActiveDialog();
+      const incomingMessages = getMessengerDialogMessages(dialog).filter(messageIsIncoming);
+      const latestIncomingAt = incomingMessages.reduce((max, message) => {
+        const createdAt = new Date(message.created_at || 0).getTime();
+        return Number.isFinite(createdAt) ? Math.max(max, createdAt) : max;
+      }, 0);
+
+      const map = getMessengerSeenMap();
+      map[dialog.id] = Math.max(Number(map[dialog.id] || 0), latestIncomingAt || Date.now());
+      saveMessengerSeenMap(map);
+      syncMessengerUnreadCount();
+    }
+
     function renderMessengerDialogs() {
       const root = $('#messengerDialogList');
       if (!root) return;
@@ -4743,7 +4812,7 @@ function renderPeopleAnalytics() {
         const isActive = dialog.id === state.activeDialogId;
         const time = last?.created_at ? new Date(last.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
         const myUid = sessionStorage.getItem('e_uid') || '';
-        const unread = messages.filter(message => message.sender_uid !== myUid && !message._seen).length;
+        const unread = getMessengerUnreadCount(dialog);
         return [
           '<button type="button" class="messenger-dialog ' + (isActive ? 'is-active' : '') + '" data-dialog-id="' + escapeHtml(dialog.id) + '" data-dialog-type="' + escapeHtml(dialog.type) + '" data-dialog-uid="' + escapeHtml(dialog.uid) + '" data-dialog-name="' + escapeHtml(dialog.name) + '">',
           '<span class="messenger-avatar">' + escapeHtml(getMessengerInitials(dialog.name)) + '</span>',
@@ -4801,6 +4870,12 @@ function renderPeopleAnalytics() {
       const myUid = sessionStorage.getItem('e_uid') || '';
       const visibleMessages = getVisibleChatMessages(messages || []);
       root.innerHTML = ChatUI.renderMessages(visibleMessages, myUid);
+      if (state.currentView === 'chat') {
+        markMessengerDialogSeen(state.activeDialogId);
+        renderMessengerDialogs();
+      } else {
+        syncMessengerUnreadCount();
+      }
       ChatUI.scrollToBottom();
     }
 
@@ -4822,11 +4897,6 @@ function renderPeopleAnalytics() {
     if (payload.eventType === 'INSERT') {
       const message = payload.new;
       const myUid = sessionStorage.getItem('e_uid');
-
-      if (messageIsVisibleForMe(message) && state.currentView !== 'chat' && message.sender_uid !== myUid) {
-        state.unreadChatCount += 1;
-        buildMainTabs();
-      }
 
       if (messageIsVisibleForMe(message)) ChatNotificationService.handleIncoming(message);
     }
@@ -5750,6 +5820,7 @@ function getChatTaskSearchMatches(query = '') {
         state.chatRecipientName = dialogBtn.dataset.dialogName || '';
         clearChatTaskSearch();
         syncChatAudienceUI();
+        markMessengerDialogSeen(state.activeDialogId);
         renderMessages(state.chatMessages || []);
         $('#chatInput')?.focus();
       });
@@ -5803,10 +5874,6 @@ function getChatTaskSearchMatches(query = '') {
        const viewTab = event.target.closest('.view-tab');
 if (viewTab) {
   state.currentView = viewTab.dataset.view;
-
-  if (state.currentView === 'chat') {
-    state.unreadChatCount = 0;
-  }
 
   renderAll();
   return;
