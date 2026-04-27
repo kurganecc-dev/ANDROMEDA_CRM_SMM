@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#2563eb" />
+  <meta name="description" content="ANDROMEDA — CRM SMM для управления задачами, публикациями, аналитикой и командной коммуникацией." />
   <title>ANDROMEDA | CRM SMM</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -46,6 +48,19 @@
       --primary: #e11d48;
       --primary-strong: #be123c;
       --shadow: 0 12px 30px rgba(190, 24, 93, 0.1);
+    }
+
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
 
     * { box-sizing: border-box; }
@@ -1619,14 +1634,15 @@
   </style>
 </head>
 <body class="min-h-screen">
+  <noscript><div style="padding:16px;text-align:center;font-weight:700">Для работы ANDROMEDA необходимо включить JavaScript.</div></noscript>
   <div id="loginOverlay" class="fixed inset-0 z-[1000] flex items-center justify-center p-4" style="background: radial-gradient(circle at center, #1e293b 0%, #000 100%);">
     <div class="app-surface w-full max-w-sm rounded-[2rem] p-8 text-center">
       <h1 class="text-3xl font-black tracking-tight">ANDROMEDA</h1>
       <p class="mt-1 text-[10px] font-black uppercase tracking-[0.3em]" style="color: var(--primary);">CRM SMM SYSTEM</p>
       <div class="mt-8 space-y-4">
-        <select id="loginUser" class="w-full rounded-2xl border p-3 text-center font-bold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></select>
-        <input id="loginPass" type="password" placeholder="" class="w-full rounded-2xl border p-3 text-center font-bold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" />
-        <button id="loginBtn" class="w-full rounded-2xl px-4 py-4 text-xs font-black uppercase tracking-[0.2em] text-white" style="background: var(--text);">Войти</button>
+        <select id="loginUser" aria-label="Пользователь" class="w-full rounded-2xl border p-3 text-center font-bold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></select>
+        <input id="loginPass" type="password" placeholder="Введите пароль" aria-label="Пароль" autocomplete="current-password" class="w-full rounded-2xl border p-3 text-center font-bold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" />
+        <button id="loginBtn" type="button" aria-label="Войти в систему" class="w-full rounded-2xl px-4 py-4 text-xs font-black uppercase tracking-[0.2em] text-white" style="background: var(--text);">Войти</button>
         <p id="loginError" class="hidden text-xs font-bold text-rose-500">Ошибка входа</p>
       </div>
     </div>
@@ -1659,7 +1675,7 @@
     <main class="mx-auto grid max-w-[1800px] grid-cols-1 gap-6 px-6 py-6 lg:grid-cols-12">
       <section id="middlePanel" class="space-y-6 lg:col-span-12">
        <div id="listControls" class="flex flex-col gap-4 md:flex-row">
-          <button id="openCreateBtn" class="rounded-2xl px-6 py-4 text-[11px] font-black uppercase text-white" style="background: var(--primary);">+ Создать задачу</button>
+          <button id="openCreateBtn" type="button" aria-label="Создать задачу" class="rounded-2xl px-6 py-4 text-[11px] font-black uppercase text-white" style="background: var(--primary);">+ Создать задачу</button>
           <div id="quickFilters" aria-label="Быстрые фильтры задач">
             <button type="button" class="quick-filter-btn is-active" data-quick-filter="ALL"><span>Все</span><span class="quick-filter-count" data-filter-count="ALL">0</span></button>
             <button type="button" class="quick-filter-btn" data-quick-filter="MINE"><span>Мои</span><span class="quick-filter-count" data-filter-count="MINE">0</span></button>
@@ -1667,8 +1683,8 @@
             <button type="button" class="quick-filter-btn" data-quick-filter="OVERDUE"><span>Просрочено</span><span class="quick-filter-count" data-filter-count="OVERDUE">0</span></button>
             <button type="button" class="quick-filter-btn" data-quick-filter="UNASSIGNED"><span>Без исполнителя</span><span class="quick-filter-count" data-filter-count="UNASSIGNED">0</span></button>
           </div>
-          <input id="taskSearch" type="text" placeholder="" class="flex-1 rounded-2xl border px-4 py-4 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);" />
-          <select id="tagFilter" class="rounded-2xl border px-4 py-4 text-[11px] font-black uppercase outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);">
+          <input id="taskSearch" type="search" placeholder="Поиск задач..." aria-label="Поиск задач" class="flex-1 rounded-2xl border px-4 py-4 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);" />
+          <select id="tagFilter" aria-label="Фильтр по тегу" class="rounded-2xl border px-4 py-4 text-[11px] font-black uppercase outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);">
             <option value="ALL">Все теги</option>
             <option value="ФРК">ФРК</option>
             <option value="УТП">УТП</option>
@@ -1735,9 +1751,9 @@
           <div id="calendarTabs" class="flex flex-wrap gap-2"></div>
           <div class="app-surface rounded-[2rem] p-6 text-center">
             <div class="mb-4 flex items-center justify-between">
-              <button id="calendarPrevBtn" class="rounded-xl border px-3 py-2" style="border-color: var(--border);">←</button>
+              <button id="calendarPrevBtn" type="button" aria-label="Предыдущий месяц календаря" class="rounded-xl border px-3 py-2" style="border-color: var(--border);">←</button>
               <h2 id="calendarMonthLabel" class="text-sm font-black uppercase"></h2>
-              <button id="calendarNextBtn" class="rounded-xl border px-3 py-2" style="border-color: var(--border);">→</button>
+              <button id="calendarNextBtn" type="button" aria-label="Следующий месяц календаря" class="rounded-xl border px-3 py-2" style="border-color: var(--border);">→</button>
             </div>
             <div class="mb-2 grid grid-cols-7 text-[10px] font-black uppercase text-slate-400">
               <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
@@ -1748,19 +1764,19 @@
 
         <div id="view-analytics" class="hidden space-y-6">
           <div class="mx-auto flex w-fit gap-1 rounded-2xl p-1 surface-muted text-[10px] font-black uppercase">
-  <button id="analyticsTableBtn" class="tab-active rounded-xl px-6 py-2.5">📊 Таблица</button>
-  <button id="analyticsVisualsBtn" class="rounded-xl px-6 py-2.5 text-slate-400">📈 Графики</button>
-  <button id="analyticsPeopleBtn" class="rounded-xl px-6 py-2.5 text-slate-400">👥 Команда</button>
+  <button id="analyticsTableBtn" type="button" aria-label="Показать таблицу аналитики" class="tab-active rounded-xl px-6 py-2.5">📊 Таблица</button>
+  <button id="analyticsVisualsBtn" type="button" aria-label="Показать графики аналитики" class="rounded-xl px-6 py-2.5 text-slate-400">📈 Графики</button>
+  <button id="analyticsPeopleBtn" type="button" aria-label="Показать аналитику команды" class="rounded-xl px-6 py-2.5 text-slate-400">👥 Команда</button>
 </div>
 
           <div id="analytics-table" class="space-y-6">
             <div class="app-surface flex flex-col gap-4 rounded-[2rem] p-6 md:flex-row md:items-center md:justify-between">
               <div class="flex items-center gap-2">
-                <button id="statsPrevBtn" class="rounded-xl border px-3 py-2" style="border-color: var(--border);">←</button>
+                <button id="statsPrevBtn" type="button" aria-label="Предыдущий месяц статистики" class="rounded-xl border px-3 py-2" style="border-color: var(--border);">←</button>
                 <h2 id="statsMonthLabel" class="w-36 text-center text-sm font-black uppercase"></h2>
-                <button id="statsNextBtn" class="rounded-xl border px-3 py-2" style="border-color: var(--border);">→</button>
+                <button id="statsNextBtn" type="button" aria-label="Следующий месяц статистики" class="rounded-xl border px-3 py-2" style="border-color: var(--border);">→</button>
               </div>
-              <select id="statsPlatformFilter" class="rounded-xl border px-3 py-2 text-xs font-bold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);">
+              <select id="statsPlatformFilter" aria-label="Фильтр по площадке" class="rounded-xl border px-3 py-2 text-xs font-bold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);">
                 <option value="ALL">Все площадки</option>
                 <option value="YouTube">YouTube</option>
                 <option value="Rutube">Rutube</option>
@@ -1770,9 +1786,9 @@
                 <option value="Telegram">Telegram (Все)</option>
               </select>
               <div class="flex gap-2">
-                <button id="btnUpdateAll" class="rounded-xl bg-emerald-500 px-4 py-3 text-[10px] font-black uppercase text-white">Обновить всё</button>
-                <button id="btnUpdateInstagram" class="rounded-xl bg-pink-600 px-4 py-3 text-[10px] font-black uppercase text-white">Instagram</button>
-                <button id="exportStatsBtn" class="rounded-xl bg-slate-900 px-4 py-3 text-[10px] font-black uppercase text-white">CSV</button>
+                <button id="btnUpdateAll" type="button" aria-label="Обновить всю статистику" class="rounded-xl bg-emerald-500 px-4 py-3 text-[10px] font-black uppercase text-white">Обновить всё</button>
+                <button id="btnUpdateInstagram" type="button" aria-label="Обновить статистику Instagram" class="rounded-xl bg-pink-600 px-4 py-3 text-[10px] font-black uppercase text-white">Instagram</button>
+                <button id="exportStatsBtn" type="button" aria-label="Экспортировать статистику в CSV" class="rounded-xl bg-slate-900 px-4 py-3 text-[10px] font-black uppercase text-white">CSV</button>
               </div>
             </div>
 
@@ -1801,10 +1817,10 @@
                   
                 </div>
                 <div class="flex flex-wrap gap-1 rounded-xl p-1 surface-muted text-[10px] font-black uppercase">
-                  <button id="chartMonthsBtn" class="tab-active rounded-lg px-3 py-2">6 месяцев</button>
-                  <button id="chartDaysBtn" class="rounded-lg px-3 py-2 text-slate-400">По дням</button>
-                  <button id="chartPlatformsBtn" class="rounded-lg px-3 py-2 text-slate-400">Площадки</button>
-                  <button id="chartTopBtn" class="rounded-lg px-3 py-2 text-slate-400">Топ постов</button>
+                  <button id="chartMonthsBtn" type="button" aria-label="График за шесть месяцев" class="tab-active rounded-lg px-3 py-2">6 месяцев</button>
+                  <button id="chartDaysBtn" type="button" aria-label="График по дням" class="rounded-lg px-3 py-2 text-slate-400">По дням</button>
+                  <button id="chartPlatformsBtn" type="button" aria-label="График по площадкам" class="rounded-lg px-3 py-2 text-slate-400">Площадки</button>
+                  <button id="chartTopBtn" type="button" aria-label="Топ публикаций" class="rounded-lg px-3 py-2 text-slate-400">Топ постов</button>
                 </div>
               </div>
 
@@ -1854,7 +1870,7 @@
           <div id="chatTaskSearchBox" class="chat-task-search-box">
             <div class="chat-task-search-row">
               <span class="chat-task-search-icon">🔎</span>
-              <input id="chatTaskSearchInput" type="text" placeholder="" autocomplete="off" />
+              <input id="chatTaskSearchInput" type="search" placeholder="Найти задачу для отправки..." aria-label="Поиск задач в чате" autocomplete="off" />
               <button id="chatTaskSearchClear" type="button" aria-label="Очистить поиск">×</button>
             </div>
             <div id="chatTaskSearchResults" class="chat-task-search-results hidden"></div>
@@ -1873,9 +1889,9 @@
 
             <div class="chat-input-row">
               <div class="chat-input-wrap">
-                <textarea id="chatInput" class="chat-input" rows="1" placeholder=""></textarea>
+                <textarea id="chatInput" class="chat-input" rows="1" placeholder="Напишите сообщение..." aria-label="Сообщение"></textarea>
               </div>
-              <button id="sendChatBtn" class="chat-send-btn" type="button">➤</button>
+              <button id="sendChatBtn" type="button" aria-label="Отправить сообщение" class="chat-send-btn">➤</button>
             </div>
           </div>
         </div>
@@ -1892,7 +1908,7 @@
     <div class="app-surface flex max-h-[92vh] w-full max-w-5xl flex-col rounded-[2rem]">
       <div class="flex items-center justify-between border-b p-5" style="border-color: var(--border);">
         <h2 class="font-black uppercase">Правка задачи</h2>
-        <button data-close-modal="editModal" class="text-4xl text-slate-400">&times;</button>
+        <button type="button" data-close-modal="editModal" aria-label="Закрыть окно" class="text-4xl text-slate-400">&times;</button>
       </div>
       <form id="editForm" class="space-y-6 overflow-y-auto p-8">
         <input id="edit_id" type="hidden" />
@@ -1903,14 +1919,14 @@
             </label>
             <div class="grid grid-cols-2 gap-2">
               <label>Тип
-                <select id="edit_work_type" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></select>
+                <select id="edit_work_type" aria-label="Тип задачи" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></select>
               </label>
               <label>Тег
                 <div id="edit_tag" class="tag-cloud mt-1" data-selected="" aria-label="Опциональные теги задачи"></div>
               </label>
             </div>
             <label>Статус
-              <select id="edit_status" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></select>
+              <select id="edit_status" aria-label="Статус задачи" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></select>
             </label>
             <label>Описание
               <textarea id="edit_description" class="mt-1 h-32 w-full rounded-xl border p-3 text-sm font-medium normal-case outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></textarea>
@@ -1958,18 +1974,18 @@
     <div class="app-surface flex max-h-[92vh] w-full max-w-4xl flex-col rounded-[2rem]">
       <div class="flex items-center justify-between border-b p-6" style="border-color: var(--border);">
         <div><div class="text-[10px] font-black uppercase tracking-[0.22em]" style="color: var(--primary);">Быстрое создание</div><h2 id="createModalTitle" class="mt-1 font-black uppercase">Новая задача</h2></div>
-        <button data-close-modal="createModal" class="text-4xl text-slate-400">&times;</button>
+        <button type="button" data-close-modal="createModal" aria-label="Закрыть окно" class="text-4xl text-slate-400">&times;</button>
       </div>
       <form id="ideaForm" class="space-y-6 overflow-y-auto p-8">
         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div class="space-y-4">
             <label class="block text-[11px] font-black uppercase text-slate-400">Основная информация</label>
-            <input id="title" type="text" required placeholder="" class="w-full rounded-xl border-2 p-3.5 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" /><div id="error_title" class="field-error hidden"></div>
+            <input id="title" type="text" required placeholder="Название задачи" aria-label="Название задачи" autocomplete="off" class="w-full rounded-xl border-2 p-3.5 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" /><div id="error_title" class="field-error hidden"></div>
             <div class="grid grid-cols-2 gap-2">
-              <select id="work_type" class="w-full rounded-xl border-2 p-3 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);"></select>
+              <select id="work_type" aria-label="Тип задачи" class="w-full rounded-xl border-2 p-3 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);"></select>
               <div id="tag" class="tag-cloud" data-selected="" aria-label="Опциональные теги задачи"></div>
             </div>
-            <textarea id="description" placeholder="" class="h-32 w-full rounded-xl border-2 p-3 text-sm font-medium outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></textarea><div id="error_description" class="field-error hidden"></div>
+            <textarea id="description" placeholder="Кратко опишите задачу, идею или требования" aria-label="Описание задачи" class="h-32 w-full rounded-xl border-2 p-3 text-sm font-medium outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></textarea><div id="error_description" class="field-error hidden"></div>
             <div class="grid grid-cols-2 gap-4">
               <label class="text-[10px] font-black uppercase text-slate-400">Старт
                 <input id="start_date_val" type="date" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold" style="background: var(--surface); border-color: var(--border); color: var(--text);" /><div id="error_start_date_val" class="field-error hidden"></div>
@@ -2013,7 +2029,7 @@
             <div id="profileRoleDisplay" class="mt-1 text-[10px] font-black uppercase" style="color: var(--muted);"></div>
           </div>
         </div>
-        <button data-close-modal="profileModal" class="text-3xl text-slate-400">&times;</button>
+        <button type="button" data-close-modal="profileModal" aria-label="Закрыть окно" class="text-3xl text-slate-400">&times;</button>
       </div>
 
       <div class="space-y-3 overflow-y-auto pr-1">
@@ -2050,7 +2066,7 @@
           </div>
         </div>
 
-        <button id="logsBtn" class="relative flex w-full items-center justify-between rounded-2xl border p-4 text-left transition hover:-translate-y-0.5" style="border-color: var(--border); background: var(--surface-2); color: var(--text);">
+        <button id="logsBtn" type="button" aria-label="Открыть историю действий" class="relative flex w-full items-center justify-between rounded-2xl border p-4 text-left transition hover:-translate-y-0.5" style="border-color: var(--border); background: var(--surface-2); color: var(--text);">
           <span>
             <span class="block text-sm font-black uppercase">🔔 История действий</span>
             
@@ -2058,7 +2074,7 @@
           <span id="logBadge" class="hidden flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-black text-white">!</span>
         </button>
 
-        <button id="chatNotifyBtn" class="relative flex w-full items-center justify-between rounded-2xl border p-4 text-left transition hover:-translate-y-0.5" style="border-color: var(--border); background: var(--surface-2); color: var(--text);">
+        <button id="chatNotifyBtn" type="button" aria-label="Настройки уведомлений мессенджера" class="relative flex w-full items-center justify-between rounded-2xl border p-4 text-left transition hover:-translate-y-0.5" style="border-color: var(--border); background: var(--surface-2); color: var(--text);">
           <span>
             <span class="block text-sm font-black uppercase">🔔 Уведомления мессенджера</span>
             <span id="chatNotifyHint" class="hidden"></span>
@@ -2066,7 +2082,7 @@
           <span id="chatNotifyStatus" class="rounded-full px-2 py-1 text-[9px] font-black uppercase" style="background: rgba(148,163,184,.14); color: var(--muted);">off</span>
         </button>
 
-        <button id="trashBtn" class="flex w-full items-center justify-between rounded-2xl border p-4 text-left transition hover:-translate-y-0.5" style="border-color: var(--border); background: var(--surface-2); color: var(--text);">
+        <button id="trashBtn" type="button" aria-label="Открыть корзину" class="flex w-full items-center justify-between rounded-2xl border p-4 text-left transition hover:-translate-y-0.5" style="border-color: var(--border); background: var(--surface-2); color: var(--text);">
           <span>
             <span class="block text-sm font-black uppercase">🗑️ Корзина</span>
             <span class="mt-1 block text-[11px] font-semibold" style="color: var(--muted);">Восстановление задач из корзины</span>
@@ -2074,7 +2090,7 @@
           <span id="trashBadge" class="flex h-6 min-w-6 items-center justify-center rounded-full bg-slate-900 px-2 text-[10px] font-black text-white">0</span>
         </button>
 
-        <button id="logoutBtn" class="flex w-full items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 text-[11px] font-black uppercase text-rose-600">
+        <button id="logoutBtn" type="button" aria-label="Выйти из аккаунта" class="flex w-full items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 text-[11px] font-black uppercase text-rose-600">
           Выйти из аккаунта
         </button>
       </div>
@@ -2085,7 +2101,7 @@
     <div class="app-surface flex max-h-[80vh] w-full max-w-2xl flex-col rounded-[2rem] p-8">
       <div class="mb-6 flex items-center justify-between">
         <h2 class="text-lg font-black uppercase">Корзина</h2>
-        <button data-close-modal="trashModal" class="text-3xl text-slate-400">&times;</button>
+        <button type="button" data-close-modal="trashModal" aria-label="Закрыть окно" class="text-3xl text-slate-400">&times;</button>
       </div>
       <div id="trashList" class="space-y-3 overflow-y-auto pr-2"></div>
     </div>
@@ -2094,15 +2110,22 @@
   <div id="logsPanel" class="fixed right-0 top-0 z-[180] flex h-full w-80 translate-x-full flex-col border-l transition-transform duration-300" style="background: var(--surface); border-color: var(--border); box-shadow: var(--shadow);">
     <div class="flex items-center justify-between border-b p-6" style="background: var(--surface-2); border-color: var(--border);">
       <h3 class="text-xs font-black uppercase">История действий</h3>
-      <button id="closeLogsBtn" class="text-2xl text-slate-400">&times;</button>
+      <button id="closeLogsBtn" type="button" aria-label="Закрыть историю действий" class="text-2xl text-slate-400">&times;</button>
     </div>
     <div id="logsContent" class="flex-1 space-y-3 overflow-y-auto p-4"></div>
   </div>
 
-  <div id="toastContainer" class="toast-wrap"></div>
+  <div id="toastContainer" class="toast-wrap" role="status" aria-live="polite"></div>
 
   <script>
-        const AppConfig = {
+        /*
+      SECURITY TODO FOR PRODUCTION:
+      - Do not validate user passwords from a browser query to profiles.
+      - Move authentication to Supabase Auth.
+      - Keep external API tokens only in Supabase Edge Function secrets.
+      - Protect tasks, chat, stats, config and logs with strict RLS policies.
+    */
+    const AppConfig = {
       supabase: {
         url: 'https://wysiuvhhetjqfhpcykgm.supabase.co',
         key: 'sb_publishable_PdY082TJszfAELdPBYsJvg_gJnFysNr'
@@ -2547,7 +2570,7 @@
             <div class="mb-4 flex items-start justify-between gap-3">
               <div class="flex max-w-[80%] flex-wrap gap-1">${channels}</div>
               <div class="flex items-center gap-1">
-                <button type="button" class="inline-edit-trigger rounded-full p-2 text-slate-400 hover:bg-blue-50 hover:text-blue-600" data-task-id="${escapeHtml(task.id)}">✎</button>
+                <button type="button" class="inline-edit-trigger rounded-full p-2 text-slate-400 hover:bg-blue-50 hover:text-blue-600" data-task-id="${escapeHtml(task.id)}" aria-label="Быстро редактировать задачу">✎</button>
               </div>
             </div>
 
@@ -6393,6 +6416,5 @@ if (viewTab) {
       enhance();
     })();
   </script>
-
 </body>
 </html>
