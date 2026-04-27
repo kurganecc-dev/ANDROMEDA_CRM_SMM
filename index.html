@@ -3736,8 +3736,16 @@
       storageKey: 'andromeda_chat_notifications_enabled',
       lastShownMessageId: null,
 
+      isLocalhost() {
+        return ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
+      },
+
+      isSecureNotificationContext() {
+        return window.isSecureContext || window.location.protocol === 'https:' || ChatNotificationService.isLocalhost();
+      },
+
       isSupported() {
-        return 'Notification' in window;
+        return 'Notification' in window && ChatNotificationService.isSecureNotificationContext();
       },
 
       isEnabled() {
@@ -3749,8 +3757,14 @@
         ChatNotificationService.syncUI();
       },
 
+      getSupportProblem() {
+        if (!('Notification' in window)) return 'Этот браузер не поддерживает системные уведомления';
+        if (!ChatNotificationService.isSecureNotificationContext()) return 'Открой CRM через HTTPS или localhost — из file:// браузер блокирует пуши';
+        return '';
+      },
+
       getPermissionLabel() {
-        if (!ChatNotificationService.isSupported()) return 'Не поддерживается';
+        if (!ChatNotificationService.isSupported()) return 'Недоступны';
         if (Notification.permission === 'granted' && ChatNotificationService.isEnabled()) return 'Включены';
         if (Notification.permission === 'denied') return 'Запрещены';
         return 'Выключены';
@@ -3769,7 +3783,7 @@
         status.textContent = ChatNotificationService.getPermissionLabel();
 
         if (!supported) {
-          hint.textContent = 'Этот браузер не поддерживает системные уведомления';
+          hint.textContent = ChatNotificationService.getSupportProblem();
           status.style.background = 'rgba(225,29,72,.12)';
           status.style.color = '#e11d48';
           return;
@@ -3783,7 +3797,7 @@
         }
 
         if (enabled && permission === 'granted') {
-          hint.textContent = 'Пуш появится при новом сообщении не от тебя';
+          hint.textContent = 'Пуш появится при каждом новом сообщении не от тебя';
           status.style.background = 'rgba(16,185,129,.12)';
           status.style.color = '#059669';
           return;
@@ -3796,7 +3810,7 @@
 
       async toggle() {
         if (!ChatNotificationService.isSupported()) {
-          notify('Этот браузер не поддерживает системные push-уведомления.', 'warning', 'Уведомления');
+          notify(ChatNotificationService.getSupportProblem(), 'warning', 'Уведомления');
           ChatNotificationService.syncUI();
           return;
         }
@@ -3849,7 +3863,8 @@
             body: ChatNotificationService.getMessagePreview(message.message || ''),
             tag: opts.tag || `andromeda-chat-${message.id || Date.now()}`,
             renotify: true,
-            silent: false
+            silent: false,
+            requireInteraction: false
           });
 
           notification.onclick = () => {
@@ -3869,13 +3884,16 @@
 
       handleIncoming(message = {}) {
         const myUid = sessionStorage.getItem('e_uid');
-        if (!message || message.sender_uid === myUid) return;
+        const myName = state.currentUser || sessionStorage.getItem('e_name') || '';
+        const senderUid = String(message?.sender_uid || '');
+        const senderName = String(message?.sender_name || '');
+
+        if (!message) return;
+        if (senderUid && senderUid === String(myUid)) return;
+        if (!senderUid && senderName && senderName === String(myName)) return;
         if (String(ChatNotificationService.lastShownMessageId || '') === String(message.id || '')) return;
 
         ChatNotificationService.lastShownMessageId = message.id || Date.now();
-
-        const shouldNotify = state.currentView !== 'chat' || document.hidden;
-        if (!shouldNotify) return;
 
         const shown = ChatNotificationService.showSystemNotification(message);
         if (!shown) {
