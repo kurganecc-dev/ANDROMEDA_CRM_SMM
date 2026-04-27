@@ -1600,6 +1600,22 @@
       .messenger-dialog { min-width: 260px; }
     }
 
+  
+
+    /* Clean interface: hide helper hints and explanatory microcopy */
+    .stage-hint,
+    .theme-dropdown-hint,
+    .theme-dropdown-option-desc,
+    .messenger-subtitle,
+    .messenger-current-subtitle,
+    .chat-context-pill,
+    .chat-task-search-hint,
+    .chat-task-search-empty,
+    .tag-cloud-hint,
+    .calendar-drop-hint {
+      display: none !important;
+    }
+
   </style>
 </head>
 <body class="min-h-screen">
@@ -1609,7 +1625,7 @@
       <p class="mt-1 text-[10px] font-black uppercase tracking-[0.3em]" style="color: var(--primary);">CRM SMM SYSTEM</p>
       <div class="mt-8 space-y-4">
         <select id="loginUser" class="w-full rounded-2xl border p-3 text-center font-bold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></select>
-        <input id="loginPass" type="password" placeholder="Пароль" class="w-full rounded-2xl border p-3 text-center font-bold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" />
+        <input id="loginPass" type="password" placeholder="" class="w-full rounded-2xl border p-3 text-center font-bold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" />
         <button id="loginBtn" class="w-full rounded-2xl px-4 py-4 text-xs font-black uppercase tracking-[0.2em] text-white" style="background: var(--text);">Войти</button>
         <p id="loginError" class="hidden text-xs font-bold text-rose-500">Ошибка входа</p>
       </div>
@@ -1651,9 +1667,9 @@
             <button type="button" class="quick-filter-btn" data-quick-filter="OVERDUE"><span>Просрочено</span><span class="quick-filter-count" data-filter-count="OVERDUE">0</span></button>
             <button type="button" class="quick-filter-btn" data-quick-filter="UNASSIGNED"><span>Без исполнителя</span><span class="quick-filter-count" data-filter-count="UNASSIGNED">0</span></button>
           </div>
-          <input id="taskSearch" type="text" placeholder="Поиск по названию" class="flex-1 rounded-2xl border px-4 py-4 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);" />
+          <input id="taskSearch" type="text" placeholder="" class="flex-1 rounded-2xl border px-4 py-4 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);" />
           <select id="tagFilter" class="rounded-2xl border px-4 py-4 text-[11px] font-black uppercase outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);">
-            <option value="ALL">Все облачка</option>
+            <option value="ALL">Все теги</option>
             <option value="ФРК">ФРК</option>
             <option value="УТП">УТП</option>
             <option value="прочее">Прочее</option>
@@ -1782,7 +1798,7 @@
                 <div>
                   <div class="text-[10px] font-black uppercase tracking-[0.24em]" style="color: var(--primary);">Визуальная аналитика</div>
                   <h3 id="chartTitle" class="mt-2 text-xl font-black uppercase">Аналитика охватов</h3>
-                  <p id="chartSubtitle" class="mt-2 max-w-2xl text-sm font-medium" style="color: var(--muted);">Смотри динамику, вклад площадок и лучшие публикации без ручной разбивки.</p>
+                  
                 </div>
                 <div class="flex flex-wrap gap-1 rounded-xl p-1 surface-muted text-[10px] font-black uppercase">
                   <button id="chartMonthsBtn" class="tab-active rounded-lg px-3 py-2">6 месяцев</button>
@@ -1817,7 +1833,7 @@
       <aside class="messenger-sidebar" aria-label="Диалоги мессенджера">
         <div class="messenger-sidebar-head">
           <div class="messenger-title">Мессенджер</div>
-          <div class="messenger-subtitle">Команда и личные диалоги</div>
+          
         </div>
         <div id="messengerDialogList" class="messenger-dialog-list"></div>
       </aside>
@@ -1828,17 +1844,17 @@
             <div id="messengerCurrentAvatar" class="messenger-avatar">👥</div>
             <div class="min-w-0">
               <div id="messengerCurrentTitle" class="messenger-current-title">Команда</div>
-              <div id="messengerCurrentSubtitle" class="messenger-current-subtitle">Общий чат команды</div>
+              
             </div>
           </div>
-          <div id="chatContextPill" class="chat-context-pill">Общий чат команды</div>
+          
         </div>
 
         <div class="px-6 pt-3">
           <div id="chatTaskSearchBox" class="chat-task-search-box">
             <div class="chat-task-search-row">
               <span class="chat-task-search-icon">🔎</span>
-              <input id="chatTaskSearchInput" type="text" placeholder="Найти задачу и отправить в мессенджер..." autocomplete="off" />
+              <input id="chatTaskSearchInput" type="text" placeholder="" autocomplete="off" />
               <button id="chatTaskSearchClear" type="button" aria-label="Очистить поиск">×</button>
             </div>
             <div id="chatTaskSearchResults" class="chat-task-search-results hidden"></div>
@@ -1857,7 +1873,7 @@
 
             <div class="chat-input-row">
               <div class="chat-input-wrap">
-                <textarea id="chatInput" class="chat-input" rows="1" placeholder="Напиши сообщение команде..."></textarea>
+                <textarea id="chatInput" class="chat-input" rows="1" placeholder=""></textarea>
               </div>
               <button id="sendChatBtn" class="chat-send-btn" type="button">➤</button>
             </div>
@@ -1941,19 +1957,19 @@
   <div id="createModal" class="hidden fixed inset-0 z-[200] items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
     <div class="app-surface flex max-h-[92vh] w-full max-w-4xl flex-col rounded-[2rem]">
       <div class="flex items-center justify-between border-b p-6" style="border-color: var(--border);">
-        <div><div class="text-[10px] font-black uppercase tracking-[0.22em]" style="color: var(--primary);">Быстрое создание</div><h2 id="createModalTitle" class="mt-1 font-black uppercase">Новая задача</h2><p id="createModalSubtitle" class="mt-2 text-sm font-medium" style="color: var(--muted);">Заполни минимум для старта, детали можно добавить позже.</p></div>
+        <div><div class="text-[10px] font-black uppercase tracking-[0.22em]" style="color: var(--primary);">Быстрое создание</div><h2 id="createModalTitle" class="mt-1 font-black uppercase">Новая задача</h2></div>
         <button data-close-modal="createModal" class="text-4xl text-slate-400">&times;</button>
       </div>
       <form id="ideaForm" class="space-y-6 overflow-y-auto p-8">
         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div class="space-y-4">
             <label class="block text-[11px] font-black uppercase text-slate-400">Основная информация</label>
-            <input id="title" type="text" required placeholder="Тема поста" class="w-full rounded-xl border-2 p-3.5 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" /><div id="error_title" class="field-error hidden"></div>
+            <input id="title" type="text" required placeholder="" class="w-full rounded-xl border-2 p-3.5 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" /><div id="error_title" class="field-error hidden"></div>
             <div class="grid grid-cols-2 gap-2">
               <select id="work_type" class="w-full rounded-xl border-2 p-3 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);"></select>
               <div id="tag" class="tag-cloud" data-selected="" aria-label="Опциональные теги задачи"></div>
             </div>
-            <textarea id="description" placeholder="Описание / ТЗ" class="h-32 w-full rounded-xl border-2 p-3 text-sm font-medium outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></textarea><div id="error_description" class="field-error hidden"></div><p class="text-xs font-medium" style="color: var(--muted);">Добавь короткий контекст: что делаем, для какой площадки и какой результат нужен.</p>
+            <textarea id="description" placeholder="" class="h-32 w-full rounded-xl border-2 p-3 text-sm font-medium outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></textarea><div id="error_description" class="field-error hidden"></div>
             <div class="grid grid-cols-2 gap-4">
               <label class="text-[10px] font-black uppercase text-slate-400">Старт
                 <input id="start_date_val" type="date" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold" style="background: var(--surface); border-color: var(--border); color: var(--text);" /><div id="error_start_date_val" class="field-error hidden"></div>
@@ -1980,7 +1996,7 @@
             </div>
           </div>
         </div>
-        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"><p class="text-xs font-medium" style="color: var(--muted);">После сохранения задача появится в списке и в календаре.</p><button class="rounded-2xl px-6 py-4 text-sm font-black uppercase text-white" style="background: var(--text);">Создать задачу</button></div>
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"><button class="rounded-2xl px-6 py-4 text-sm font-black uppercase text-white" style="background: var(--text);">Создать задачу</button></div>
       </form>
     </div>
   </div>
@@ -2009,7 +2025,7 @@
                 <span id="themeDropdownIcon" class="theme-dropdown-icon">☀️</span>
                 <span>
                   <span id="themeDropdownLabel" class="theme-dropdown-label">Светлая</span>
-                  <span class="theme-dropdown-hint">Цветовая схема интерфейса</span>
+                  
                 </span>
               </span>
               <span class="theme-dropdown-chevron">⌄</span>
@@ -2017,17 +2033,17 @@
             <div id="themeDropdownMenu" class="theme-dropdown-menu" role="listbox" aria-label="Выбор темы интерфейса">
               <button type="button" class="theme-dropdown-option" data-theme-option="light" role="option" aria-selected="true">
                 <span class="theme-dropdown-option-icon">☀️</span>
-                <span><span class="theme-dropdown-option-title">Светлая</span><span class="theme-dropdown-option-desc">Чистый дневной режим</span></span>
+                <span><span class="theme-dropdown-option-title">Светлая</span></span>
                 <span class="theme-dropdown-check">✓</span>
               </button>
               <button type="button" class="theme-dropdown-option" data-theme-option="dark" role="option" aria-selected="false">
                 <span class="theme-dropdown-option-icon">🌙</span>
-                <span><span class="theme-dropdown-option-title">Тёмная</span><span class="theme-dropdown-option-desc">Контрастно для вечера</span></span>
+                <span><span class="theme-dropdown-option-title">Тёмная</span></span>
                 <span class="theme-dropdown-check">✓</span>
               </button>
               <button type="button" class="theme-dropdown-option" data-theme-option="pink" role="option" aria-selected="false">
                 <span class="theme-dropdown-option-icon">🌸</span>
-                <span><span class="theme-dropdown-option-title">Розовая</span><span class="theme-dropdown-option-desc">Мягкий брендовый акцент</span></span>
+                <span><span class="theme-dropdown-option-title">Розовая</span></span>
                 <span class="theme-dropdown-check">✓</span>
               </button>
             </div>
@@ -2037,7 +2053,7 @@
         <button id="logsBtn" class="relative flex w-full items-center justify-between rounded-2xl border p-4 text-left transition hover:-translate-y-0.5" style="border-color: var(--border); background: var(--surface-2); color: var(--text);">
           <span>
             <span class="block text-sm font-black uppercase">🔔 История действий</span>
-            <span class="mt-1 block text-[11px] font-semibold" style="color: var(--muted);">Логи создания, удаления и изменений задач</span>
+            
           </span>
           <span id="logBadge" class="hidden flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-black text-white">!</span>
         </button>
@@ -2045,7 +2061,7 @@
         <button id="chatNotifyBtn" class="relative flex w-full items-center justify-between rounded-2xl border p-4 text-left transition hover:-translate-y-0.5" style="border-color: var(--border); background: var(--surface-2); color: var(--text);">
           <span>
             <span class="block text-sm font-black uppercase">🔔 Уведомления мессенджера</span>
-            <span id="chatNotifyHint" class="mt-1 block text-[11px] font-semibold" style="color: var(--muted);">Включить пуши о новых сообщениях</span>
+            <span id="chatNotifyHint" class="hidden"></span>
           </span>
           <span id="chatNotifyStatus" class="rounded-full px-2 py-1 text-[9px] font-black uppercase" style="background: rgba(148,163,184,.14); color: var(--muted);">off</span>
         </button>
@@ -2254,16 +2270,7 @@
       },
 
       getNextStepHint(status) {
-        const hints = {
-          idea: 'Следующий шаг: создать сценарий',
-          script: 'Следующий шаг: передать в продакшн',
-          production: 'Следующий шаг: отправить на монтаж',
-          editing: 'Следующий шаг: отправить на проверку',
-          review: 'Следующий шаг: запланировать публикацию',
-          scheduled: 'Следующий шаг: дождаться публикации',
-          published: 'Следующий шаг: проанализировать результат'
-        };
-        return hints[status] || 'Следующий шаг не определён';
+        return '';
       },
 
       isSameMonthYear(date, sample) {
@@ -2540,7 +2547,7 @@
             <div class="mb-4 flex items-start justify-between gap-3">
               <div class="flex max-w-[80%] flex-wrap gap-1">${channels}</div>
               <div class="flex items-center gap-1">
-                <button type="button" class="inline-edit-trigger rounded-full p-2 text-slate-400 hover:bg-blue-50 hover:text-blue-600" data-task-id="${escapeHtml(task.id)}" title="Быстрое редактирование">✎</button>
+                <button type="button" class="inline-edit-trigger rounded-full p-2 text-slate-400 hover:bg-blue-50 hover:text-blue-600" data-task-id="${escapeHtml(task.id)}">✎</button>
               </div>
             </div>
 
@@ -2560,7 +2567,7 @@
                 <span>Прогресс: ${Math.round(getProgress(task.status))}%</span>
                 <span>${escapeHtml(STATUS_MAP[task.status] || 'Идея')}</span>
               </div>
-              <div class="stage-hint">${escapeHtml(getNextStepHint(task.status))}</div>
+              
             </div>
 
             <div class="grid grid-cols-2 gap-2 text-[10px] font-bold" style="color: var(--muted);">
@@ -2600,7 +2607,7 @@
               <div class="mt-1 text-[9px] font-bold" style="color: var(--muted);">Прогресс: ${progress}%</div>
             </div>
 
-            <div class="text-[9px] font-black uppercase stage-hint">${escapeHtml(getNextStepHint(task.status))}</div>
+            
 
             <div class="mt-3 flex items-center justify-between border-t pt-2 text-[9px] font-bold" style="border-color: var(--border); color: var(--muted);">
               <span>👤 ${responsible}</span>
@@ -3027,7 +3034,7 @@
               ${reactionsHtml ? `<div class="chat-actions">${reactionsHtml}</div>` : ''}
 
               ${isMe ? `
-                <button class="delete-message chat-delete-btn" data-message-id="${escapeHtml(message.id)}" title="Удалить сообщение">✕</button>
+                <button class="delete-message chat-delete-btn" data-message-id="${escapeHtml(message.id)}">✕</button>
               ` : ''}
             </div>
           </div>
@@ -3112,7 +3119,7 @@
         const cls = `status-${escapeHtml(task.status || 'idea' )}`;
 
         return `
-          <button class="calendar-item ${cls} w-full text-left" draggable="true" data-task-id="${escapeHtml(task.id)}" title="Перетащи на другой день, чтобы изменить дату публикации">
+          <button class="calendar-item ${cls} w-full text-left" draggable="true" data-task-id="${escapeHtml(task.id)}">
             🏁 ${escapeHtml(task.title || 'Без названия')}
           </button>
         `;
@@ -3125,7 +3132,7 @@
           <div class="calendar-day cursor-pointer ${dateStr === state.createPrefillDate ? 'create-target' : ''}" data-date="${dateStr}">
             <div class="mb-1 text-[10px] font-black text-slate-400">${day}</div>
             ${itemsHtml}
-            <div class="calendar-drop-hint">Отпустить здесь</div>
+            
           </div>
         `;
       },
@@ -3643,7 +3650,6 @@
           <div class="app-surface rounded-[1.5rem] p-5">
             <div class="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">${escapeHtml(item.label)}</div>
             <div class="mt-2 truncate text-2xl font-black">${escapeHtml(item.value)}</div>
-            <div class="mt-2 text-xs font-semibold" style="color: var(--muted);">${escapeHtml(item.hint)}</div>
           </div>
         `).join('') + `
           <div class="app-surface rounded-[1.5rem] p-5 md:col-span-4">
@@ -3754,7 +3760,6 @@
         };
         const [title, subtitle] = titles[state.chartMode] || titles.months;
         if ($('#chartTitle')) $('#chartTitle').textContent = title;
-        if ($('#chartSubtitle')) $('#chartSubtitle').textContent = subtitle;
       },
 
       getChartOptions(type) {
@@ -4045,27 +4050,22 @@
         status.textContent = ChatNotificationService.getPermissionLabel();
 
         if (!supported) {
-          hint.textContent = ChatNotificationService.getSupportProblem();
           status.style.background = 'rgba(225,29,72,.12)';
           status.style.color = '#e11d48';
           return;
         }
 
         if (permission === 'denied') {
-          hint.textContent = 'Разреши уведомления для сайта в настройках браузера';
           status.style.background = 'rgba(225,29,72,.12)';
           status.style.color = '#e11d48';
           return;
         }
 
         if (enabled && permission === 'granted') {
-          hint.textContent = 'Пуш появится при каждом новом сообщении не от тебя';
           status.style.background = 'rgba(16,185,129,.12)';
           status.style.color = '#059669';
           return;
         }
-
-        hint.textContent = 'Включить пуши о новых сообщениях';
         status.style.background = 'rgba(148,163,184,.14)';
         status.style.color = 'var(--muted)';
       },
@@ -4235,7 +4235,7 @@
           class="social-logo"
           src="${logo.src}"
           alt="${escapeHtml(logo.alt)}"
-          title="${escapeHtml(platform)}"
+         
           loading="lazy"
           onerror="this.outerHTML='<span class=&quot;social-logo-fallback&quot;>${escapeHtml(logo.fallback)}</span>'"
         />
@@ -4272,7 +4272,6 @@
       if (!container) return;
       container.dataset.selected = selected || '';
       container.innerHTML = `
-        <div class="tag-cloud-hint">Тег можно не выбирать. Нажми один раз, чтобы поставить облачко, повторно — чтобы снять.</div>
         ${TAGS.map(tag => `
           <button
             type="button"
@@ -4494,7 +4493,7 @@ renderMetaOnly();
             <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl" style="background: var(--surface);">📭</div>
             <div class="text-lg font-black">Ничего не найдено</div>
             <p class="mx-auto mt-2 max-w-md text-sm font-medium" style="color: var(--muted);">
-              Попробуй очистить поиск или снять фильтр по тегу. В новой версии пустое состояние тоже подсказывает следующий шаг.
+              Задач нет.
             </p>
             <button type="button" id="resetFiltersBtn" class="mt-5 rounded-2xl px-5 py-3 text-[11px] font-black uppercase text-white" style="background: var(--text);">
               Сбросить фильтры
@@ -4628,7 +4627,6 @@ function renderPeopleKpiCard(label, value, hint, icon = '•') {
         <div class="grid h-10 w-10 place-items-center rounded-2xl text-lg" style="background: var(--surface);">${icon}</div>
       </div>
       <div class="mt-3 text-3xl font-black">${value}</div>
-      <div class="mt-2 text-[11px] font-semibold" style="color: var(--muted);">${escapeHtml(hint)}</div>
     </div>
   `;
 }
@@ -4694,7 +4692,7 @@ function renderPeopleAnalyticsTable(rows, totalViews) {
         <td class="p-4">${Math.round(avg).toLocaleString('ru-RU')}</td>
         <td class="p-4">${Math.round(person.efficiency).toLocaleString('ru-RU')}</td>
         <td class="p-4">${escapeHtml(person.topPlatform)}</td>
-        <td class="p-4 max-w-[260px] truncate" title="${escapeHtml(person.bestTask?.title || '')}">${escapeHtml(person.bestTask?.title || '—')}</td>
+        <td class="p-4 max-w-[260px] truncate">${escapeHtml(person.bestTask?.title || '—')}</td>
       </tr>
     `;
   }).join('');
@@ -4961,8 +4959,8 @@ function renderPeopleAnalytics() {
     }
 
     function getMessengerDialogs() {
-      const dialogs = [{ id: 'team', type: 'team', uid: '', name: 'Команда', subtitle: 'Общий чат команды' }];
-      getChatUserOptions().forEach(user => dialogs.push({ id: 'direct:' + user.uid, type: 'direct', uid: user.uid, name: user.name, subtitle: 'Личный диалог' }));
+      const dialogs = [{ id: 'team', type: 'team', uid: '', name: 'Команда', subtitle: '' }];
+      getChatUserOptions().forEach(user => dialogs.push({ id: 'direct:' + user.uid, type: 'direct', uid: user.uid, name: user.name, subtitle: '' }));
 
       return dialogs
         .map((dialog, index) => ({
@@ -5109,14 +5107,14 @@ function renderPeopleAnalytics() {
       if (activeDialog.type === 'direct') {
         if (pill) pill.textContent = 'Личный чат с ' + activeDialog.name;
         if (title) title.textContent = activeDialog.name;
-        if (subtitle) subtitle.textContent = 'Личный диалог';
+        if (subtitle) subtitle.textContent = '';
         if (avatar) avatar.textContent = getMessengerInitials(activeDialog.name);
         if (input) input.placeholder = 'Личное сообщение для ' + activeDialog.name + '...';
         if (taskSearch) taskSearch.placeholder = 'Найти задачу и отправить в личный диалог...';
       } else {
         if (pill) pill.textContent = 'Общий чат команды';
         if (title) title.textContent = 'Команда';
-        if (subtitle) subtitle.textContent = 'Общий чат команды';
+        if (subtitle) subtitle.textContent = '';
         if (avatar) avatar.textContent = '👥';
         if (input) input.placeholder = 'Напиши сообщение команде...';
         if (taskSearch) taskSearch.placeholder = 'Найти задачу и отправить в общий чат...';
@@ -5593,11 +5591,6 @@ function renderPeopleAnalytics() {
 
       const formatted = parseLocalDate(date)?.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) || 'без даты';
       if ($('#createModalTitle')) $('#createModalTitle').textContent = prefillDate ? 'Новая задача' : 'Новая задача';
-      if ($('#createModalSubtitle')) {
-        $('#createModalSubtitle').textContent = selectedCalendarChannel
-          ? `Создаём задачу на ${formatted}. Площадка «${selectedCalendarChannel}» уже выбрана.`
-          : (prefillDate ? 'Заполни все важное.' : 'Заполни минимум для старта, детали можно добавить позже.');
-      }
       if ($('#createPreviewDate')) $('#createPreviewDate').textContent = formatted;
       openModal('createModal');
       renderCalendar();
@@ -5869,7 +5862,7 @@ function getChatTaskSearchMatches(query = '') {
 
       const title = query
         ? ''
-        : '<div class="chat-task-search-hint">Ближайшие активные задачи</div>';
+        : '';
 
       results.innerHTML = title + matches.map(task => {
         const deadline = getDeadlineMeta(task.date, task.status);
